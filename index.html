@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giornale Lavori - GeomFazio</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h1 { color: #2c3e50; margin-bottom: 20px; font-size: 24px; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; box-sizing: border-box; text-align: center; }
+        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        button:hover { background: #2980b9; }
+        #appContent { display: none; }
+        .success-msg { color: #27ae60; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="loginCard" class="card">
+        <h1>Accesso Cantiere</h1>
+        <p>Inserisci il PIN per operare</p>
+        <input type="password" id="pinInput" placeholder="****" inputmode="numeric">
+        <button onclick="validaPin()">ACCEDI</button>
+    </div>
+
+    <div id="appContent" class="card">
+        <h1 class="success-msg">✅ Accesso Eseguito</h1>
+        <p>Benvenuto, Geom. Fazio.</p>
+        <p>Il sistema di gestione cantiere è attivo.</p>
+        <hr>
+        <button onclick="location.reload()" style="background:#95a5a6;">Esci</button>
+    </div>
+
+    <script>
+        function validaPin() {
+            const pinInserito = document.getElementById('pinInput').value;
+            const pinCorretto = "9731"; // Il tuo PIN
+
+            if (pinInserito === pinCorretto) {
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+            } else {
+                alert("PIN Errato! Riprova.");
+                document.getElementById('pinInput').value = "";
+            }
+        }
+    </script>
+</body>
+</html>
