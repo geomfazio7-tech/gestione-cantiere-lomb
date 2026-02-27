@@ -37,8 +37,13 @@
         canvas { width: 100% !important; height: 100% !important; touch-action: none; border-radius: 12px; }
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; border: 1px solid #dee2e6; margin: 2px; cursor: pointer; background: white; }
         .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
-        .anagrafica-ditta { background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #0056b3; font-size: 0.85rem; }
+        
+        /* FOTO CON TASTO ELIMINA */
+        .photo-wrapper { position: relative; display: inline-block; }
         .photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-del-photo { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        .ditta-giornale-card { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -99,26 +104,29 @@
 
                 <div class="row g-3">
                     <div class="col-lg-4 border-end">
-                        <span class="section-label">📸 Foto di Cantiere</span>
+                        <span class="section-label">📸 Foto (Clicca X per eliminare)</span>
                         <input type="file" id="photo-input" multiple accept="image/*" style="display:none" onchange="uploadPhoto(this)">
                         <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill" onclick="document.getElementById('photo-input').click()">+ Aggiungi Foto</button>
                         <div id="photo-gallery" class="d-flex flex-wrap gap-2 mb-3"></div>
                         
-                        <span class="section-label">🌦️ Situazione Meteo</span>
+                        <span class="section-label">🌦️ Meteo</span>
                         <input type="text" id="g-meteo" class="form-control form-control-sm border-0 bg-light mb-3" onchange="autoSave()">
                         
-                        <span class="section-label">👷 Selezione Ditte e Appello</span>
-                        <select id="select-ditta-appello" class="form-select form-select-sm mb-2 border-0 bg-light" onchange="renderAppello()">
-                            <option value="">-- Scegli Ditta/Subappaltatore --</option>
-                        </select>
-                        <div id="presenze-appello" class="p-2 bg-light rounded-3 mb-2" style="max-height: 200px; overflow-y: auto;"></div>
+                        <span class="section-label">👷 Ditte in Cantiere</span>
+                        <div class="input-group mb-2">
+                            <select id="select-add-ditta" class="form-select form-select-sm border-0 bg-light">
+                                <option value="">-- Seleziona Ditta da inserire --</option>
+                            </select>
+                            <button class="btn btn-sm btn-success" onclick="addDittaToGiornale()">AGGIUNGI</button>
+                        </div>
+                        <div id="ditte-attive-container"></div>
                     </div>
 
                     <div class="col-lg-4 border-end">
-                        <span class="section-label">🏗️ Descrizione Lavorazioni</span>
+                        <span class="section-label">🏗️ Lavorazioni</span>
                         <textarea id="g-lavorazioni" class="form-control form-control-sm border-0 bg-light mb-3" rows="5" onchange="autoSave()"></textarea>
 
-                        <span class="section-label text-center d-block">✍️ Firma Digitale</span>
+                        <span class="section-label text-center d-block">✍️ Firma</span>
                         <select id="sign-role" class="form-select form-select-sm mb-2 border-0 bg-light" onchange="loadSignature()">
                             <option value="">-- Ruolo --</option>
                             <option value="DL">Direttore Lavori</option>
@@ -136,16 +144,16 @@
                             </div>
                         </div>
                         <div class="bg-white p-2 rounded-3 border mb-3 shadow-sm">
-                            <span class="section-label">📌 Note Interne</span>
+                            <span class="section-label">📌 Note</span>
                             <textarea id="g-memo" class="form-control form-control-sm border-0" rows="2" onchange="autoSave()"></textarea>
                         </div>
-                        <button class="btn btn-danger w-100 fw-bold py-2 rounded-3" onclick="generatePDF()">SCARICA PDF</button>
+                        <button class="btn btn-danger w-100 fw-bold py-2 rounded-3" onclick="generatePDF()">PDF</button>
                     </div>
 
                     <div class="col-lg-4">
-                        <span class="section-label text-center d-block">⚡ Matrice Eisenhower</span>
+                        <span class="section-label text-center d-block">⚡ Eisenhower</span>
                         <div class="input-group input-group-sm mb-2">
-                            <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Nuovo Task...">
+                            <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Task...">
                             <select id="t-q" class="form-select border-0 bg-light" style="max-width:110px">
                                 <option value="1">Urgente</option>
                                 <option value="2">Importante</option>
@@ -201,7 +209,7 @@ const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", auth
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(); const db = firebase.firestore();
 let userData = { cantieri: [] }; let cIdx = -1; let activeDate = ""; let sigPad;
-let currentViewDate = new Date(); let tempDitte = []; let currentUID = "";
+let currentViewDate = new Date(); let currentUID = "";
 
 auth.onAuthStateChanged(user => { if (user) { currentUID = user.uid; $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
@@ -210,8 +218,7 @@ function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").
 function loadDB() { 
     db.collection('users').doc('archivio_condiviso').onSnapshot(doc => { 
         userData.cantieri = doc.exists ? doc.data().cantieri : [];
-        renderCantieri(); 
-        if(cIdx !== -1) renderCal();
+        renderCantieri(); if(cIdx !== -1) renderCal();
     });
 }
 
@@ -219,7 +226,7 @@ function renderCantieri() {
     let h = ''; userData.cantieri.forEach((c, i) => {
         h += `<div class="col-12 col-md-4"><div class="card p-3 shadow-sm border-0 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:15px;"><h6 class="fw-bold text-primary m-0">${c.nome}</h6><small class="text-muted">CIG: ${c.cig || '-'}</small></div></div>`;
     });
-    $('#cantieri-grid').html(h || '<small>Nessuna commessa presente.</small>');
+    $('#cantieri-grid').html(h || '<small>Nessuna commessa.</small>');
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
@@ -244,43 +251,80 @@ function renderCal() {
 }
 
 function openG(ds) { 
-    activeDate = ds; const c = userData.cantieri[cIdx]; 
-    $('#g-date-title').text(ds.split('-').reverse().join('/')); 
+    activeDate = ds; const c = userData.cantieri[cIdx]; $('#g-date-title').text(ds.split('-').reverse().join('/')); 
     const g = (c.giornali || {})[ds] || {}; 
     $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || ''); 
     
-    // Reset e caricamento menu ditte
-    let sel = $('#select-ditta-appello').empty().append('<option value="">-- Scegli Ditta/Subappaltatore --</option>');
-    (c.anagraficaDitte || []).forEach((d, idx) => sel.append(`<option value="${idx}">${d.nome}</option>`));
+    // Menu selezione ditte (filtrato)
+    let sel = $('#select-add-ditta').empty().append('<option value="">-- Seleziona Ditta --</option>');
+    (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
     
-    showSection('section-giornale'); renderPhotos(); renderTasks(); 
-    $('#presenze-appello').empty();
+    showSection('section-giornale'); renderPhotos(); renderTasks(); renderDitteAttive();
     sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val(""); 
 }
 
-function renderAppello() { 
-    const dIdx = $('#select-ditta-appello').val();
-    if(dIdx === "") return $('#presenze-appello').empty();
-    
-    const c = userData.cantieri[cIdx], d = c.anagraficaDitte[dIdx], g = c.giornali[activeDate] || {}, pres = g.presenti || []; 
-    let h = `<small class="fw-bold d-block mb-1 text-primary">PERSONALE ${d.nome}:</small>`;
-    d.operai.forEach(o => { 
-        const id = `${o} (${d.nome})`; 
-        h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`; 
-    }); 
-    $('#presenze-appello').html(h); 
+// LOGICA DITTE PERMANENTI
+function addDittaToGiornale() {
+    const nome = $('#select-add-ditta').val(); if(!nome) return;
+    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
+    let g = userData.cantieri[cIdx].giornali[activeDate];
+    if(!g.ditteVisibili) g.ditteVisibili = [];
+    if(!g.ditteVisibili.includes(nome)) g.ditteVisibili.push(nome);
+    autoSave(); renderDitteAttive();
+}
+
+function removeDittaDalGiornale(nome) {
+    let g = userData.cantieri[cIdx].giornali[activeDate];
+    g.ditteVisibili = g.ditteVisibili.filter(n => n !== nome);
+    autoSave(); renderDitteAttive();
+}
+
+function renderDitteAttive() {
+    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
+    const attive = g.ditteVisibili || []; const pres = g.presenti || [];
+    let h = '';
+    attive.forEach(nomeDitta => {
+        const dittaAnag = c.anagraficaDitte.find(d => d.nome === nomeDitta);
+        if(dittaAnag) {
+            h += `<div class="ditta-giornale-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-primary small">${nomeDitta}</strong>
+                    <button class="btn btn-link text-danger p-0" style="font-size:0.6rem" onclick="removeDittaDalGiornale('${nomeDitta}')">RIMUOVI</button>
+                </div>`;
+            dittaAnag.operai.forEach(o => {
+                const id = `${o} (${nomeDitta})`;
+                h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`;
+            });
+            h += `</div>`;
+        }
+    });
+    $('#ditte-attive-container').html(h || '<small class="text-muted">Nessuna ditta aggiunta oggi.</small>');
 }
 
 function togglePresenza(id) { 
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
     let g = userData.cantieri[cIdx].giornali[activeDate]; if(!g.presenti) g.presenti = []; 
     if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id); else g.presenti.push(id); 
-    autoSave(); renderAppello(); 
+    autoSave(); renderDitteAttive(); 
 }
 
+// LOGICA FOTO CON ELIMINAZIONE
 function renderPhotos() { 
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
-    if(g.photos) g.photos.forEach(p => $('#photo-gallery').append(`<img src="${p}" class="photo-thumb">`)); 
+    if(g.photos) g.photos.forEach((p, idx) => {
+        $('#photo-gallery').append(`
+            <div class="photo-wrapper">
+                <img src="${p}" class="photo-thumb">
+                <button class="btn-del-photo" onclick="deletePhoto(${idx})">X</button>
+            </div>`);
+    }); 
+}
+
+function deletePhoto(idx) {
+    if(confirm("Eliminare questa foto?")) {
+        userData.cantieri[cIdx].giornali[activeDate].photos.splice(idx, 1);
+        autoSave(); renderPhotos();
+    }
 }
 
 async function uploadPhoto(input) { 
@@ -299,8 +343,6 @@ async function uploadPhoto(input) {
 
 function autoSave() { 
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
-    const g = userData.cantieri[cIdx].giornali[activeDate]; 
-    g.meteo = $('#g-meteo').val(); g.lavorazioni = $('#g-lavorazioni').val(); g.memo = $('#g-memo').val(); 
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}); 
 }
 
@@ -315,7 +357,7 @@ function loadSignature() {
 function saveSignatureNow() { 
     const r = $("#sign-role").val(); if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
     userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL(); 
-    autoSave(); alert("Firma acquisita correttamente.");
+    autoSave(); alert("Firma acquisita.");
 }
 
 function addT() { 
@@ -342,8 +384,8 @@ function editCurrentCommessa() {
     renderAnagraficaDitte(); $('#modalCommessa').modal('show'); 
 }
 
-function addDittaAnagrafica() { const n = prompt("Nome Ditta/Subappaltatore:"); if(n) { tempDitte.push({ nome: n.toUpperCase(), operai: [] }); renderAnagraficaDitte(); } }
-function addOperaioAnagrafica(di) { const n = prompt("Nome Operaio:"); if(n) { tempDitte[di].operai.push(n.toUpperCase()); renderAnagraficaDitte(); } }
+function addDittaAnagrafica() { const n = prompt("Ditta:"); if(n) { tempDitte.push({ nome: n.toUpperCase(), operai: [] }); renderAnagraficaDitte(); } }
+function addOperaioAnagrafica(di) { const n = prompt("Operaio:"); if(n) { tempDitte[di].operai.push(n.toUpperCase()); renderAnagraficaDitte(); } }
 
 function renderAnagraficaDitte() { 
     let h = ''; tempDitte.forEach((d, di) => { 
@@ -364,13 +406,11 @@ function saveCommessaData() {
         let currentShared = doc.exists ? doc.data().cantieri : []; 
         if(cIdx === -1) { currentShared.push(data); } 
         else { currentShared[cIdx] = data; } 
-        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { 
-            $('#modalCommessa').modal('hide'); alert("Database Aggiornato."); 
-        }); 
+        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { $('#modalCommessa').modal('hide'); }); 
     }); 
 }
 
-function generatePDF() { alert("Funzione PDF in fase di generazione dati..."); }
+function generatePDF() { alert("Generazione PDF..."); }
 </script>
 </body>
 </html>
