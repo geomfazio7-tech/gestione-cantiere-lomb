@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -18,24 +19,22 @@
         body { background: #f4f7f9; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         section { display: none; } .active-section { display: block; }
         .calendar-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; width: 100%; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
         .cal-header { font-size: 0.75rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; padding-bottom: 10px; }
         .cal-day { min-height: 90px; border-radius: 12px; border: 1px solid #edf2f7; padding: 10px; cursor: pointer; background: white; transition: 0.2s; }
         .cal-past { background: var(--past) !important; color: #adb5bd; }
         .cal-today { border: 2px solid var(--primary) !important; background: var(--today) !important; font-weight: bold; }
-        .cal-empty { background: transparent !important; border: none !important; cursor: default; }
         .quadrant { min-height: 140px; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.05); }
-        .q-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block; text-align: center; }
+        .q-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block; text-align: center; letter-spacing: 1px; }
         .q-1 { background: var(--q1); color: #721c24; } .q-2 { background: var(--q2); color: #856404; }
         .q-3 { background: var(--q3); color: #004085; } .q-4 { background: var(--q4); color: #383d41; }
-        .task-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 10px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
-        .section-label { font-size: 0.75rem; font-weight: 800; color: #495057; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .task-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .section-label { font-size: 0.75rem; font-weight: 800; color: #495057; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.5px; }
         .sig-box { border: 2px dashed #cbd5e0; border-radius: 12px; height: 150px; background: #fff; }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; border-radius: 12px; }
         .worker-chip { display: inline-block; padding: 6px 14px; border-radius: 50px; font-size: 0.8rem; border: 1px solid #dee2e6; margin: 3px; cursor: pointer; background: white; }
         .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
-        .anagrafica-ditta { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0056b3; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .info-header-badge { font-size: 0.8rem; background: #f1f3f5; padding: 6px 15px; border-radius: 50px; color: #495057; font-weight: 700; }
+        .anagrafica-ditta { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0056b3; }
     </style>
 </head>
 <body>
@@ -63,25 +62,25 @@
 
         <section id="section-list" class="active-section">
             <div class="d-flex justify-content-between mb-4 align-items-center">
-                <h5 class="fw-bold m-0">Le Mie Commesse</h5>
-                <button class="btn btn-primary rounded-pill px-4" onclick="openModaleNuovo()">+ Nuova Commessa</button>
+                <h5 class="fw-bold m-0 text-dark">Archivio Commesse</h5>
+                <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow" onclick="openModaleNuovo()">+ Nuova Commessa</button>
             </div>
             <div id="cantieri-grid" class="row g-4"></div>
         </section>
 
         <section id="section-calendar">
-            <div class="calendar-card">
+            <div class="calendar-card border-0">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <button class="btn btn-outline-secondary rounded-pill px-3" onclick="showSection('section-list')">← Elenco</button>
                     <div class="text-center">
-                        <h4 id="cal-title" class="fw-bold m-0 text-primary text-uppercase" style="letter-spacing: 1px;"></h4>
+                        <h4 id="cal-title" class="fw-bold m-0 text-primary"></h4>
                         <div class="d-flex align-items-center justify-content-center mt-2">
-                            <button class="btn btn-link btn-sm text-dark p-0" onclick="changeMonth(-1)">◀</button>
-                            <span id="current-month-display" class="mx-3 fw-bold text-uppercase" style="font-size: 0.9rem; letter-spacing: 1px;"></span>
-                            <button class="btn btn-link btn-sm text-dark p-0" onclick="changeMonth(1)">▶</button>
+                            <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(-1)">◀</button>
+                            <span id="current-month-display" class="mx-4 fw-bold text-uppercase" style="letter-spacing:2px"></span>
+                            <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
-                    <button class="btn btn-warning fw-bold rounded-pill px-4" onclick="editCurrentCommessa()">⚙️ Anagrafica</button>
+                    <button class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm" onclick="editCurrentCommessa()">⚙️ Anagrafica</button>
                 </div>
                 <div id="calendar-days-container" class="calendar-grid"></div>
             </div>
@@ -93,8 +92,8 @@
                     <div>
                         <h4 id="g-date-title" class="m-0 fw-bold text-primary"></h4>
                         <div class="d-flex gap-3 mt-3">
-                            <span id="badge-cig" class="info-header-badge">CIG: -</span>
-                            <span id="badge-cup" class="info-header-badge">CUP: -</span>
+                            <span id="badge-cig" class="info-header-badge" style="font-size: 0.8rem; background: #f1f3f5; padding: 6px 15px; border-radius: 50px;">CIG: -</span>
+                            <span id="badge-cup" class="info-header-badge" style="font-size: 0.8rem; background: #f1f3f5; padding: 6px 15px; border-radius: 50px;">CUP: -</span>
                         </div>
                     </div>
                     <button class="btn-close" onclick="showSection('section-calendar')"></button>
@@ -102,22 +101,22 @@
 
                 <div class="row g-4">
                     <div class="col-md-4 border-end">
-                        <span class="section-label">📸 Foto e Media</span>
+                        <span class="section-label">📸 Foto</span>
                         <input type="file" id="photo-input" multiple style="display:none" onchange="uploadPhoto(this)">
-                        <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill" onclick="document.getElementById('photo-input').click()">Allega Foto</button>
+                        <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill" onclick="document.getElementById('photo-input').click()">Aggiungi Foto</button>
                         <div id="photo-gallery" class="d-flex flex-wrap gap-2 mb-3"></div>
                         <span class="section-label">🌦️ Meteo</span>
-                        <input type="text" id="g-meteo" class="form-control border-0 bg-light mb-3" onchange="autoSave()">
+                        <input type="text" id="g-meteo" class="form-control border-0 bg-light p-3 mb-3" onchange="autoSave()">
                         <span class="section-label">👷 Appello</span>
                         <div id="presenze-appello" class="p-3 bg-light rounded-4 mb-3" style="max-height: 250px; overflow-y: auto;"></div>
                         <span class="section-label">🏗️ Lavorazioni</span>
-                        <textarea id="g-lavorazioni" class="form-control border-0 bg-light" rows="5" onchange="autoSave()"></textarea>
+                        <textarea id="g-lavorazioni" class="form-control border-0 bg-light p-3" rows="6" onchange="autoSave()"></textarea>
                     </div>
 
                     <div class="col-md-4 border-end">
                         <span class="section-label text-center d-block">✍️ Firme Digitali</span>
                         <select id="sign-role" class="form-select mb-3 border-0 bg-light" onchange="loadSignature()">
-                            <option value="">-- Chi firma? --</option>
+                            <option value="">-- Seleziona Ruolo --</option>
                             <option value="DL">Direttore Lavori</option>
                             <option value="ADL">Assistente D.L.</option>
                             <option value="CSE">Coord. Sicurezza</option>
@@ -129,27 +128,30 @@
                             <div class="sig-box mb-3"><canvas id="sig-pad"></canvas></div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-outline-danger w-50 fw-bold rounded-pill" onclick="clearSig()">CANCELLA</button>
-                                <button class="btn btn-success w-50 fw-bold rounded-pill" onclick="saveSignatureNow()">SALVA FIRMA</button>
+                                <button class="btn btn-success w-50 fw-bold rounded-pill" onclick="saveSignatureNow()">SALVA</button>
                             </div>
                         </div>
-                        <div class="bg-white p-3 rounded-4 border mb-4 mt-4 shadow-sm">
+                        <div class="bg-white p-3 rounded-4 border mb-4 mt-4">
                             <span class="section-label">📌 Note Interne</span>
                             <textarea id="g-memo" class="form-control border-0" rows="3" onchange="autoSave()"></textarea>
                         </div>
-                        <button class="btn btn-danger w-100 fw-bold py-4 rounded-4 shadow" onclick="generatePDF()">GENERA PDF</button>
+                        <button class="btn btn-danger w-100 fw-bold py-4 rounded-4 shadow" onclick="generatePDF()">SCARICA PDF</button>
                     </div>
 
                     <div class="col-md-4">
                         <span class="section-label text-center d-block">⚡ Matrice Eisenhower</span>
                         <div class="input-group mb-3">
                             <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Task...">
+                            <select id="t-q" class="form-select border-0 bg-light" style="max-width:80px">
+                                <option value="1">U</option><option value="2">I</option><option value="3">D</option><option value="4">V</option>
+                            </select>
                             <button class="btn btn-primary" onclick="addT()">+</button>
                         </div>
                         <div class="row g-2">
-                            <div class="col-6"><span class="q-title text-danger">Urgenti</span><div class="quadrant q-1" id="list-q1"></div></div>
-                            <div class="col-6"><span class="q-title text-warning">Importanti</span><div class="quadrant q-2" id="list-q2"></div></div>
+                            <div class="col-6"><span class="q-title text-danger">Urgente</span><div class="quadrant q-1" id="list-q1"></div></div>
+                            <div class="col-6"><span class="q-title text-warning">Importante</span><div class="quadrant q-2" id="list-q2"></div></div>
                             <div class="col-6"><span class="q-title text-primary">Delega</span><div class="quadrant q-3" id="list-q3"></div></div>
-                            <div class="col-6"><span class="q-title text-secondary">Note</span><div class="quadrant q-4" id="list-q4"></div></div>
+                            <div class="col-6"><span class="q-title text-secondary">Varie</span><div class="quadrant q-4" id="list-q4"></div></div>
                         </div>
                     </div>
                 </div>
@@ -158,8 +160,35 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg" style="border-radius: 25px;"><div class="modal-body p-5">
+    <h4 class="fw-bold mb-4">Anagrafica Commessa</h4>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><input type="text" id="c-nome" class="form-control bg-light border-0 p-3" placeholder="Nome Cantiere"></div>
+        <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control bg-light border-0 p-3" placeholder="Oggetto"></div>
+        <div class="col-6"><input type="text" id="c-cig" class="form-control bg-light border-0 p-3" placeholder="CIG"></div>
+        <div class="col-6"><input type="text" id="c-cup" class="form-control bg-light border-0 p-3" placeholder="CUP"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-5 border-end">
+            <span class="section-label">Tecnici</span>
+            <input type="text" id="c-dl" class="form-control mb-1 border-0 bg-light" placeholder="D.L.">
+            <input type="text" id="c-adl" class="form-control mb-1 border-0 bg-light" placeholder="Ass. D.L.">
+            <input type="text" id="c-cse" class="form-control mb-1 border-0 bg-light" placeholder="C.S.E.">
+            <input type="text" id="c-rup" class="form-control mb-1 border-0 bg-light" placeholder="R.U.P.">
+            <input type="text" id="c-arup" class="form-control mb-3 border-0 bg-light" placeholder="Ass. RUP">
+        </div>
+        <div class="col-md-7 ps-4">
+            <span class="section-label">Ditte</span>
+            <div id="anagrafica-imprese-list"></div>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-2 rounded-pill" onclick="addDittaAnagrafica()">+ Ditta</button>
+        </div>
+    </div>
+    <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill p-3 mt-4" onclick="saveCommessaData()">SALVA TUTTO</button>
+</div></div></div></div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" };
 firebase.initializeApp(firebaseConfig);
@@ -170,31 +199,112 @@ let currentViewDate = new Date(); let tempDitte = []; let currentUID = "";
 auth.onAuthStateChanged(user => { if (user) { currentUID = user.uid; $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
 function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else { alert("PIN Errato"); } }
-function loadDB() { db.collection('users').doc(currentUID).get().then(oldDoc => { let oldData = oldDoc.exists ? oldDoc.data().cantieri : []; db.collection('users').doc('archivio_condiviso').onSnapshot(doc => { let sharedData = doc.exists ? doc.data().cantieri : []; userData.cantieri = [...oldData, ...sharedData]; userData.cantieri = userData.cantieri.filter((v,i,a)=>a.findIndex(t=>(t.nome === v.nome))===i); renderCantieri(); if(cIdx !== -1) { renderCal(); if(activeDate) { renderTasks(); renderPhotos(); renderAppello(); } } }); }); }
-function renderCantieri() { let h = ''; userData.cantieri.forEach((c, i) => { h += `<div class="col-12 col-md-4"><div class="card p-4 shadow-sm border-0 h-100 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:20px;"><h5>${c.nome}</h5></div></div>`; }); $('#cantieri-grid').html(h || 'Nessuna commessa.'); }
+
+function loadDB() { 
+    db.collection('users').doc(currentUID).get().then(oldDoc => {
+        let oldData = oldDoc.exists ? oldDoc.data().cantieri : [];
+        db.collection('users').doc('archivio_condiviso').onSnapshot(doc => { 
+            let sharedData = doc.exists ? doc.data().cantieri : [];
+            userData.cantieri = [...oldData, ...sharedData];
+            userData.cantieri = userData.cantieri.filter((v,i,a)=>a.findIndex(t=>(t.nome === v.nome))===i);
+            renderCantieri(); 
+            if(cIdx !== -1) { renderCal(); if(activeDate) { renderTasks(); renderPhotos(); renderAppello(); } }
+        });
+    });
+}
+
+function renderCantieri() {
+    let h = ''; userData.cantieri.forEach((c, i) => {
+        h += `<div class="col-12 col-md-4"><div class="card p-4 shadow-sm border-0 h-100 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:20px;"><h5 class="fw-bold text-primary mb-2">${c.nome}</h5><span class="badge bg-light text-dark border">CIG: ${c.cig || '-'}</span></div></div>`;
+    });
+    $('#cantieri-grid').html(h || '<div class="col-12 text-center py-5">Nessun cantiere.</div>');
+}
+
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
+
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
-function renderCal() { const y = currentViewDate.getFullYear(); const m = currentViewDate.getMonth(); const today = new Date(); today.setHours(0,0,0,0); const daysInMonth = new Date(y, m+1, 0).getDate(); const startDay = new Date(y, m, 1).getDay(); const adj = startDay === 0 ? 6 : startDay - 1; let h = ''; for(let x=0; x<adj; x++) h += `<div class="cal-day cal-empty"></div>`; for(let d=1; d<=daysInMonth; d++) { const thisDate = new Date(y, m, d); const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; let sc = (thisDate < today) ? "cal-past" : (thisDate.getTime() === today.getTime() ? "cal-today" : ""); h += `<div class="cal-day ${sc}" onclick="openG('${ds}')"><b>${d}</b></div>`; } $('#calendar-days-container').html(`<div class="cal-header">L</div><div class="cal-header">M</div><div class="cal-header">M</div><div class="cal-header">G</div><div class="cal-header">V</div><div class="cal-header">S</div><div class="cal-header">D</div>${h}`); }
-function openG(ds) { activeDate = ds; const c = userData.cantieri[cIdx]; $('#g-date-title').text("GIORNALE DEL " + ds); const g = (c.giornali || {})[ds] || {}; $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || ''); showSection('section-giornale'); renderPhotos(); renderTasks(); renderAppello(); sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val(""); }
+
+function renderCal() {
+    const y = currentViewDate.getFullYear(); const m = currentViewDate.getMonth();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+    $('#current-month-display').text(`${monthNames[m]} ${y}`);
+    const days = new Date(y, m+1, 0).getDate();
+    const start = new Date(y, m, 1).getDay();
+    const adj = start === 0 ? 6 : start - 1;
+    let h = ''; 
+    for(let x=0; x<adj; x++) h += `<div class="cal-day cal-empty"></div>`;
+    for(let d=1; d<=days; d++) {
+        const thisDate = new Date(y, m, d);
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        let styleClass = "";
+        if (thisDate < today) styleClass = "cal-past";
+        else if (thisDate.getTime() === today.getTime()) styleClass = "cal-today";
+        h += `<div class="cal-day ${styleClass}" onclick="openG('${ds}')"><b>${d}</b></div>`;
+    }
+    $('#calendar-days-container').html(`<div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mer</div><div class="cal-header">Gio</div><div class="cal-header">Ven</div><div class="cal-header">Sab</div><div class="cal-header">Dom</div>${h}`);
+}
+
+function openG(ds) { 
+    activeDate = ds; const c = userData.cantieri[cIdx]; $('#g-date-title').text("GIORNALE DEL " + ds); 
+    $('#badge-cig').text("CIG: " + (c.cig || '-')); $('#badge-cup').text("CUP: " + (c.cup || '-'));
+    const g = (c.giornali || {})[ds] || {}; $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || ''); 
+    showSection('section-giornale'); renderPhotos(); renderTasks(); renderAppello(); 
+    sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val(""); 
+}
+
 function clearSig() { if(sigPad) sigPad.clear(); }
-function loadSignature() { const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide(); $("#sig-area").show(); const cvs = document.getElementById("sig-pad"); cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight; sigPad.clear(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; if(g['firma_'+r]) sigPad.fromDataURL(g['firma_'+r]); }
-function saveSignatureNow() { const r = $("#sign-role").val(); if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL(); db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => alert("Firma salvata")); }
-function autoSave() { if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; const g = userData.cantieri[cIdx].giornali[activeDate]; g.meteo = $('#g-meteo').val(); g.lavorazioni = $('#g-lavorazioni').val(); g.memo = $('#g-memo').val(); db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}); }
-function renderPhotos() { $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:70px; height:70px; object-fit:cover; border-radius:10px;">`)); }
-async function uploadPhoto(input) { for (let f of input.files) { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const cvs = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width; cvs.width = MAX; cvs.height = img.height * scale; cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height); const comp = cvs.toDataURL('image/jpeg', 0.7); if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = []; userData.cantieri[cIdx].giornali[activeDate].photos.push(comp); autoSave(); renderPhotos(); }; }; reader.readAsDataURL(f); } }
-function renderAppello() { const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {}; const pres = g.presenti || []; let h = ''; (c.anagraficaDitte || []).forEach(d => { h += `<div class="mb-3"><small class="section-label" style="font-size:0.6rem; color:var(--primary)">${d.nome}</small>`; d.operai.forEach(o => { const id = `${o} (${d.nome})`; h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`; }); h += `</div>`; }); $('#presenze-appello').html(h || '<small>Aggiungi ditte.</small>'); }
-function togglePresenza(id) { if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; let g = userData.cantieri[cIdx].giornali[activeDate]; if(!g.presenti) g.presenti = []; if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id); else g.presenti.push(id); autoSave(); renderAppello(); }
-function addT() { const v = $('#t-input').val(); if(!v) return; if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = []; userData.cantieri[cIdx].tasks.push({id:Date.now(), text:v, q:$('#t-q').val()}); $('#t-input').val(''); autoSave(); renderTasks(); }
-function renderTasks() { $('.quadrant').empty(); (userData.cantieri[cIdx].tasks || []).forEach(t => { $(`#list-q${t.q}`).append(`<div class="task-item" onclick="deleteTask(${t.id})"><span>${t.text}</span></div>`); }); }
-function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); autoSave(); renderTasks(); }
-function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
-function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#modalCommessa').modal('show'); }
-function editCurrentCommessa() { const c = userData.cantieri[cIdx]; $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || ''); $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || ''); $('#c-dl').val(c.dl || ''); $('#c-adl').val(c.adl || ''); $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); $('#c-arup').val(c.arup || ''); tempDitte = c.anagraficaDitte || []; renderAnagraficaDitte(); $('#modalCommessa').modal('show'); }
-function addDittaAnagrafica() { const n = prompt("Ditta:"); if(n) { tempDitte.push({ nome: n.toUpperCase(), operai: [] }); renderAnagraficaDitte(); } }
-function addOperaioAnagrafica(di) { const n = prompt("Operaio:"); if(n) { tempDitte[di].operai.push(n.toUpperCase()); renderAnagraficaDitte(); } }
-function renderAnagraficaDitte() { let h = ''; tempDitte.forEach((d, di) => { h += `<div class="anagrafica-ditta"><strong>${d.nome}</strong><br>`; d.operai.forEach(o => h += `<span class="badge bg-light text-dark border me-1">${o}</span>`); h += `<br><button class="btn btn-link btn-sm p-0" onclick="addOperaioAnagrafica(${di})">+ Operaio</button></div>`; }); $('#anagrafica-imprese-list').html(h); }
-function saveCommessaData() { const data = { nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), anagraficaDitte: tempDitte, giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || []) }; db.collection('users').doc('archivio_condiviso').get().then(doc => { let currentShared = doc.exists ? doc.data().cantieri : []; if(cIdx === -1) { currentShared.push(data); } else { let index = currentShared.findIndex(c => c.nome === data.nome); if(index !== -1) currentShared[index] = data; else currentShared.push(data); } db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => $('#modalCommessa').modal('hide')); }); }
-function generatePDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("GIORNALE DI CANTIERE", 15, 20); doc.save("Giornale.pdf"); }
-</script>
-</body>
-</html>
+
+function loadSignature() { 
+    const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide(); $("#sig-area").show(); 
+    const cvs = document.getElementById("sig-pad"); cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight; 
+    sigPad.clear(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
+    if(g['firma_'+r]) sigPad.fromDataURL(g['firma_'+r]); 
+}
+
+function saveSignatureNow() { 
+    const r = $("#sign-role").val(); if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
+    userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL(); 
+    autoSave(); alert("Firma acquisita correttamente.");
+}
+
+function autoSave() { 
+    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
+    const g = userData.cantieri[cIdx].giornali[activeDate]; 
+    g.meteo = $('#g-meteo').val(); g.lavorazioni = $('#g-lavorazioni').val(); g.memo = $('#g-memo').val(); 
+    db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}); 
+}
+
+function renderPhotos() { 
+    $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
+    if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:70px; height:70px; object-fit:cover; border-radius:10px;">`)); 
+}
+
+async function uploadPhoto(input) { 
+    for (let f of input.files) { 
+        const reader = new FileReader(); reader.onload = (e) => { 
+            const img = new Image(); img.src = e.target.result; img.onload = () => { 
+                const cvs = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width; 
+                cvs.width = MAX; cvs.height = img.height * scale; cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height); 
+                const comp = cvs.toDataURL('image/jpeg', 0.7); 
+                if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
+                if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = []; 
+                userData.cantieri[cIdx].giornali[activeDate].photos.push(comp); autoSave(); renderPhotos(); 
+            }; 
+        }; reader.readAsDataURL(f); 
+    } 
+}
+
+function renderAppello() { 
+    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {}; const pres = g.presenti || []; 
+    let h = ''; (c.anagraficaDitte || []).forEach(d => { 
+        h += `<div class="mb-3"><small class="section-label" style="font-size:0.6rem; color:var(--primary)">${d.nome}</small>`; 
+        d.operai.forEach(o => { const id = `${o} (${d.nome})`; h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`; }); 
+        h += `</div>`; 
+    }); $('#presenze-appello').html(h || '<small>Nessuna ditta.</small>'); 
+}
+
+function togglePresenza(id) { 
+    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
+    let g = userData.cantieri[cIdx].giornali[activeDate]; if(!g.presenti) g.presenti = []; 
+    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id
