@@ -141,9 +141,12 @@
                     <div class="col-md-4">
                         <span class="section-label text-center d-block">⚡ Matrice Eisenhower</span>
                         <div class="input-group mb-3">
-                            <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Task...">
-                            <select id="t-q" class="form-select border-0 bg-light" style="max-width:80px">
-                                <option value="1">U</option><option value="2">I</option><option value="3">D</option><option value="4">V</option>
+                            <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Inserisci Task...">
+                            <select id="t-q" class="form-select border-0 bg-light" style="max-width:120px">
+                                <option value="1">Urgente</option>
+                                <option value="2">Importante</option>
+                                <option value="3">Delega</option>
+                                <option value="4">Note</option>
                             </select>
                             <button class="btn btn-primary" onclick="addT()">+</button>
                         </div>
@@ -151,7 +154,7 @@
                             <div class="col-6"><span class="q-title text-danger">Urgente</span><div class="quadrant q-1" id="list-q1"></div></div>
                             <div class="col-6"><span class="q-title text-warning">Importante</span><div class="quadrant q-2" id="list-q2"></div></div>
                             <div class="col-6"><span class="q-title text-primary">Delega</span><div class="quadrant q-3" id="list-q3"></div></div>
-                            <div class="col-6"><span class="q-title text-secondary">Varie</span><div class="quadrant q-4" id="list-q4"></div></div>
+                            <div class="col-6"><span class="q-title text-secondary">Note</span><div class="quadrant q-4" id="list-q4"></div></div>
                         </div>
                     </div>
                 </div>
@@ -221,7 +224,6 @@ function renderCantieri() {
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
-
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
 
 function renderCal() {
@@ -237,12 +239,10 @@ function renderCal() {
     for(let d=1; d<=days; d++) {
         const thisDate = new Date(y, m, d);
         const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        let styleClass = "";
-        if (thisDate < today) styleClass = "cal-past";
-        else if (thisDate.getTime() === today.getTime()) styleClass = "cal-today";
+        let styleClass = (thisDate < today) ? "cal-past" : (thisDate.getTime() === today.getTime() ? "cal-today" : "");
         h += `<div class="cal-day ${styleClass}" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
-    $('#calendar-days-container').html(`<div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mer</div><div class="cal-header">Gio</div><div class="cal-header">Ven</div><div class="cal-header">Sab</div><div class="cal-header">Dom</div>${h}`);
+    $('#calendar-days-container').html(`<div class="cal-header">Lunedì</div><div class="cal-header">Martedì</div><div class="cal-header">Mercoledì</div><div class="cal-header">Giovedì</div><div class="cal-header">Venerdì</div><div class="cal-header">Sabato</div><div class="cal-header">Domenica</div>${h}`);
 }
 
 function openG(ds) { 
@@ -254,7 +254,6 @@ function openG(ds) {
 }
 
 function clearSig() { if(sigPad) sigPad.clear(); }
-
 function loadSignature() { 
     const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide(); $("#sig-area").show(); 
     const cvs = document.getElementById("sig-pad"); cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight; 
@@ -277,7 +276,7 @@ function autoSave() {
 
 function renderPhotos() { 
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
-    if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:70px; height:70px; object-fit:cover; border-radius:10px;">`)); 
+    if(g.photos) g.photos.forEach((p) => $('#photo-gallery').append(`<img src="${p}" style="width:70px; height:70px; object-fit:cover; border-radius:10px;">`)); 
 }
 
 async function uploadPhoto(input) { 
@@ -325,7 +324,6 @@ function renderTasks() {
 
 function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); autoSave(); renderTasks(); }
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
-
 function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#modalCommessa').modal('show'); }
 
 function editCurrentCommessa() { 
@@ -360,7 +358,7 @@ function saveCommessaData() {
         else { let index = currentShared.findIndex(c => c.nome === data.nome); if(index !== -1) currentShared[index] = data; else currentShared.push(data); } 
         db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { 
             $('#modalCommessa').modal('hide'); 
-            alert("Anagrafica salvata correttamente.");
+            alert("Anagrafica salvata.");
         }); 
     }); 
 }
