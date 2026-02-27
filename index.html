@@ -34,7 +34,9 @@
         .section-label { font-size: 0.7rem; font-weight: 700; color: #495057; text-transform: uppercase; margin-bottom: 4px; display: block; }
         .sig-box { border: 1px dashed #cbd5e0; border-radius: 8px; height: 130px; background: #fff; }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; }
-        .sub-ditta-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; margin-bottom: 5px; font-size: 0.85rem; }
+        .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #ddd; margin: 2px; cursor: pointer; background: white; }
+        .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
+        .anagrafica-ditta { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #0056b3; }
     </style>
 </head>
 <body>
@@ -80,10 +82,7 @@
                             <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-warning fw-bold" onclick="editCurrentCommessa()">⚙️ Gestisci</button>
-                </div>
-                <div class="calendar-grid">
-                    <div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mer</div><div class="cal-header">Gio</div><div class="cal-header">Ven</div><div class="cal-header">Sab</div><div class="cal-header">Dom</div>
+                    <button class="btn btn-sm btn-warning fw-bold" onclick="editCurrentCommessa()">⚙️ Anagrafica</button>
                 </div>
                 <div id="calendar-days-container" class="calendar-grid mt-2"></div>
             </div>
@@ -105,10 +104,8 @@
                         <span class="section-label">🌦️ Meteo</span>
                         <input type="text" id="g-meteo" class="form-control mb-2 bg-light border-0" onchange="autoSave()">
                         
-                        <span class="section-label">👷 Maestranze / Ditte</span>
-                        <div id="ditte-container" class="mb-2">
-                            </div>
-                        <button class="btn btn-sm btn-link p-0 mb-3" onclick="addSubDitta()">+ Aggiungi Sub-Affidataria</button>
+                        <span class="section-label">👷 Presenze Maestranze (Clicca per inserire)</span>
+                        <div id="presenze-appello" class="mb-3"></div>
                         
                         <span class="section-label">🏗️ Lavorazioni</span>
                         <textarea id="g-lavorazioni" class="form-control mb-2 bg-light border-0" rows="4" onchange="autoSave()"></textarea>
@@ -158,23 +155,37 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog"><div class="modal-content border-0 shadow-lg"><div class="modal-body p-4">
+<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg"><div class="modal-body p-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="fw-bold m-0">Anagrafica Commessa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
     </div>
-    <input type="text" id="c-nome" class="form-control mb-2" placeholder="Nome Cantiere">
-    <input type="text" id="c-oggetto" class="form-control mb-2" placeholder="Oggetto/Titolo Lavori">
-    <div class="row mb-2"><div class="col-6"><input type="text" id="c-cig" class="form-control" placeholder="CIG"></div><div class="col-6"><input type="text" id="c-cup" class="form-control" placeholder="CUP"></div></div>
+    
+    <div class="row g-2">
+        <div class="col-md-6"><input type="text" id="c-nome" class="form-control mb-2" placeholder="Nome Cantiere"></div>
+        <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control mb-2" placeholder="Oggetto Lavori"></div>
+        <div class="col-6"><input type="text" id="c-cig" class="form-control mb-2" placeholder="CIG"></div>
+        <div class="col-6"><input type="text" id="c-cup" class="form-control mb-2" placeholder="CUP"></div>
+    </div>
+    
     <hr>
-    <span class="section-label">Figure Professionali</span>
-    <input type="text" id="c-dl" class="form-control mb-1" placeholder="Direttore Lavori">
-    <input type="text" id="c-cse" class="form-control mb-1" placeholder="CSE">
-    <input type="text" id="c-imp" class="form-control mb-1" placeholder="Impresa Esecutrice">
-    <input type="text" id="c-rup" class="form-control mb-3" placeholder="RUP">
-    <div class="d-grid gap-2">
-        <button class="btn btn-primary fw-bold" onclick="saveCommessaData()">SALVA MODIFICHE</button>
-        <button id="btn-elimina-c" class="btn btn-outline-danger btn-sm mt-3" onclick="deleteCurrentCommessa()" style="display:none">ELIMINA DEFINITIVAMENTE COMMESSA</button>
+    <div class="row">
+        <div class="col-md-6 border-end">
+            <span class="section-label">Figure Professionali</span>
+            <input type="text" id="c-dl" class="form-control mb-1 form-control-sm" placeholder="Direttore Lavori">
+            <input type="text" id="c-cse" class="form-control mb-1 form-control-sm" placeholder="CSE">
+            <input type="text" id="c-rup" class="form-control mb-3 form-control-sm" placeholder="RUP">
+        </div>
+        <div class="col-md-6">
+            <span class="section-label">Database Imprese e Operai</span>
+            <div id="anagrafica-imprese-list"></div>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="addDittaAnagrafica()">+ Aggiungi Ditta (Esecutrice o Sub)</button>
+        </div>
+    </div>
+
+    <div class="d-grid gap-2 mt-4">
+        <button class="btn btn-primary fw-bold" onclick="saveCommessaData()">SALVA TUTTI I DATI ANAGRAFICA</button>
+        <button id="btn-elimina-c" class="btn btn-link btn-sm text-danger" onclick="deleteCurrentCommessa()" style="display:none">Elimina definitivamente commessa</button>
     </div>
 </div></div></div></div>
 
@@ -183,38 +194,28 @@
 
 <script>
 const firebaseConfig = { 
-    apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", 
-    authDomain: "gestionecantierilombardia.firebaseapp.com", 
-    projectId: "gestionecantierilombardia", 
-    storageBucket: "gestionecantierilombardia.firebasestorage.app", 
-    messagingSenderId: "341647926497", 
-    appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" 
+    apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", 
+    projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", 
+    messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" 
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(); const db = firebase.firestore();
-
-// Abilita Offline
-db.enablePersistence().catch(() => console.log("Offline non disponibile"));
+db.enablePersistence().catch(() => {});
 
 let userData = { cantieri: [] }; let uID = null; let cIdx = -1; let activeDate = ""; let sigPad;
 let currentViewDate = new Date();
+let tempDitte = []; // Gestione temporanea ditte in modale
 
-// AUTH
 auth.onAuthStateChanged(user => { if (user) { uID = user.uid; $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
 function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else { alert("PIN Errato"); } }
 
 function loadDB() { 
     db.collection('users').doc(uID).onSnapshot(doc => { 
-        if (doc.exists) { 
-            userData = doc.data(); 
-            renderCantieri(); 
-            if(cIdx !== -1) { renderCal(); if(activeDate) { renderTasks(); renderPhotos(); renderDitte(); } } 
-        } 
+        if (doc.exists) { userData = doc.data(); renderCantieri(); if(cIdx !== -1) { renderCal(); if(activeDate) { renderTasks(); renderPhotos(); renderAppello(); } } } 
     }); 
 }
 
-// GESTIONE COMMESSE
 function renderCantieri() {
     let h = ''; (userData.cantieri || []).forEach((c, i) => {
         h += `<div class="col-6 col-md-4"><div class="card p-3 shadow-sm border-0 h-100 text-center" onclick="openC(${i})" style="cursor:pointer; border-radius:15px"><b>${c.nome}</b><br><small class="text-muted">${c.cig || 'Rif. assente'}</small></div></div>`;
@@ -223,21 +224,65 @@ function renderCantieri() {
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
-function openModaleNuovo() { cIdx = -1; $('#modalCommessa input').val(''); $('#btn-elimina-c').hide(); $('#modalCommessa').modal('show'); }
+
+// ANAGRAFICA DITTE E OPERAI
+function openModaleNuovo() { 
+    cIdx = -1; tempDitte = []; 
+    $('#modalCommessa input').val(''); 
+    renderAnagraficaDitte();
+    $('#btn-elimina-c').hide(); 
+    $('#modalCommessa').modal('show'); 
+}
 
 function editCurrentCommessa() {
     const c = userData.cantieri[cIdx];
     $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || '');
     $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || '');
     $('#c-dl').val(c.dl || ''); $('#c-cse').val(c.cse || '');
-    $('#c-imp').val(c.imp || ''); $('#c-rup').val(c.rup || '');
+    $('#c-rup').val(c.rup || '');
+    tempDitte = c.anagraficaDitte || [];
+    renderAnagraficaDitte();
     $('#btn-elimina-c').show(); $('#modalCommessa').modal('show');
+}
+
+function addDittaAnagrafica() {
+    const nome = prompt("Nome della Ditta:");
+    if(!nome) return;
+    tempDitte.push({ nome: nome.toUpperCase(), operai: [] });
+    renderAnagraficaDitte();
+}
+
+function addOperaioAnagrafica(dIdx) {
+    const nome = prompt("Nome e Cognome Operaio:");
+    if(!nome) return;
+    tempDitte[dIdx].operai.push(nome.toUpperCase());
+    renderAnagraficaDitte();
+}
+
+function removeOperaio(dIdx, oIdx) { tempDitte[dIdx].operai.splice(oIdx, 1); renderAnagraficaDitte(); }
+function removeDitta(dIdx) { if(confirm("Eliminare ditta e operai?")) { tempDitte.splice(dIdx, 1); renderAnagraficaDitte(); } }
+
+function renderAnagraficaDitte() {
+    let h = '';
+    tempDitte.forEach((d, di) => {
+        h += `<div class="anagrafica-ditta">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>${d.nome}</strong>
+                <button class="btn btn-sm btn-outline-danger border-0" onclick="removeDitta(${di})">×</button>
+            </div>`;
+        d.operai.forEach((o, oi) => {
+            h += `<span class="badge bg-white text-dark border me-1 mb-1">${o} <span class="text-danger ms-1" style="cursor:pointer" onclick="removeOperaio(${di},${oi})">×</span></span>`;
+        });
+        h += `<br><button class="btn btn-link btn-sm p-0 mt-1" onclick="addOperaioAnagrafica(${di})">+ Aggiungi Operaio</button></div>`;
+    });
+    $('#anagrafica-imprese-list').html(h);
 }
 
 function saveCommessaData() {
     const data = {
         nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(),
-        dl: $('#c-dl').val(), cse: $('#c-cse').val(), imp: $('#c-imp').val(), rup: $('#c-rup').val(),
+        dl: $('#c-dl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(),
+        anagraficaDitte: tempDitte,
         giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}),
         tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || [])
     };
@@ -245,14 +290,38 @@ function saveCommessaData() {
     db.collection('users').doc(uID).set(userData).then(() => $('#modalCommessa').modal('hide'));
 }
 
-function deleteCurrentCommessa() {
-    if(confirm("Eliminare definitivamente?")) {
-        userData.cantieri.splice(cIdx, 1);
-        db.collection('users').doc(uID).set(userData).then(() => { $('#modalCommessa').modal('hide'); showSection('section-list'); });
-    }
+// GIORNALE - APPELLO OPERAI
+function renderAppello() {
+    const c = userData.cantieri[cIdx];
+    const g = c.giornali[activeDate] || {};
+    const presenti = g.presenti || []; // Array di stringhe "NomeOperaio (NomeDitta)"
+    
+    let h = '';
+    (c.anagraficaDitte || []).forEach(d => {
+        h += `<div class="mb-2"><small class="fw-bold text-muted border-bottom d-block mb-1">${d.nome}</small>`;
+        d.operai.forEach(o => {
+            const idOperaio = `${o} (${d.nome})`;
+            const isPresente = presenti.includes(idOperaio);
+            h += `<span class="worker-chip ${isPresente?'selected':''}" onclick="togglePresenza('${idOperaio}')">${o}</span>`;
+        });
+        h += `</div>`;
+    });
+    $('#presenze-appello').html(h || '<small>Nessun operaio in anagrafica.</small>');
 }
 
-// CALENDARIO
+function togglePresenza(id) {
+    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
+    let g = userData.cantieri[cIdx].giornali[activeDate];
+    if(!g.presenti) g.presenti = [];
+    
+    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id);
+    else g.presenti.push(id);
+    
+    autoSave();
+    renderAppello();
+}
+
+// CALENDARIO E GIORNALE BASE
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
 function renderCal() {
     const year = currentViewDate.getFullYear(); const month = currentViewDate.getMonth();
@@ -270,50 +339,89 @@ function renderCal() {
         const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
         h += `<div class="cal-day ${isPast?'cal-past':''} ${isToday?'cal-today':''}" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
-    $('#calendar-days-container').html(h);
+    $('#calendar-days-container').html(`<div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mer</div><div class="cal-header">Gio</div><div class="cal-header">Ven</div><div class="cal-header">Sab</div><div class="cal-header">Dom</div>${h}`);
 }
 
-// GIORNALE & DITTE
 function openG(ds) {
     activeDate = ds; $('#g-date-title').text("GIORNALE DEL " + ds);
     const g = (userData.cantieri[cIdx].giornali || {})[ds] || {};
     $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || '');
-    showSection('section-giornale'); renderPhotos(); renderTasks(); renderDitte();
+    showSection('section-giornale'); renderPhotos(); renderTasks(); renderAppello();
     sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val("");
 }
 
-function renderDitte() {
-    const c = userData.cantieri[cIdx];
-    const g = c.giornali[activeDate] || {};
-    let h = `<div class="sub-ditta-card bg-primary text-white">
-        <strong>ESECUTRICE:</strong> ${c.imp || '-'} 
-        <input type="number" class="form-control form-control-sm mt-1" placeholder="N. Operai" value="${g.op_principale || ''}" onchange="saveOpPrincipale(this.value)">
-    </div>`;
-    (g.subDitte || []).forEach((d, i) => {
-        h += `<div class="sub-ditta-card">
-            <div class="d-flex justify-content-between"><strong>SUB: ${d.nome}</strong> <span class="text-danger" onclick="removeSub(${i})">×</span></div>
-            <input type="number" class="form-control form-control-sm mt-1" placeholder="N. Operai" value="${d.operai || ''}" onchange="updateSub(${i}, this.value)">
-        </div>`;
+function autoSave() {
+    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
+    const g = userData.cantieri[cIdx].giornali[activeDate];
+    g.meteo = $('#g-meteo').val(); g.lavorazioni = $('#g-lavorazioni').val(); g.memo = $('#g-memo').val();
+    db.collection('users').doc(uID).set(userData);
+}
+
+// PDF POTENZIATO
+function generatePDF() {
+    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
+    
+    doc.setFontSize(18); doc.setTextColor(0, 86, 179); doc.text("GIORNALE DI CANTIERE", 15, 20);
+    doc.setFontSize(10); doc.setTextColor(0);
+    doc.text(`CANTIERE: ${c.nome}`, 15, 30);
+    doc.text(`DATA: ${activeDate} | CIG: ${c.cig || '-'}`, 15, 35);
+    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 15, 40, {maxWidth: 180});
+
+    // Maestranze nel PDF
+    const presenti = g.presenti || [];
+    let dittePresenti = {};
+    presenti.forEach(p => {
+        const ditta = p.substring(p.indexOf('(')+1, p.indexOf(')'));
+        const nome = p.substring(0, p.indexOf('(')).trim();
+        if(!dittePresenti[ditta]) dittePresenti[ditta] = [];
+        dittePresenti[ditta].push(nome);
     });
-    $('#ditte-container').html(h);
+
+    let maestranzeBody = [];
+    for(let ditta in dittePresenti) {
+        maestranzeBody.push([ditta, dittePresenti[ditta].join(", ")]);
+    }
+
+    doc.autoTable({
+        startY: 50,
+        head: [['Ditta', 'Maestranze Presenti']],
+        body: maestranzeBody.length ? maestranzeBody : [['-', 'Nessuna presenza registrata']],
+        theme: 'grid', headStyles: {fillColor: [0, 86, 179]}
+    });
+
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 5,
+        head: [['Lavorazioni / Annotazioni']],
+        body: [[g.lavorazioni || '-']],
+        theme: 'grid'
+    });
+
+    // Firme
+    let fy = doc.lastAutoTable.finalY + 10;
+    const roles = { DL: "Dir. Lavori", CSE: "Coord. Sicurezza", IMP: "Impresa", RUP: "RUP" };
+    let fx = 15;
+    Object.keys(roles).forEach(r => {
+        if(g['firma_'+r]) {
+            doc.setFontSize(8); doc.text(roles[r], fx, fy);
+            doc.addImage(g['firma_'+r], 'PNG', fx, fy+2, 35, 12);
+            fx += 45;
+        }
+    });
+
+    if(g.photos && g.photos.length > 0) {
+        doc.addPage(); doc.text("ALLEGATO FOTOGRAFICO", 15, 15);
+        let py = 25;
+        g.photos.forEach(p => {
+            if(py > 220) { doc.addPage(); py = 20; }
+            doc.addImage(p, 'JPEG', 15, py, 80, 60);
+            py += 70;
+        });
+    }
+    doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
 }
 
-function addSubDitta() {
-    const n = prompt("Nome Ditta Sub-affidataria:");
-    if(!n) return;
-    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
-    if(!userData.cantieri[cIdx].giornali[activeDate].subDitte) userData.cantieri[cIdx].giornali[activeDate].subDitte = [];
-    userData.cantieri[cIdx].giornali[activeDate].subDitte.push({nome: n.toUpperCase(), operai: ""});
-    autoSave(); renderDitte();
-}
-function removeSub(i) { userData.cantieri[cIdx].giornali[activeDate].subDitte.splice(i,1); autoSave(); renderDitte(); }
-function updateSub(i, v) { userData.cantieri[cIdx].giornali[activeDate].subDitte[i].operai = v; autoSave(); }
-function saveOpPrincipale(v) { 
-    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
-    userData.cantieri[cIdx].giornali[activeDate].op_principale = v; autoSave(); 
-}
-
-// FOTO CON COMPRESSIONE
+// RESTANTI FUNZIONI (Compressione, Task, etc - Invariate)
 async function compressImage(base64) {
     return new Promise(res => {
         const img = new Image(); img.src = base64;
@@ -326,7 +434,6 @@ async function compressImage(base64) {
         };
     });
 }
-
 async function uploadPhoto(input) {
     for (let file of input.files) {
         const reader = new FileReader();
@@ -340,13 +447,10 @@ async function uploadPhoto(input) {
         reader.readAsDataURL(file);
     }
 }
-
 function renderPhotos() {
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:55px; height:55px; object-fit:cover; border-radius:8px" onclick="if(confirm('Elimina?')){g.photos.splice(${i},1);autoSave();renderPhotos();}">`));
 }
-
-// TASK, FIRME, PDF
 function addT() {
     const val = $('#t-input').val(); if(!val) return;
     if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
@@ -360,14 +464,6 @@ function renderTasks() {
     });
 }
 function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); db.collection('users').doc(uID).set(userData).then(() => renderTasks()); }
-
-function autoSave() {
-    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
-    const g = userData.cantieri[cIdx].giornali[activeDate];
-    g.meteo = $('#g-meteo').val(); g.lavorazioni = $('#g-lavorazioni').val(); g.memo = $('#g-memo').val();
-    db.collection('users').doc(uID).set(userData);
-}
-
 function loadSignature() {
     const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide();
     $("#sig-area").show();
@@ -384,47 +480,8 @@ function saveSignatureNow() {
     db.collection('users').doc(uID).set(userData).then(() => alert("Firma acquisita"));
 }
 function clearSig() { sigPad.clear(); }
-
-function generatePDF() {
-    const { jsPDF } = window.jspdf; const doc = new jsPDF();
-    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
-    
-    doc.setFontSize(18); doc.setTextColor(0, 86, 179); doc.text("GIORNALE DI CANTIERE", 15, 20);
-    doc.setFontSize(10); doc.setTextColor(0);
-    doc.text(`CANTIERE: ${c.nome}`, 15, 30);
-    doc.text(`DATA: ${activeDate}`, 15, 35);
-    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 15, 40, {maxWidth: 180});
-
-    const ditteBody = [[`Esecutrice: ${c.imp}`, g.op_principale || '0']];
-    (g.subDitte || []).forEach(s => ditteBody.push([`Sub: ${s.nome}`, s.operai || '0']));
-
-    doc.autoTable({
-        startY: 50,
-        head: [['Ditta', 'N. Operai']],
-        body: ditteBody,
-        theme: 'grid', headStyles: {fillColor: [0, 86, 179]}
-    });
-
-    doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 5,
-        head: [['Lavorazioni / Annotazioni']],
-        body: [[g.lavorazioni || '-']],
-        theme: 'grid'
-    });
-
-    if(g.photos && g.photos.length > 0) {
-        doc.addPage(); doc.text("ALLEGATO FOTOGRAFICO", 15, 15);
-        let py = 25;
-        g.photos.forEach((p, idx) => {
-            if(py > 220) { doc.addPage(); py = 20; }
-            doc.addImage(p, 'JPEG', 15, py, 80, 60);
-            py += 70;
-        });
-    }
-    doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
-}
-
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
+function deleteCurrentCommessa() { if(confirm("Eliminare definitivamente?")) { userData.cantieri.splice(cIdx, 1); db.collection('users').doc(uID).set(userData).then(() => { $('#modalCommessa').modal('hide'); showSection('section-list'); }); } }
 </script>
 </body>
 </html>
