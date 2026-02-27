@@ -18,33 +18,38 @@
         :root { --primary: #0056b3; --past: #f1f3f5; --today: #cfe2ff; --q1: #f8d7da; --q2: #fff3cd; --q3: #cfe2ff; --q4: #f8f9fa; }
         body { background: #f4f7f9; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         section { display: none; } .active-section { display: block; }
-        .calendar-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        .cal-header { font-size: 0.75rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; padding-bottom: 10px; }
-        .cal-day { min-height: 90px; border-radius: 12px; border: 1px solid #edf2f7; padding: 10px; cursor: pointer; background: white; transition: 0.2s; }
+        
+        /* CALENDARIO REATTIVO */
+        .calendar-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 5px; min-width: 300px; }
+        .cal-header { font-size: 0.65rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; padding-bottom: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cal-day { min-height: 70px; border-radius: 8px; border: 1px solid #edf2f7; padding: 5px; cursor: pointer; background: white; transition: 0.2s; display: flex; flex-direction: column; justify-content: flex-start; }
+        .cal-day b { font-size: 0.9rem; }
         .cal-past { background: var(--past) !important; color: #adb5bd; }
         .cal-today { border: 2px solid var(--primary) !important; background: var(--today) !important; font-weight: bold; }
-        .quadrant { min-height: 140px; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.05); }
-        .q-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block; text-align: center; letter-spacing: 1px; }
+        .cal-empty { background: transparent !important; border: none !important; cursor: default; }
+
+        .quadrant { min-height: 120px; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.05); }
+        .q-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block; text-align: center; }
         .q-1 { background: var(--q1); color: #721c24; } .q-2 { background: var(--q2); color: #856404; }
         .q-3 { background: var(--q3); color: #004085; } .q-4 { background: var(--q4); color: #383d41; }
-        .task-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-        .section-label { font-size: 0.75rem; font-weight: 800; color: #495057; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.5px; }
+        .task-item { background: white; margin-bottom: 5px; padding: 8px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .section-label { font-size: 0.7rem; font-weight: 800; color: #495057; text-transform: uppercase; margin-bottom: 5px; display: block; }
         .sig-box { border: 2px dashed #cbd5e0; border-radius: 12px; height: 150px; background: #fff; }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; border-radius: 12px; }
-        .worker-chip { display: inline-block; padding: 6px 14px; border-radius: 50px; font-size: 0.8rem; border: 1px solid #dee2e6; margin: 3px; cursor: pointer; background: white; }
+        .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; border: 1px solid #dee2e6; margin: 2px; cursor: pointer; background: white; }
         .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
-        .anagrafica-ditta { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0056b3; }
+        .anagrafica-ditta { background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #0056b3; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-<div class="container py-4" style="max-width: 1300px;">
-    <div id="auth-section" class="card p-5 shadow-lg mt-5 border-0" style="display:none; border-radius: 25px;">
+<div class="container-fluid py-3" style="max-width: 1400px;">
+    <div id="auth-section" class="card p-4 shadow-lg mt-5 border-0 mx-auto" style="display:none; border-radius: 25px; max-width: 450px;">
         <h3 class="text-center mb-4 fw-bold text-primary">Cantieri Cloud</h3>
-        <input type="email" id="log-email" class="form-control form-control-lg mb-3" placeholder="Email">
-        <input type="password" id="log-pw" class="form-control form-control-lg mb-4" placeholder="Password">
-        <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill" onclick="handleLogin()">ACCEDI</button>
+        <input type="email" id="log-email" class="form-control mb-3" placeholder="Email">
+        <input type="password" id="log-pw" class="form-control mb-4" placeholder="Password">
+        <button class="btn btn-primary w-100 fw-bold rounded-pill" onclick="handleLogin()">ACCEDI</button>
     </div>
 
     <div id="pin-section" class="text-center mt-5" style="display:none;">
@@ -55,94 +60,87 @@
     </div>
 
     <div id="main-app" style="display:none;">
-        <header class="d-flex justify-content-between mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm">
-            <h4 class="fw-bold m-0 text-primary">Gestionale Lombardia</h4>
-            <button class="btn btn-sm btn-outline-danger rounded-pill px-4 fw-bold" onclick="auth.signOut()">Esci</button>
+        <header class="d-flex justify-content-between mb-3 align-items-center bg-white p-3 rounded-4 shadow-sm">
+            <h5 class="fw-bold m-0 text-primary">Gestionale Lombardia</h5>
+            <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="auth.signOut()">Esci</button>
         </header>
 
         <section id="section-list" class="active-section">
-            <div class="d-flex justify-content-between mb-4 align-items-center">
-                <h5 class="fw-bold m-0 text-dark">Archivio Commesse</h5>
-                <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow" onclick="openModaleNuovo()">+ Nuova Commessa</button>
+            <div class="d-flex justify-content-between mb-3 align-items-center">
+                <h6 class="fw-bold m-0">Archivio Commesse</h6>
+                <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="openModaleNuovo()">+ Nuova</button>
             </div>
-            <div id="cantieri-grid" class="row g-4"></div>
+            <div id="cantieri-grid" class="row g-3"></div>
         </section>
 
         <section id="section-calendar">
-            <div class="calendar-card border-0">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <button class="btn btn-outline-secondary rounded-pill px-3" onclick="showSection('section-list')">← Elenco</button>
+            <div class="calendar-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="showSection('section-list')">←</button>
                     <div class="text-center">
-                        <h4 id="cal-title" class="fw-bold m-0 text-primary"></h4>
-                        <div class="d-flex align-items-center justify-content-center mt-2">
-                            <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(-1)">◀</button>
-                            <span id="current-month-display" class="mx-4 fw-bold text-uppercase" style="letter-spacing:2px"></span>
-                            <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(1)">▶</button>
+                        <strong id="cal-title" class="text-primary d-block"></strong>
+                        <div class="d-flex align-items-center justify-content-center">
+                            <button class="btn btn-link btn-sm text-dark p-1" onclick="changeMonth(-1)">◀</button>
+                            <span id="current-month-display" class="mx-2 small fw-bold text-uppercase"></span>
+                            <button class="btn btn-link btn-sm text-dark p-1" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
-                    <button class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm" onclick="editCurrentCommessa()">⚙️ Anagrafica</button>
+                    <button class="btn btn-sm btn-warning fw-bold rounded-pill" onclick="editCurrentCommessa()">⚙️</button>
                 </div>
                 <div id="calendar-days-container" class="calendar-grid"></div>
             </div>
         </section>
 
         <section id="section-giornale">
-            <div class="card p-4 shadow-lg border-0" style="border-radius: 25px;">
-                <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-3">
-                    <div>
-                        <h4 id="g-date-title" class="m-0 fw-bold text-primary"></h4>
-                        <div class="d-flex gap-3 mt-3">
-                            <span id="badge-cig" class="info-header-badge" style="font-size: 0.8rem; background: #f1f3f5; padding: 6px 15px; border-radius: 50px;">CIG: -</span>
-                            <span id="badge-cup" class="info-header-badge" style="font-size: 0.8rem; background: #f1f3f5; padding: 6px 15px; border-radius: 50px;">CUP: -</span>
-                        </div>
-                    </div>
+            <div class="card p-3 shadow-lg border-0" style="border-radius: 20px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h6 id="g-date-title" class="m-0 fw-bold text-primary"></h6>
                     <button class="btn-close" onclick="showSection('section-calendar')"></button>
                 </div>
 
-                <div class="row g-4">
-                    <div class="col-md-4 border-end">
+                <div class="row g-3">
+                    <div class="col-lg-4 border-end">
                         <span class="section-label">📸 Foto</span>
                         <input type="file" id="photo-input" multiple style="display:none" onchange="uploadPhoto(this)">
-                        <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill" onclick="document.getElementById('photo-input').click()">Aggiungi Foto</button>
-                        <div id="photo-gallery" class="d-flex flex-wrap gap-2 mb-3"></div>
+                        <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill" onclick="document.getElementById('photo-input').click()">Carica</button>
+                        <div id="photo-gallery" class="d-flex flex-wrap gap-1 mb-2"></div>
                         <span class="section-label">🌦️ Meteo</span>
-                        <input type="text" id="g-meteo" class="form-control border-0 bg-light p-3 mb-3" onchange="autoSave()">
+                        <input type="text" id="g-meteo" class="form-control form-control-sm border-0 bg-light mb-2" onchange="autoSave()">
                         <span class="section-label">👷 Appello</span>
-                        <div id="presenze-appello" class="p-3 bg-light rounded-4 mb-3" style="max-height: 250px; overflow-y: auto;"></div>
+                        <div id="presenze-appello" class="p-2 bg-light rounded-3 mb-2" style="max-height: 200px; overflow-y: auto;"></div>
                         <span class="section-label">🏗️ Lavorazioni</span>
-                        <textarea id="g-lavorazioni" class="form-control border-0 bg-light p-3" rows="6" onchange="autoSave()"></textarea>
+                        <textarea id="g-lavorazioni" class="form-control form-control-sm border-0 bg-light" rows="4" onchange="autoSave()"></textarea>
                     </div>
 
-                    <div class="col-md-4 border-end">
-                        <span class="section-label text-center d-block">✍️ Firme Digitali</span>
-                        <select id="sign-role" class="form-select mb-3 border-0 bg-light" onchange="loadSignature()">
-                            <option value="">-- Seleziona Ruolo --</option>
+                    <div class="col-lg-4 border-end">
+                        <span class="section-label text-center d-block">✍️ Firma</span>
+                        <select id="sign-role" class="form-select form-select-sm mb-2 border-0 bg-light" onchange="loadSignature()">
+                            <option value="">-- Ruolo --</option>
                             <option value="DL">Direttore Lavori</option>
                             <option value="ADL">Assistente D.L.</option>
                             <option value="CSE">Coord. Sicurezza</option>
                             <option value="IMP">Impresa</option>
                             <option value="RUP">R.U.P.</option>
-                            <option value="ARUP">Assistente RUP</option>
                         </select>
                         <div id="sig-area" style="display:none">
-                            <div class="sig-box mb-3"><canvas id="sig-pad"></canvas></div>
+                            <div class="sig-box mb-2"><canvas id="sig-pad"></canvas></div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-outline-danger w-50 fw-bold rounded-pill" onclick="clearSig()">CANCELLA</button>
-                                <button class="btn btn-success w-50 fw-bold rounded-pill" onclick="saveSignatureNow()">SALVA</button>
+                                <button class="btn btn-sm btn-outline-danger w-50 rounded-pill" onclick="clearSig()">CANCELLA</button>
+                                <button class="btn btn-sm btn-success w-50 rounded-pill" onclick="saveSignatureNow()">SALVA</button>
                             </div>
                         </div>
-                        <div class="bg-white p-3 rounded-4 border mb-4 mt-4">
-                            <span class="section-label">📌 Note Interne</span>
-                            <textarea id="g-memo" class="form-control border-0" rows="3" onchange="autoSave()"></textarea>
+                        <div class="bg-white p-2 rounded-3 border mb-3 mt-3 shadow-sm">
+                            <span class="section-label">📌 Note</span>
+                            <textarea id="g-memo" class="form-control form-control-sm border-0" rows="2" onchange="autoSave()"></textarea>
                         </div>
-                        <button class="btn btn-danger w-100 fw-bold py-4 rounded-4 shadow" onclick="generatePDF()">SCARICA PDF</button>
+                        <button class="btn btn-danger w-100 fw-bold py-2 rounded-3" onclick="generatePDF()">PDF</button>
                     </div>
 
-                    <div class="col-md-4">
-                        <span class="section-label text-center d-block">⚡ Matrice Eisenhower</span>
-                        <div class="input-group mb-3">
-                            <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Inserisci Task...">
-                            <select id="t-q" class="form-select border-0 bg-light" style="max-width:120px">
+                    <div class="col-lg-4">
+                        <span class="section-label text-center d-block">⚡ Eisenhower</span>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" id="t-input" class="form-control border-0 bg-light" placeholder="Task...">
+                            <select id="t-q" class="form-select border-0 bg-light" style="max-width:110px">
                                 <option value="1">Urgente</option>
                                 <option value="2">Importante</option>
                                 <option value="3">Delega</option>
@@ -150,7 +148,7 @@
                             </select>
                             <button class="btn btn-primary" onclick="addT()">+</button>
                         </div>
-                        <div class="row g-2">
+                        <div class="row g-1">
                             <div class="col-6"><span class="q-title text-danger">Urgente</span><div class="quadrant q-1" id="list-q1"></div></div>
                             <div class="col-6"><span class="q-title text-warning">Importante</span><div class="quadrant q-2" id="list-q2"></div></div>
                             <div class="col-6"><span class="q-title text-primary">Delega</span><div class="quadrant q-3" id="list-q3"></div></div>
@@ -163,30 +161,28 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg" style="border-radius: 25px;"><div class="modal-body p-5">
-    <h4 class="fw-bold mb-4">Anagrafica Commessa</h4>
-    <div class="row g-3 mb-4">
-        <div class="col-md-6"><input type="text" id="c-nome" class="form-control bg-light border-0 p-3" placeholder="Nome Cantiere"></div>
-        <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control bg-light border-0 p-3" placeholder="Oggetto"></div>
-        <div class="col-6"><input type="text" id="c-cig" class="form-control bg-light border-0 p-3" placeholder="CIG"></div>
-        <div class="col-6"><input type="text" id="c-cup" class="form-control bg-light border-0 p-3" placeholder="CUP"></div>
+<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg" style="border-radius: 20px;"><div class="modal-body p-4">
+    <h5 class="fw-bold mb-3">Dati Commessa</h5>
+    <div class="row g-2 mb-3">
+        <div class="col-md-6"><input type="text" id="c-nome" class="form-control form-control-sm bg-light border-0" placeholder="Cantiere"></div>
+        <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control form-control-sm bg-light border-0" placeholder="Oggetto"></div>
+        <div class="col-6"><input type="text" id="c-cig" class="form-control form-control-sm bg-light border-0" placeholder="CIG"></div>
+        <div class="col-6"><input type="text" id="c-cup" class="form-control form-control-sm bg-light border-0" placeholder="CUP"></div>
     </div>
     <div class="row">
         <div class="col-md-5 border-end">
             <span class="section-label">Tecnici</span>
-            <input type="text" id="c-dl" class="form-control mb-1 border-0 bg-light" placeholder="D.L.">
-            <input type="text" id="c-adl" class="form-control mb-1 border-0 bg-light" placeholder="Ass. D.L.">
-            <input type="text" id="c-cse" class="form-control mb-1 border-0 bg-light" placeholder="C.S.E.">
-            <input type="text" id="c-rup" class="form-control mb-1 border-0 bg-light" placeholder="R.U.P.">
-            <input type="text" id="c-arup" class="form-control mb-3 border-0 bg-light" placeholder="Ass. RUP">
+            <input type="text" id="c-dl" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="D.L.">
+            <input type="text" id="c-cse" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="C.S.E.">
+            <input type="text" id="c-rup" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="R.U.P.">
         </div>
-        <div class="col-md-7 ps-4">
-            <span class="section-label">Ditte</span>
-            <div id="anagrafica-imprese-list"></div>
-            <button class="btn btn-sm btn-outline-primary w-100 mt-2 rounded-pill" onclick="addDittaAnagrafica()">+ Ditta</button>
+        <div class="col-md-7 ps-3">
+            <span class="section-label">Imprese</span>
+            <div id="anagrafica-imprese-list" style="max-height: 200px; overflow-y:auto"></div>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="addDittaAnagrafica()">+ Ditta</button>
         </div>
     </div>
-    <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill p-3 mt-4" onclick="saveCommessaData()">SALVA TUTTO</button>
+    <button class="btn btn-primary w-100 fw-bold rounded-pill p-2 mt-3" onclick="saveCommessaData()">SALVA</button>
 </div></div></div></div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -211,16 +207,16 @@ function loadDB() {
             userData.cantieri = [...oldData, ...sharedData];
             userData.cantieri = userData.cantieri.filter((v,i,a)=>a.findIndex(t=>(t.nome === v.nome))===i);
             renderCantieri(); 
-            if(cIdx !== -1) { renderCal(); if(activeDate) { renderTasks(); renderPhotos(); renderAppello(); } }
+            if(cIdx !== -1) { renderCal(); }
         });
     });
 }
 
 function renderCantieri() {
     let h = ''; userData.cantieri.forEach((c, i) => {
-        h += `<div class="col-12 col-md-4"><div class="card p-4 shadow-sm border-0 h-100 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:20px;"><h5 class="fw-bold text-primary mb-2">${c.nome}</h5><span class="badge bg-light text-dark border">CIG: ${c.cig || '-'}</span></div></div>`;
+        h += `<div class="col-12 col-md-4"><div class="card p-3 shadow-sm border-0 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:15px;"><h6 class="fw-bold text-primary m-0">${c.nome}</h6><small class="text-muted">CIG: ${c.cig || '-'}</small></div></div>`;
     });
-    $('#cantieri-grid').html(h || '<div class="col-12 text-center py-5">Nessun cantiere.</div>');
+    $('#cantieri-grid').html(h || '<small>Nessun cantiere.</small>');
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
@@ -242,12 +238,13 @@ function renderCal() {
         let styleClass = (thisDate < today) ? "cal-past" : (thisDate.getTime() === today.getTime() ? "cal-today" : "");
         h += `<div class="cal-day ${styleClass}" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
-    $('#calendar-days-container').html(`<div class="cal-header">Lunedì</div><div class="cal-header">Martedì</div><div class="cal-header">Mercoledì</div><div class="cal-header">Giovedì</div><div class="cal-header">Venerdì</div><div class="cal-header">Sabato</div><div class="cal-header">Domenica</div>${h}`);
+    const headers = window.innerWidth < 600 ? ['L','M','M','G','V','S','D'] : ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    let hh = headers.map(n => `<div class="cal-header">${n}</div>`).join('');
+    $('#calendar-days-container').html(hh + h);
 }
 
 function openG(ds) { 
-    activeDate = ds; const c = userData.cantieri[cIdx]; $('#g-date-title').text("GIORNALE DEL " + ds); 
-    $('#badge-cig').text("CIG: " + (c.cig || '-')); $('#badge-cup').text("CUP: " + (c.cup || '-'));
+    activeDate = ds; const c = userData.cantieri[cIdx]; $('#g-date-title').text(ds.split('-').reverse().join('/')); 
     const g = (c.giornali || {})[ds] || {}; $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || ''); 
     showSection('section-giornale'); renderPhotos(); renderTasks(); renderAppello(); 
     sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val(""); 
@@ -264,7 +261,7 @@ function loadSignature() {
 function saveSignatureNow() { 
     const r = $("#sign-role").val(); if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
     userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL(); 
-    autoSave(); alert("Firma acquisita correttamente.");
+    autoSave(); alert("Firma salvata.");
 }
 
 function autoSave() { 
@@ -276,7 +273,7 @@ function autoSave() {
 
 function renderPhotos() { 
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
-    if(g.photos) g.photos.forEach((p) => $('#photo-gallery').append(`<img src="${p}" style="width:70px; height:70px; object-fit:cover; border-radius:10px;">`)); 
+    if(g.photos) g.photos.forEach((p) => $('#photo-gallery').append(`<img src="${p}" style="width:50px; height:50px; object-fit:cover; border-radius:5px;">`)); 
 }
 
 async function uploadPhoto(input) { 
@@ -285,7 +282,7 @@ async function uploadPhoto(input) {
             const img = new Image(); img.src = e.target.result; img.onload = () => { 
                 const cvs = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width; 
                 cvs.width = MAX; cvs.height = img.height * scale; cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height); 
-                const comp = cvs.toDataURL('image/jpeg', 0.7); 
+                const comp = cvs.toDataURL('image/jpeg', 0.6); 
                 if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
                 if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = []; 
                 userData.cantieri[cIdx].giornali[activeDate].photos.push(comp); autoSave(); renderPhotos(); 
@@ -297,7 +294,7 @@ async function uploadPhoto(input) {
 function renderAppello() { 
     const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {}; const pres = g.presenti || []; 
     let h = ''; (c.anagraficaDitte || []).forEach(d => { 
-        h += `<div class="mb-3"><small class="section-label" style="font-size:0.6rem; color:var(--primary)">${d.nome}</small>`; 
+        h += `<div class="mb-2"><small class="fw-bold d-block" style="font-size:0.6rem; color:var(--primary)">${d.nome}</small>`; 
         d.operai.forEach(o => { const id = `${o} (${d.nome})`; h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`; }); 
         h += `</div>`; 
     }); $('#presenze-appello').html(h || '<small>Nessuna ditta.</small>'); 
@@ -329,8 +326,8 @@ function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input'
 function editCurrentCommessa() { 
     const c = userData.cantieri[cIdx]; $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || ''); 
     $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || ''); $('#c-dl').val(c.dl || ''); 
-    $('#c-adl').val(c.adl || ''); $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); 
-    $('#c-arup').val(c.arup || ''); tempDitte = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); 
+    $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); 
+    tempDitte = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); 
     renderAnagraficaDitte(); $('#modalCommessa').modal('show'); 
 }
 
@@ -348,7 +345,7 @@ function renderAnagraficaDitte() {
 function saveCommessaData() { 
     const data = { 
         nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), 
-        dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), 
+        dl: $('#c-dl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), 
         anagraficaDitte: tempDitte, giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}), 
         tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || []) 
     }; 
@@ -356,14 +353,11 @@ function saveCommessaData() {
         let currentShared = doc.exists ? doc.data().cantieri : []; 
         if(cIdx === -1) { currentShared.push(data); } 
         else { let index = currentShared.findIndex(c => c.nome === data.nome); if(index !== -1) currentShared[index] = data; else currentShared.push(data); } 
-        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { 
-            $('#modalCommessa').modal('hide'); 
-            alert("Anagrafica salvata.");
-        }); 
+        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { $('#modalCommessa').modal('hide'); alert("Salvato."); }); 
     }); 
 }
 
-function generatePDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("GIORNALE DI CANTIERE", 15, 20); doc.save("Giornale.pdf"); }
+function generatePDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("GIORNALE", 15, 20); doc.save("Giornale.pdf"); }
 </script>
 </body>
 </html>
