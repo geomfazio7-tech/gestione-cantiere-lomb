@@ -307,4 +307,65 @@ function renderAppello() {
 function togglePresenza(id) { 
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
     let g = userData.cantieri[cIdx].giornali[activeDate]; if(!g.presenti) g.presenti = []; 
-    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id
+    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id); else g.presenti.push(id); 
+    autoSave(); renderAppello(); 
+}
+
+function addT() { 
+    const v = $('#t-input').val(); if(!v) return; if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = []; 
+    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:v, q:$('#t-q').val()}); $('#t-input').val(''); 
+    autoSave(); renderTasks(); 
+}
+
+function renderTasks() { 
+    $('.quadrant').empty(); (userData.cantieri[cIdx].tasks || []).forEach(t => { 
+        $(`#list-q${t.q}`).append(`<div class="task-item" onclick="deleteTask(${t.id})"><span>${t.text}</span></div>`); 
+    }); 
+}
+
+function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); autoSave(); renderTasks(); }
+function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
+
+function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#modalCommessa').modal('show'); }
+
+function editCurrentCommessa() { 
+    const c = userData.cantieri[cIdx]; $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || ''); 
+    $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || ''); $('#c-dl').val(c.dl || ''); 
+    $('#c-adl').val(c.adl || ''); $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); 
+    $('#c-arup').val(c.arup || ''); tempDitte = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); 
+    renderAnagraficaDitte(); $('#modalCommessa').modal('show'); 
+}
+
+function addDittaAnagrafica() { const n = prompt("Ditta:"); if(n) { tempDitte.push({ nome: n.toUpperCase(), operai: [] }); renderAnagraficaDitte(); } }
+function addOperaioAnagrafica(di) { const n = prompt("Operaio:"); if(n) { tempDitte[di].operai.push(n.toUpperCase()); renderAnagraficaDitte(); } }
+
+function renderAnagraficaDitte() { 
+    let h = ''; tempDitte.forEach((d, di) => { 
+        h += `<div class="anagrafica-ditta"><strong>${d.nome}</strong><br>`; 
+        d.operai.forEach(o => h += `<span class="badge bg-light text-dark border me-1">${o}</span>`); 
+        h += `<br><button class="btn btn-link btn-sm p-0" onclick="addOperaioAnagrafica(${di})">+ Operaio</button></div>`; 
+    }); $('#anagrafica-imprese-list').html(h); 
+}
+
+function saveCommessaData() { 
+    const data = { 
+        nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), 
+        dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), 
+        anagraficaDitte: tempDitte, giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}), 
+        tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || []) 
+    }; 
+    db.collection('users').doc('archivio_condiviso').get().then(doc => { 
+        let currentShared = doc.exists ? doc.data().cantieri : []; 
+        if(cIdx === -1) { currentShared.push(data); } 
+        else { let index = currentShared.findIndex(c => c.nome === data.nome); if(index !== -1) currentShared[index] = data; else currentShared.push(data); } 
+        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { 
+            $('#modalCommessa').modal('hide'); 
+            alert("Anagrafica salvata correttamente.");
+        }); 
+    }); 
+}
+
+function generatePDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text("GIORNALE DI CANTIERE", 15, 20); doc.save("Giornale.pdf"); }
+</script>
+</body>
+</html>
