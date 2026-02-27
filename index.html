@@ -3,192 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionale Cantiere PRO - GeomFazio</title>
+    <title>Giornale Lavori - GeomFazio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #eef2f3; margin: 0; padding: 10px; padding-bottom: 50px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin: 10px auto; }
-        h1 { color: #2c3e50; font-size: 20px; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        h2 { color: #2980b9; font-size: 16px; margin-top: 20px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-green { background: #27ae60; }
-        .btn-orange { background: #e67e22; }
-        .btn-red { background: #e74c3c; }
-        #appContent, #sezioneGiornale, #sezioneArchivio { display: none; }
-        .operaio-item { display: flex; align-items: center; background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 5px; }
-        .operaio-item input { width: auto; margin-right: 10px; }
-        #previewFoto { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; border: 1px solid #ccc; }
-        .giornale-archiviato { border-left: 5px solid #27ae60; background: #f9f9f9; padding: 10px; margin: 10px 0; font-size: 13px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h1 { color: #2c3e50; margin-bottom: 20px; font-size: 24px; }
+        h3 { font-size: 16px; color: #3498db; margin-top: 20px; text-align: left; border-bottom: 1px solid #ddd; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background: #2980b9; }
+        #appContent { display: none; }
+        .success-msg { color: #27ae60; font-weight: bold; }
+        .checklist { text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; }
+        .item-check { display: flex; align-items: center; margin-bottom: 5px; font-size: 14px; }
+        .item-check input { width: auto; margin-right: 10px; margin: 0 10px 0 0; }
+        .thumb-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div id="loginCard" class="card">
-        <h1>🔐 Accesso Cantiere</h1>
-        <input type="password" id="pinInput" placeholder="Inserisci PIN" inputmode="numeric">
+        <h1>Accesso Cantiere</h1>
+        <p>Inserisci il PIN per operare</p>
+        <input type="password" id="pinInput" placeholder="****" inputmode="numeric">
         <button onclick="validaPin()">ACCEDI</button>
     </div>
 
     <div id="appContent" class="card">
-        <h1>⚙️ Configurazione Commessa</h1>
-        <label>Impresa (SIRIMED o Sub):</label>
-        <input type="text" id="nomeDitta" placeholder="Nome Ditta">
-        <label>Lavoratore e Mansione:</label>
-        <input type="text" id="nomeOperaio" placeholder="Es: Mario Rossi - Edile">
-        <button class="btn-green" onclick="aggiungiAlDatabase()">AGGIUNGI ALL'ELENCO</button>
-        <div id="listaDatabase"></div>
-        <hr>
-        <button onclick="vaiAlGiornale()">VAI AL GIORNALE DI OGGI →</button>
-        <button class="btn-orange" onclick="vaiAllArchivio()">📂 VEDI TUTTI I GIORNALI SALVATI</button>
-    </div>
-
-    <div id="sezioneGiornale" class="card">
-        <h1>📝 Giornale del <span id="dataTitolo"></span></h1>
-        <input type="date" id="dataGiorno">
+        <h1 class="success-msg">✅ Sistema Attivo</h1>
         
-        <h2>👷 Personale Presente:</h2>
-        <div id="presenzeChecklist"></div>
+        <input type="date" id="dataGiorno">
 
-        <h2>📸 Foto del Giorno:</h2>
-        <input type="file" id="fotoInput" accept="image/*" multiple capture="camera" onchange="anteprimaImmagini()">
-        <div id="previewFoto"></div>
+        <h3>1. Configura Commessa</h3>
+        <input type="text" id="nomeDitta" placeholder="Nome Impresa (es. SIRIMED)">
+        <input type="text" id="nomeOperaio" placeholder="Nome Operaio e Ruolo">
+        <button onclick="aggiungiMaestranza()" style="font-size:14px; padding:10px; background:#27ae60;">Aggiungi a Elenco</button>
 
-        <h2>📝 Note Lavorazioni:</h2>
-        <textarea id="noteLavoro" rows="4" placeholder="Descrivi i lavori..."></textarea>
+        <h3>2. Personale Presente</h3>
+        <div id="listaCheck" class="checklist">
+            <p style="color:#999; font-size:12px;">Nessun nome inserito sopra.</p>
+        </div>
 
-        <button class="btn-green" onclick="salvaInArchivio()">SALVA NEL DATABASE LOCALE</button>
-        <button class="btn-red" onclick="tornaConfig()">ANNULLA</button>
-    </div>
+        <h3>3. Foto Cantiere</h3>
+        <input type="file" id="fotoInput" accept="image/*" capture="camera" multiple onchange="anteprimaFoto()">
+        <div id="thumbPreview" class="thumb-container"></div>
 
-    <div id="sezioneArchivio" class="card">
-        <h1>📂 Archivio Giornali</h1>
-        <button onclick="scaricaTutto()">📥 SCARICA TUTTI (FORMATO EXCEL/TESTO)</button>
-        <div id="elencoArchivio"></div>
-        <button class="btn-red" onclick="cancellaArchivio()">SVUOTA ARCHIVIO</button>
-        <button onclick="tornaConfig()">TORNA INDIETRO</button>
+        <h3>4. Note Lavorazioni</h3>
+        <textarea id="noteLavoro" placeholder="Descrizione attività..."></textarea>
+
+        <hr>
+        <button onclick="generaPDF()">GENERA PDF GIORNALE</button>
+        <button onclick="scaricaArchivio()" style="background:#e67e22;">SCARICA TUTTI I GIORNALI (.csv)</button>
+        <button onclick="location.reload()" style="background:#95a5a6;">Esci</button>
     </div>
 
     <script>
-        let databaseLavoratori = JSON.parse(localStorage.getItem('maestranze')) || [];
-        let archivioGiornali = JSON.parse(localStorage.getItem('giornali')) || [];
-        let fotoCaricate = [];
+        let maestranze = JSON.parse(localStorage.getItem('fazio_maestranze')) || [];
+        let archivio = JSON.parse(localStorage.getItem('fazio_archivio')) || [];
+        let fotoBase64 = [];
 
         function validaPin() {
             if (document.getElementById('pinInput').value === "9731") {
                 document.getElementById('loginCard').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-                aggiornaVistaDatabase();
+                document.getElementById('dataGiorno').valueAsDate = new Date();
+                aggiornaChecklist();
             } else { alert("PIN Errato!"); }
         }
 
-        function aggiungiAlDatabase() {
+        function aggiungiMaestranza() {
             const ditta = document.getElementById('nomeDitta').value;
-            const operaio = document.getElementById('nomeOperaio').value;
-            if (ditta && operaio) {
-                databaseLavoratori.push({ ditta, operaio });
-                localStorage.setItem('maestranze', JSON.stringify(databaseLavoratori));
-                aggiornaVistaDatabase();
+            const nome = document.getElementById('nomeOperaio').value;
+            if(ditta && nome) {
+                maestranze.push({ ditta, nome });
+                localStorage.setItem('fazio_maestranze', JSON.stringify(maestranze));
+                aggiornaChecklist();
                 document.getElementById('nomeOperaio').value = "";
             }
         }
 
-        function aggiornaVistaDatabase() {
-            const div = document.getElementById('listaDatabase');
-            div.innerHTML = "<h4>Anagrafica Attiva:</h4>";
-            databaseLavoratori.forEach(item => {
-                div.innerHTML += `<div style="font-size:12px;">• ${item.operaio} (${item.ditta})</div>`;
+        function aggiornaChecklist() {
+            const cont = document.getElementById('listaCheck');
+            if(maestranze.length === 0) return;
+            cont.innerHTML = "";
+            maestranze.forEach((m, i) => {
+                cont.innerHTML += `<div class="item-check"><input type="checkbox" class="op-check" value="${m.nome} (${m.ditta})"> ${m.nome} <small style="margin-left:5px; color:#666;">[${m.ditta}]</small></div>`;
             });
         }
 
-        function vaiAlGiornale() {
-            document.getElementById('appContent').style.display = 'none';
-            document.getElementById('sezioneGiornale').style.display = 'block';
-            document.getElementById('dataGiorno').valueAsDate = new Date();
-            costruisciChecklist();
-        }
-
-        function costruisciChecklist() {
-            const container = document.getElementById('presenzeChecklist');
-            container.innerHTML = databaseLavoratori.length ? "" : "Nessun lavoratore in anagrafica.";
-            databaseLavoratori.forEach((item, i) => {
-                container.innerHTML += `<div class="operaio-item"><input type="checkbox" class="checkOp" value="${item.operaio} [${item.ditta}]"> ${item.operaio}</div>`;
-            });
-        }
-
-        function anteprimaImmagini() {
+        function anteprimaFoto() {
             const files = document.getElementById('fotoInput').files;
-            const preview = document.getElementById('previewFoto');
+            const preview = document.getElementById('thumbPreview');
             preview.innerHTML = "";
-            fotoCaricate = [];
-
+            fotoBase64 = [];
             for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                let reader = new FileReader();
+                reader.onload = (e) => {
                     const img = document.createElement("img");
                     img.src = e.target.result;
                     img.className = "thumb";
                     preview.appendChild(img);
-                    fotoCaricate.push(e.target.result); // Salva in Base64 per il PDF
-                }
+                    fotoBase64.push(e.target.result);
+                };
                 reader.readAsDataURL(file);
             }
         }
 
-        function salvaInArchivio() {
+        function generaPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
             const data = document.getElementById('dataGiorno').value;
             const note = document.getElementById('noteLavoro').value;
-            let presenti = Array.from(document.querySelectorAll('.checkOp:checked')).map(c => c.value);
+            const selezionati = Array.from(document.querySelectorAll('.op-check:checked')).map(c => c.value);
 
-            const nuovoGiornale = { data, presenti, note, foto: fotoCaricate };
-            archivioGiornali.push(nuovoGiornale);
-            localStorage.setItem('giornali', JSON.stringify(archivioGiornali));
-            
-            alert("Giornale salvato correttamente nell'archivio!");
-            vaiAllArchivio();
+            doc.text(`GIORNALE DI CANTIERE - DATA: ${data}`, 10, 10);
+            doc.text("PERSONALE PRESENTE:", 10, 20);
+            let y = 30;
+            selezionati.forEach(p => { doc.text(`- ${p}`, 15, y); y += 10; });
+            doc.text("NOTE LAVORI:", 10, y + 10);
+            doc.text(note, 10, y + 20);
+
+            // Salvataggio in archivio interno
+            archivio.push({ data, selezionati, note });
+            localStorage.setItem('fazio_archivio', JSON.stringify(archivio));
+
+            doc.save(`Giornale_${data}.pdf`);
+            alert("PDF Generato e salvato in archivio!");
         }
 
-        function vaiAllArchivio() {
-            document.getElementById('appContent').style.display = 'none';
-            document.getElementById('sezioneGiornale').style.display = 'none';
-            document.getElementById('sezioneArchivio').style.display = 'block';
-            
-            const elenco = document.getElementById('elencoArchivio');
-            elenco.innerHTML = "";
-            archivioGiornali.forEach((g, i) => {
-                elenco.innerHTML += `<div class="giornale-archiviato">
-                    <b>Data: ${g.data}</b><br>
-                    Presenti: ${g.presenti.length}<br>
-                    Foto: ${g.foto.length}
-                </div>`;
+        function scaricaArchivio() {
+            let csv = "Data;Presenti;Note\n";
+            archivio.forEach(g => {
+                csv += `${g.data};${g.selezionati.join(",")};${g.note}\n`;
             });
-        }
-
-        function scaricaTutto() {
-            let csvContent = "data:text/csv;charset=utf-8,DATA;PRESENTI;NOTE\n";
-            archivioGiornali.forEach(g => {
-                csvContent += `${g.data};"${g.presenti.join(', ')}";"${g.note}"\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "archivio_giornali_sirimed.csv");
-            document.body.appendChild(link);
-            link.click();
-        }
-
-        function tornaConfig() {
-            document.getElementById('sezioneGiornale').style.display = 'none';
-            document.getElementById('sezioneArchivio').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-        }
-
-        function cancellaArchivio() {
-            if(confirm("Sei sicuro? Cancellerai tutti i giornali salvati.")) {
-                localStorage.removeItem('giornali');
-                archivioGiornali = [];
-                vaiAllArchivio();
-            }
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'archivio_giornali.csv';
+            a.click();
         }
     </script>
 </body>
