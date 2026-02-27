@@ -37,11 +37,12 @@
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #ddd; margin: 2px; cursor: pointer; background: white; }
         .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
         .anagrafica-ditta { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #0056b3; }
+        .info-header-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 12px; border-radius: 50px; color: #495057; font-weight: 600; }
     </style>
 </head>
 <body>
 
-<div class="container py-3" style="max-width: 1100px;">
+<div class="container py-3" style="max-width: 1200px;">
     <div id="auth-section" class="card p-4 shadow mt-5" style="display:none; border-radius: 20px;">
         <h4 class="text-center mb-4 fw-bold">Cantieri Cloud</h4>
         <input type="email" id="log-email" class="form-control mb-2" placeholder="Email">
@@ -90,64 +91,81 @@
 
         <section id="section-giornale">
             <div class="card p-4 shadow border-0" style="border-radius: 20px;">
-                <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                    <h5 id="g-date-title" class="m-0 fw-bold text-primary"></h5>
+                <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
+                    <div>
+                        <h5 id="g-date-title" class="m-0 fw-bold text-primary"></h5>
+                        <div class="d-flex gap-2 mt-2">
+                            <span id="badge-cig" class="info-header-badge">CIG: -</span>
+                            <span id="badge-cup" class="info-header-badge">CUP: -</span>
+                        </div>
+                    </div>
                     <button class="btn-close" onclick="showSection('section-calendar')"></button>
                 </div>
+
                 <div class="row">
                     <div class="col-md-4 border-end">
-                        <span class="section-label">📸 Foto</span>
+                        <span class="section-label">📸 Foto Cantiere</span>
                         <input type="file" id="photo-input" accept="image/*" capture="environment" multiple style="display:none" onchange="uploadPhoto(this)">
                         <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="document.getElementById('photo-input').click()">Aggiungi Foto</button>
                         <div id="photo-gallery" class="d-flex flex-wrap gap-2 mb-3"></div>
                         
-                        <span class="section-label">🌦️ Meteo</span>
-                        <input type="text" id="g-meteo" class="form-control mb-2 bg-light border-0" onchange="autoSave()">
+                        <span class="section-label">🌦️ Condizioni Meteo</span>
+                        <input type="text" id="g-meteo" class="form-control mb-3 bg-light border-0" onchange="autoSave()">
                         
-                        <span class="section-label">👷 Presenze Maestranze (Clicca per inserire)</span>
-                        <div id="presenze-appello" class="mb-3"></div>
+                        <span class="section-label">👷 Appello Maestranze</span>
+                        <div id="presenze-appello" class="mb-3 p-2 bg-light rounded" style="max-height: 300px; overflow-y: auto;"></div>
                         
-                        <span class="section-label">🏗️ Lavorazioni</span>
-                        <textarea id="g-lavorazioni" class="form-control mb-2 bg-light border-0" rows="4" onchange="autoSave()"></textarea>
-                        
-                        <span class="section-label text-danger">📌 Memo Privato</span>
-                        <textarea id="g-memo" class="form-control bg-light border-0" rows="2" onchange="autoSave()"></textarea>
+                        <span class="section-label">🏗️ Descrizione Lavorazioni</span>
+                        <textarea id="g-lavorazioni" class="form-control mb-3 bg-light border-0" rows="6" onchange="autoSave()"></textarea>
                     </div>
 
                     <div class="col-md-4 border-end">
-                        <span class="section-label text-center d-block">⚡ Attività</span>
+                        <span class="section-label text-center d-block">✍️ Firme del Giorno</span>
+                        <select id="sign-role" class="form-select mb-3 shadow-sm" onchange="loadSignature()">
+                            <option value="">Seleziona chi firma...</option>
+                            <option value="DL">Direttore Lavori</option>
+                            <option value="ADL">Assistente D.L.</option>
+                            <option value="CSE">Coord. Sicurezza</option>
+                            <option value="IMP">Impresa Esecutrice</option>
+                            <option value="RUP">RUP</option>
+                            <option value="ARUP">Assistente RUP</option>
+                        </select>
+                        <div id="sig-area" style="display:none" class="animate__animated animate__fadeIn">
+                            <div class="sig-box mb-2 shadow-sm"><canvas id="sig-pad"></canvas></div>
+                            <div class="d-flex justify-content-between mb-4">
+                                <button class="btn btn-sm btn-link text-muted" onclick="clearSig()">Cancella</button>
+                                <button class="btn btn-sm btn-success px-4 fw-bold shadow-sm" onclick="saveSignatureNow()">SALVA FIRMA</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-light p-3 rounded mb-4">
+                            <span class="section-label">📌 Memo Tecnico (Privato)</span>
+                            <textarea id="g-memo" class="form-control border-0" rows="3" placeholder="Note interne non visibili nel PDF..." onchange="autoSave()"></textarea>
+                        </div>
+
+                        <button class="btn btn-danger w-100 fw-bold py-3 shadow-sm mb-3" onclick="generatePDF()">
+                             SCARICA PDF GIORNALE
+                        </button>
+                    </div>
+
+                    <div class="col-md-4">
+                        <span class="section-label text-center d-block">⚡ Matrice Attività (Eisenhower)</span>
                         <div class="input-group input-group-sm mb-3">
-                            <input type="text" id="t-input" class="form-control" placeholder="Nuovo...">
-                            <select id="t-q" class="form-select" style="max-width:110px">
-                                <option value="1">URGENTE</option><option value="2">IMPORTANTE</option><option value="3">DELEGARE</option><option value="4">VARIE</option>
+                            <input type="text" id="t-input" class="form-control" placeholder="Nuovo task...">
+                            <select id="t-q" class="form-select" style="max-width:100px">
+                                <option value="1">Urgente</option>
+                                <option value="2">Import.</option>
+                                <option value="3">Delega</option>
+                                <option value="4">Varie</option>
                             </select>
                             <button class="btn btn-primary px-3" onclick="addT()">+</button>
                         </div>
                         <div class="row g-2">
-                            <div class="col-6"><span class="q-title">Urgente</span><div class="quadrant q-1" id="list-q1"></div></div>
-                            <div class="col-6"><span class="q-title">Importante</span><div class="quadrant q-2" id="list-q2"></div></div>
-                            <div class="col-6"><span class="q-title">Delegabile</span><div class="quadrant q-3" id="list-q3"></div></div>
-                            <div class="col-6"><span class="q-title">Varie</span><div class="quadrant q-4" id="list-q4"></div></div>
+                            <div class="col-6"><span class="q-title text-danger">Urgente</span><div class="quadrant q-1" id="list-q1"></div></div>
+                            <div class="col-6"><span class="q-title text-warning">Importante</span><div class="quadrant q-2" id="list-q2"></div></div>
+                            <div class="col-6"><span class="q-title text-primary">Delegabile</span><div class="quadrant q-3" id="list-q3"></div></div>
+                            <div class="col-6"><span class="q-title text-secondary">Varie</span><div class="quadrant q-4" id="list-q4"></div></div>
                         </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <span class="section-label">✍️ Firma Digitale</span>
-                        <select id="sign-role" class="form-select mb-2" onchange="loadSignature()">
-                            <option value="">Ruolo...</option>
-                            <option value="DL">Direttore Lavori</option>
-                            <option value="CSE">Coord. Sicurezza</option>
-                            <option value="IMP">Impresa Esecutrice</option>
-                            <option value="RUP">RUP</option>
-                        </select>
-                        <div id="sig-area" style="display:none">
-                            <div class="sig-box mb-2"><canvas id="sig-pad"></canvas></div>
-                            <div class="d-flex justify-content-between">
-                                <button class="btn btn-sm btn-link text-muted" onclick="clearSig()">Cancella</button>
-                                <button class="btn btn-sm btn-success px-4 fw-bold" onclick="saveSignatureNow()">CONFERMA</button>
-                            </div>
-                        </div>
-                        <button class="btn btn-danger w-100 mt-5 fw-bold py-3 shadow" onclick="generatePDF()">SCARICA PDF GIORNALE</button>
                     </div>
                 </div>
             </div>
@@ -170,21 +188,23 @@
     
     <hr>
     <div class="row">
-        <div class="col-md-6 border-end">
+        <div class="col-md-5 border-end">
             <span class="section-label">Figure Professionali</span>
             <input type="text" id="c-dl" class="form-control mb-1 form-control-sm" placeholder="Direttore Lavori">
-            <input type="text" id="c-cse" class="form-control mb-1 form-control-sm" placeholder="CSE">
-            <input type="text" id="c-rup" class="form-control mb-3 form-control-sm" placeholder="RUP">
+            <input type="text" id="c-adl" class="form-control mb-1 form-control-sm" placeholder="Assistente D.L.">
+            <input type="text" id="c-cse" class="form-control mb-1 form-control-sm" placeholder="Coord. Sicurezza">
+            <input type="text" id="c-rup" class="form-control mb-1 form-control-sm" placeholder="RUP">
+            <input type="text" id="c-arup" class="form-control mb-3 form-control-sm" placeholder="Assistente RUP">
         </div>
-        <div class="col-md-6">
-            <span class="section-label">Database Imprese e Operai</span>
+        <div class="col-md-7">
+            <span class="section-label">Imprese e Maestranze</span>
             <div id="anagrafica-imprese-list"></div>
-            <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="addDittaAnagrafica()">+ Aggiungi Ditta (Esecutrice o Sub)</button>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="addDittaAnagrafica()">+ Aggiungi Nuova Ditta</button>
         </div>
     </div>
 
     <div class="d-grid gap-2 mt-4">
-        <button class="btn btn-primary fw-bold" onclick="saveCommessaData()">SALVA TUTTI I DATI ANAGRAFICA</button>
+        <button class="btn btn-primary fw-bold p-3" onclick="saveCommessaData()">SALVA ANAGRAFICA COMMESSA</button>
         <button id="btn-elimina-c" class="btn btn-link btn-sm text-danger" onclick="deleteCurrentCommessa()" style="display:none">Elimina definitivamente commessa</button>
     </div>
 </div></div></div></div>
@@ -204,7 +224,7 @@ db.enablePersistence().catch(() => {});
 
 let userData = { cantieri: [] }; let uID = null; let cIdx = -1; let activeDate = ""; let sigPad;
 let currentViewDate = new Date();
-let tempDitte = []; // Gestione temporanea ditte in modale
+let tempDitte = []; 
 
 auth.onAuthStateChanged(user => { if (user) { uID = user.uid; $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
@@ -218,28 +238,22 @@ function loadDB() {
 
 function renderCantieri() {
     let h = ''; (userData.cantieri || []).forEach((c, i) => {
-        h += `<div class="col-6 col-md-4"><div class="card p-3 shadow-sm border-0 h-100 text-center" onclick="openC(${i})" style="cursor:pointer; border-radius:15px"><b>${c.nome}</b><br><small class="text-muted">${c.cig || 'Rif. assente'}</small></div></div>`;
+        h += `<div class="col-6 col-md-4"><div class="card p-3 shadow-sm border-0 h-100 text-center" onclick="openC(${i})" style="cursor:pointer; border-radius:15px"><b>${c.nome}</b><br><small class="text-muted">CIG: ${c.cig || '-'}</small></div></div>`;
     });
     $('#cantieri-grid').html(h);
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
 
-// ANAGRAFICA DITTE E OPERAI
-function openModaleNuovo() { 
-    cIdx = -1; tempDitte = []; 
-    $('#modalCommessa input').val(''); 
-    renderAnagraficaDitte();
-    $('#btn-elimina-c').hide(); 
-    $('#modalCommessa').modal('show'); 
-}
+// ANAGRAFICA 
+function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#btn-elimina-c').hide(); $('#modalCommessa').modal('show'); }
 
 function editCurrentCommessa() {
     const c = userData.cantieri[cIdx];
     $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || '');
     $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || '');
-    $('#c-dl').val(c.dl || ''); $('#c-cse').val(c.cse || '');
-    $('#c-rup').val(c.rup || '');
+    $('#c-dl').val(c.dl || ''); $('#c-adl').val(c.adl || ''); $('#c-cse').val(c.cse || '');
+    $('#c-rup').val(c.rup || ''); $('#c-arup').val(c.arup || '');
     tempDitte = c.anagraficaDitte || [];
     renderAnagraficaDitte();
     $('#btn-elimina-c').show(); $('#modalCommessa').modal('show');
@@ -247,16 +261,12 @@ function editCurrentCommessa() {
 
 function addDittaAnagrafica() {
     const nome = prompt("Nome della Ditta:");
-    if(!nome) return;
-    tempDitte.push({ nome: nome.toUpperCase(), operai: [] });
-    renderAnagraficaDitte();
+    if(!nome) return; tempDitte.push({ nome: nome.toUpperCase(), operai: [] }); renderAnagraficaDitte();
 }
 
 function addOperaioAnagrafica(dIdx) {
     const nome = prompt("Nome e Cognome Operaio:");
-    if(!nome) return;
-    tempDitte[dIdx].operai.push(nome.toUpperCase());
-    renderAnagraficaDitte();
+    if(!nome) return; tempDitte[dIdx].operai.push(nome.toUpperCase()); renderAnagraficaDitte();
 }
 
 function removeOperaio(dIdx, oIdx) { tempDitte[dIdx].operai.splice(oIdx, 1); renderAnagraficaDitte(); }
@@ -266,13 +276,8 @@ function renderAnagraficaDitte() {
     let h = '';
     tempDitte.forEach((d, di) => {
         h += `<div class="anagrafica-ditta">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong>${d.nome}</strong>
-                <button class="btn btn-sm btn-outline-danger border-0" onclick="removeDitta(${di})">×</button>
-            </div>`;
-        d.operai.forEach((o, oi) => {
-            h += `<span class="badge bg-white text-dark border me-1 mb-1">${o} <span class="text-danger ms-1" style="cursor:pointer" onclick="removeOperaio(${di},${oi})">×</span></span>`;
-        });
+            <div class="d-flex justify-content-between align-items-center mb-2"><strong>${d.nome}</strong><button class="btn btn-sm btn-outline-danger border-0" onclick="removeDitta(${di})">×</button></div>`;
+        d.operai.forEach((o, oi) => { h += `<span class="badge bg-white text-dark border me-1 mb-1 small">${o} <span class="text-danger ms-1" style="cursor:pointer" onclick="removeOperaio(${di},${oi})">×</span></span>`; });
         h += `<br><button class="btn btn-link btn-sm p-0 mt-1" onclick="addOperaioAnagrafica(${di})">+ Aggiungi Operaio</button></div>`;
     });
     $('#anagrafica-imprese-list').html(h);
@@ -281,7 +286,7 @@ function renderAnagraficaDitte() {
 function saveCommessaData() {
     const data = {
         nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(),
-        dl: $('#c-dl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(),
+        dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(),
         anagraficaDitte: tempDitte,
         giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}),
         tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || [])
@@ -290,15 +295,14 @@ function saveCommessaData() {
     db.collection('users').doc(uID).set(userData).then(() => $('#modalCommessa').modal('hide'));
 }
 
-// GIORNALE - APPELLO OPERAI
+// APPELLO
 function renderAppello() {
     const c = userData.cantieri[cIdx];
     const g = c.giornali[activeDate] || {};
-    const presenti = g.presenti || []; // Array di stringhe "NomeOperaio (NomeDitta)"
-    
+    const presenti = g.presenti || [];
     let h = '';
     (c.anagraficaDitte || []).forEach(d => {
-        h += `<div class="mb-2"><small class="fw-bold text-muted border-bottom d-block mb-1">${d.nome}</small>`;
+        h += `<div class="mb-2"><small class="fw-bold text-primary d-block mb-1" style="font-size:0.65rem">${d.nome}</small>`;
         d.operai.forEach(o => {
             const idOperaio = `${o} (${d.nome})`;
             const isPresente = presenti.includes(idOperaio);
@@ -306,29 +310,24 @@ function renderAppello() {
         });
         h += `</div>`;
     });
-    $('#presenze-appello').html(h || '<small>Nessun operaio in anagrafica.</small>');
+    $('#presenze-appello').html(h || '<small class="text-muted">Configura le ditte in Anagrafica.</small>');
 }
 
 function togglePresenza(id) {
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
     let g = userData.cantieri[cIdx].giornali[activeDate];
     if(!g.presenti) g.presenti = [];
-    
-    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id);
-    else g.presenti.push(id);
-    
-    autoSave();
-    renderAppello();
+    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id); else g.presenti.push(id);
+    autoSave(); renderAppello();
 }
 
-// CALENDARIO E GIORNALE BASE
+// CALENDARIO E NAVIGAZIONE
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
 function renderCal() {
     const year = currentViewDate.getFullYear(); const month = currentViewDate.getMonth();
     const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     $('#current-month-display').text(`${monthNames[month]} ${year}`);
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
     const adj = firstDay === 0 ? 6 : firstDay - 1;
     let h = '';
     for(let x=0; x<adj; x++) h += `<div class="cal-day cal-empty"></div>`;
@@ -343,8 +342,10 @@ function renderCal() {
 }
 
 function openG(ds) {
-    activeDate = ds; $('#g-date-title').text("GIORNALE DEL " + ds);
-    const g = (userData.cantieri[cIdx].giornali || {})[ds] || {};
+    activeDate = ds; const c = userData.cantieri[cIdx];
+    $('#g-date-title').text("GIORNALE DEL " + ds);
+    $('#badge-cig').text("CIG: " + (c.cig || '-')); $('#badge-cup').text("CUP: " + (c.cup || '-'));
+    const g = (c.giornali || {})[ds] || {};
     $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || '');
     showSection('section-giornale'); renderPhotos(); renderTasks(); renderAppello();
     sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val("");
@@ -357,77 +358,29 @@ function autoSave() {
     db.collection('users').doc(uID).set(userData);
 }
 
-// PDF POTENZIATO
-function generatePDF() {
-    const { jsPDF } = window.jspdf; const doc = new jsPDF();
-    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
-    
-    doc.setFontSize(18); doc.setTextColor(0, 86, 179); doc.text("GIORNALE DI CANTIERE", 15, 20);
-    doc.setFontSize(10); doc.setTextColor(0);
-    doc.text(`CANTIERE: ${c.nome}`, 15, 30);
-    doc.text(`DATA: ${activeDate} | CIG: ${c.cig || '-'}`, 15, 35);
-    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 15, 40, {maxWidth: 180});
-
-    // Maestranze nel PDF
-    const presenti = g.presenti || [];
-    let dittePresenti = {};
-    presenti.forEach(p => {
-        const ditta = p.substring(p.indexOf('(')+1, p.indexOf(')'));
-        const nome = p.substring(0, p.indexOf('(')).trim();
-        if(!dittePresenti[ditta]) dittePresenti[ditta] = [];
-        dittePresenti[ditta].push(nome);
-    });
-
-    let maestranzeBody = [];
-    for(let ditta in dittePresenti) {
-        maestranzeBody.push([ditta, dittePresenti[ditta].join(", ")]);
-    }
-
-    doc.autoTable({
-        startY: 50,
-        head: [['Ditta', 'Maestranze Presenti']],
-        body: maestranzeBody.length ? maestranzeBody : [['-', 'Nessuna presenza registrata']],
-        theme: 'grid', headStyles: {fillColor: [0, 86, 179]}
-    });
-
-    doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 5,
-        head: [['Lavorazioni / Annotazioni']],
-        body: [[g.lavorazioni || '-']],
-        theme: 'grid'
-    });
-
-    // Firme
-    let fy = doc.lastAutoTable.finalY + 10;
-    const roles = { DL: "Dir. Lavori", CSE: "Coord. Sicurezza", IMP: "Impresa", RUP: "RUP" };
-    let fx = 15;
-    Object.keys(roles).forEach(r => {
-        if(g['firma_'+r]) {
-            doc.setFontSize(8); doc.text(roles[r], fx, fy);
-            doc.addImage(g['firma_'+r], 'PNG', fx, fy+2, 35, 12);
-            fx += 45;
-        }
-    });
-
-    if(g.photos && g.photos.length > 0) {
-        doc.addPage(); doc.text("ALLEGATO FOTOGRAFICO", 15, 15);
-        let py = 25;
-        g.photos.forEach(p => {
-            if(py > 220) { doc.addPage(); py = 20; }
-            doc.addImage(p, 'JPEG', 15, py, 80, 60);
-            py += 70;
-        });
-    }
-    doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
+// FIRME E PDF
+function loadSignature() {
+    const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide();
+    $("#sig-area").show();
+    const canvas = document.getElementById("sig-pad");
+    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    sigPad.clear();
+    const g = userData.cantieri[cIdx].giornali[activeDate] || {};
+    if(g['firma_'+r]) sigPad.fromDataURL(g['firma_'+r]);
 }
+function saveSignatureNow() {
+    const r = $("#sign-role").val();
+    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
+    userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL();
+    db.collection('users').doc(uID).set(userData).then(() => alert("Firma acquisita correttamente"));
+}
+function clearSig() { sigPad.clear(); }
 
-// RESTANTI FUNZIONI (Compressione, Task, etc - Invariate)
 async function compressImage(base64) {
     return new Promise(res => {
         const img = new Image(); img.src = base64;
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX = 800; const scale = MAX / img.width;
+            const canvas = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width;
             canvas.width = MAX; canvas.height = img.height * scale;
             canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
             res(canvas.toDataURL('image/jpeg', 0.7));
@@ -449,8 +402,67 @@ async function uploadPhoto(input) {
 }
 function renderPhotos() {
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {};
-    if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:55px; height:55px; object-fit:cover; border-radius:8px" onclick="if(confirm('Elimina?')){g.photos.splice(${i},1);autoSave();renderPhotos();}">`));
+    if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:60px; height:60px; object-fit:cover; border-radius:8px" onclick="if(confirm('Elimina foto?')){g.photos.splice(${i},1);autoSave();renderPhotos();}">`));
 }
+
+function generatePDF() {
+    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
+    
+    doc.setFontSize(18); doc.setTextColor(0, 86, 179); doc.text("GIORNALE DI CANTIERE", 15, 20);
+    doc.setFontSize(9); doc.setTextColor(100); doc.text(`Generato il: ${new Date().toLocaleString()}`, 150, 20);
+    
+    doc.setFontSize(11); doc.setTextColor(0);
+    doc.text(`CANTIERE: ${c.nome}`, 15, 32);
+    doc.text(`DATA: ${activeDate}`, 15, 38);
+    doc.text(`RIFERIMENTI: CIG ${c.cig || '-'} | CUP ${c.cup || '-'}`, 15, 44);
+    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 15, 50, {maxWidth: 180});
+
+    // Maestranze
+    const presenti = g.presenti || []; let dittePresenti = {};
+    presenti.forEach(p => {
+        const ditta = p.substring(p.indexOf('(')+1, p.indexOf(')'));
+        const nome = p.substring(0, p.indexOf('(')).trim();
+        if(!dittePresenti[ditta]) dittePresenti[ditta] = []; dittePresenti[ditta].push(nome);
+    });
+    let maestranzeBody = []; for(let ditta in dittePresenti) { maestranzeBody.push([ditta, dittePresenti[ditta].join(", ")]); }
+
+    doc.autoTable({
+        startY: 58, head: [['Ditta / Impresa', 'Personale Presente']],
+        body: maestranzeBody.length ? maestranzeBody : [['-', 'Nessuna presenza registrata']],
+        theme: 'grid', headStyles: {fillColor: [0, 86, 179]}
+    });
+
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 5, head: [['Lavorazioni del Giorno / Annotazioni Tecniche']],
+        body: [[g.lavorazioni || '-']], theme: 'grid'
+    });
+
+    // Firme in calce
+    let fy = doc.lastAutoTable.finalY + 15;
+    const roles = { DL: "Dir. Lavori", ADL: "Ass. D.L.", CSE: "C.S.E.", IMP: "Impresa", RUP: "R.U.P.", ARUP: "Ass. RUP" };
+    let fx = 15;
+    Object.keys(roles).forEach(r => {
+        if(g['firma_'+r]) {
+            if(fx > 150) { fx = 15; fy += 25; }
+            doc.setFontSize(7); doc.text(roles[r], fx, fy);
+            doc.addImage(g['firma_'+r], 'PNG', fx, fy+2, 30, 10);
+            fx += 35;
+        }
+    });
+
+    if(g.photos && g.photos.length > 0) {
+        doc.addPage(); doc.setFontSize(14); doc.text("ALLEGATO FOTOGRAFICO", 15, 20);
+        let py = 30;
+        g.photos.forEach(p => {
+            if(py > 230) { doc.addPage(); py = 20; }
+            doc.addImage(p, 'JPEG', 15, py, 90, 65); py += 75;
+        });
+    }
+    doc.save(`Giornale_${c.nome.replace(/\s+/g, '_')}_${activeDate}.pdf`);
+}
+
+// EISENHOWER
 function addT() {
     const val = $('#t-input').val(); if(!val) return;
     if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
@@ -464,22 +476,7 @@ function renderTasks() {
     });
 }
 function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); db.collection('users').doc(uID).set(userData).then(() => renderTasks()); }
-function loadSignature() {
-    const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide();
-    $("#sig-area").show();
-    const canvas = document.getElementById("sig-pad");
-    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-    sigPad.clear();
-    const g = userData.cantieri[cIdx].giornali[activeDate] || {};
-    if(g['firma_'+r]) sigPad.fromDataURL(g['firma_'+r]);
-}
-function saveSignatureNow() {
-    const r = $("#sign-role").val();
-    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
-    userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL();
-    db.collection('users').doc(uID).set(userData).then(() => alert("Firma acquisita"));
-}
-function clearSig() { sigPad.clear(); }
+
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
 function deleteCurrentCommessa() { if(confirm("Eliminare definitivamente?")) { userData.cantieri.splice(cIdx, 1); db.collection('users').doc(uID).set(userData).then(() => { $('#modalCommessa').modal('hide'); showSection('section-list'); }); } }
 </script>
