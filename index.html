@@ -3,148 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giornale Lavori - GeomFazio</title>
+    <title>Gestione Cantiere - GeomFazio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        h1 { color: #2c3e50; margin-bottom: 20px; font-size: 24px; }
-        h3 { font-size: 16px; color: #3498db; margin-top: 20px; text-align: left; border-bottom: 1px solid #ddd; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
-        button:hover { background: #2980b9; }
-        #appContent { display: none; }
-        .success-msg { color: #27ae60; font-weight: bold; }
-        .checklist { text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; }
-        .item-check { display: flex; align-items: center; margin-bottom: 5px; font-size: 14px; }
-        .item-check input { width: auto; margin-right: 10px; margin: 0 10px 0 0; }
-        .thumb-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-        .thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
+        body { font-family: sans-serif; background: #f4f4f4; margin: 0; padding: 10px; text-align: center; }
+        .container { max-width: 500px; margin: 10px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+        h1 { color: #0056b3; font-size: 22px; }
+        h2 { color: #333; font-size: 18px; margin-top: 20px; text-align: left; border-bottom: 1px solid #ddd; }
+        input, button, textarea, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button { background: #0056b3; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-sec { background: #6c757d; }
+        .btn-save { background: #28a745; }
+        .hidden { display: none; }
+        
+        /* Matrice Eisenhower */
+        .eisen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 15px 0; }
+        .eisen-box { font-size: 10px; padding: 8px; border-radius: 5px; color: white; min-height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* Calendario */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 15px; }
+        .day { padding: 10px 0; background: #eee; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .day.completed { background: #28a745; color: white; font-weight: bold; }
+
+        /* Checklist */
+        .checklist { text-align: left; background: #f9f9f9; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .check-row { display: flex; align-items: center; margin-bottom: 5px; }
+        .check-row input { width: auto; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="loginCard" class="card">
+    <div id="login" class="container">
         <h1>Accesso Cantiere</h1>
-        <p>Inserisci il PIN per operare</p>
-        <input type="password" id="pinInput" placeholder="****" inputmode="numeric">
-        <button onclick="validaPin()">ACCEDI</button>
+        <input type="password" id="pin" placeholder="Inserisci PIN" inputmode="numeric">
+        <button onclick="checkPin()">ACCEDI</button>
     </div>
 
-    <div id="appContent" class="card">
-        <h1 class="success-msg">✅ Sistema Attivo</h1>
-        
-        <input type="date" id="dataGiorno">
+    <div id="dashCommesse" class="container hidden">
+        <h1>Benvenuto Geom. Fazio</h1>
+        <h2>Le Mie Commesse</h2>
+        <div id="listaCommesse"></div>
+        <button onclick="nuovaCommessa()">+ NUOVA COMMESSA</button>
+        <button class="btn-sec" onclick="location.reload()">Esci</button>
+    </div>
 
-        <h3>1. Configura Commessa</h3>
-        <input type="text" id="nomeDitta" placeholder="Nome Impresa (es. SIRIMED)">
-        <input type="text" id="nomeOperaio" placeholder="Nome Operaio e Ruolo">
-        <button onclick="aggiungiMaestranza()" style="font-size:14px; padding:10px; background:#27ae60;">Aggiungi a Elenco</button>
+    <div id="configCommessa" class="container hidden">
+        <h1 id="nomeCommessaConfig">Configura</h1>
+        <h2>Imprese e Maestranze</h2>
+        <input type="text" id="inpDitta" placeholder="Ditta (es: SIRIMED)">
+        <input type="text" id="inpOperaio" placeholder="Nome Operaio e Mansione">
+        <button onclick="aggiungiOperaio()">AGGIUNGI ALL'ELENCO</button>
+        <div id="anagraficaLista" style="text-align:left; font-size:12px; margin:10px 0;"></div>
+        <button class="btn-save" onclick="vaiAlCalendario()">VAI AL CALENDARIO →</button>
+    </div>
 
-        <h3>2. Personale Presente</h3>
-        <div id="listaCheck" class="checklist">
-            <p style="color:#999; font-size:12px;">Nessun nome inserito sopra.</p>
+    <div id="viewCantiere" class="container hidden">
+        <h1 id="titoloCantiere">Cantiere</h1>
+        <div class="calendar-grid" id="gridGiorni"></div>
+
+        <h2>Matrice di Eisenhower</h2>
+        <div class="eisen-grid">
+            <div class="eisen-box" style="background:#dc3545;">URGENTE / IMPORTANTE</div>
+            <div class="eisen-box" style="background:#ffc107; color:black;">IMPORTANTE / NON URG.</div>
+            <div class="eisen-box" style="background:#007bff;">URGENTE / NON IMP.</div>
+            <div class="eisen-box" style="background:#6c757d;">NON URG. / NON IMP.</div>
         </div>
 
-        <h3>3. Foto Cantiere</h3>
-        <input type="file" id="fotoInput" accept="image/*" capture="camera" multiple onchange="anteprimaFoto()">
-        <div id="thumbPreview" class="thumb-container"></div>
+        <button onclick="apriConfig()">MODIFICA MAESTRANZE</button>
+        <button class="btn-sec" onclick="mostraDash()">TORNA ALLE COMMESSE</button>
+    </div>
 
-        <h3>4. Note Lavorazioni</h3>
-        <textarea id="noteLavoro" placeholder="Descrizione attività..."></textarea>
-
-        <hr>
-        <button onclick="generaPDF()">GENERA PDF GIORNALE</button>
-        <button onclick="scaricaArchivio()" style="background:#e67e22;">SCARICA TUTTI I GIORNALI (.csv)</button>
-        <button onclick="location.reload()" style="background:#95a5a6;">Esci</button>
+    <div id="giornaleLavori" class="container hidden">
+        <h1 id="dataSelezionata">Giornale</h1>
+        <h2>Personale Presente</h2>
+        <div id="checklistPresenze" class="checklist"></div>
+        
+        <h2>Foto Cantiere</h2>
+        <input type="file" id="fotoInput" accept="image/*" capture="camera" multiple>
+        
+        <h2>Note Lavorazioni</h2>
+        <textarea id="noteGiorno" rows="4" placeholder="Cosa è stato fatto oggi?"></textarea>
+        
+        <button class="btn-save" onclick="salvaGiorno()">SALVA GIORNALE E PDF</button>
+        <button class="btn-sec" onclick="vaiAlCalendario()">ANNULLA</button>
     </div>
 
     <script>
-        let maestranze = JSON.parse(localStorage.getItem('fazio_maestranze')) || [];
-        let archivio = JSON.parse(localStorage.getItem('fazio_archivio')) || [];
-        let fotoBase64 = [];
+        let db = JSON.parse(localStorage.getItem('geom_fazio_db')) || [];
+        let curIdx = null;
 
-        function validaPin() {
-            if (document.getElementById('pinInput').value === "9731") {
-                document.getElementById('loginCard').style.display = 'none';
-                document.getElementById('appContent').style.display = 'block';
-                document.getElementById('dataGiorno').valueAsDate = new Date();
-                aggiornaChecklist();
-            } else { alert("PIN Errato!"); }
+        function checkPin() {
+            if (document.getElementById('pin').value === '9731') {
+                document.getElementById('login').classList.add('hidden');
+                mostraDash();
+            } else { alert('PIN Errato!'); }
         }
 
-        function aggiungiMaestranza() {
-            const ditta = document.getElementById('nomeDitta').value;
-            const nome = document.getElementById('nomeOperaio').value;
-            if(ditta && nome) {
-                maestranze.push({ ditta, nome });
-                localStorage.setItem('fazio_maestranze', JSON.stringify(maestranze));
-                aggiornaChecklist();
-                document.getElementById('nomeOperaio').value = "";
-            }
-        }
-
-        function aggiornaChecklist() {
-            const cont = document.getElementById('listaCheck');
-            if(maestranze.length === 0) return;
-            cont.innerHTML = "";
-            maestranze.forEach((m, i) => {
-                cont.innerHTML += `<div class="item-check"><input type="checkbox" class="op-check" value="${m.nome} (${m.ditta})"> ${m.nome} <small style="margin-left:5px; color:#666;">[${m.ditta}]</small></div>`;
+        function mostraDash() {
+            curIdx = null;
+            document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+            document.getElementById('dashCommesse').classList.remove('hidden');
+            const lista = document.getElementById('listaCommesse');
+            lista.innerHTML = db.length ? "" : "<p>Nessuna commessa salvata.</p>";
+            db.forEach((c, i) => {
+                lista.innerHTML += `<button style="background:white; color:#0056b3; border:1px solid #0056b3;" onclick="apriCantiere(${i})">${c.nome}</button>`;
             });
         }
 
-        function anteprimaFoto() {
-            const files = document.getElementById('fotoInput').files;
-            const preview = document.getElementById('thumbPreview');
-            preview.innerHTML = "";
-            fotoBase64 = [];
-            for (let file of files) {
-                let reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.className = "thumb";
-                    preview.appendChild(img);
-                    fotoBase64.push(e.target.result);
-                };
-                reader.readAsDataURL(file);
+        function nuovaCommessa() {
+            let n = prompt("Nome della Commessa:");
+            if(n) { db.push({ nome: n, maestranze: [], giornali: {} }); salva(); mostraDash(); }
+        }
+
+        function apriCantiere(i) {
+            curIdx = i;
+            vaiAlCalendario();
+        }
+
+        function apriConfig() {
+            document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+            document.getElementById('configCommessa').classList.remove('hidden');
+            document.getElementById('nomeCommessaConfig').innerText = db[curIdx].nome;
+            aggiornaAnagrafica();
+        }
+
+        function aggiungiOperaio() {
+            const d = document.getElementById('inpDitta').value;
+            const o = document.getElementById('inpOperaio').value;
+            if(d && o) {
+                db[curIdx].maestranze.push({ ditta: d, nome: o });
+                salva(); aggiornaAnagrafica();
+                document.getElementById('inpOperaio').value = "";
             }
         }
 
-        function generaPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const data = document.getElementById('dataGiorno').value;
-            const note = document.getElementById('noteLavoro').value;
-            const selezionati = Array.from(document.querySelectorAll('.op-check:checked')).map(c => c.value);
-
-            doc.text(`GIORNALE DI CANTIERE - DATA: ${data}`, 10, 10);
-            doc.text("PERSONALE PRESENTE:", 10, 20);
-            let y = 30;
-            selezionati.forEach(p => { doc.text(`- ${p}`, 15, y); y += 10; });
-            doc.text("NOTE LAVORI:", 10, y + 10);
-            doc.text(note, 10, y + 20);
-
-            // Salvataggio in archivio interno
-            archivio.push({ data, selezionati, note });
-            localStorage.setItem('fazio_archivio', JSON.stringify(archivio));
-
-            doc.save(`Giornale_${data}.pdf`);
-            alert("PDF Generato e salvato in archivio!");
+        function aggiornaAnagrafica() {
+            const l = document.getElementById('anagraficaLista');
+            l.innerHTML = "<b>Personale Registrato:</b><br>";
+            db[curIdx].maestranze.forEach(m => { l.innerHTML += `• ${m.nome} [${m.ditta}]<br>`; });
         }
 
-        function scaricaArchivio() {
-            let csv = "Data;Presenti;Note\n";
-            archivio.forEach(g => {
-                csv += `${g.data};${g.selezionati.join(",")};${g.note}\n`;
+        function vaiAlCalendario() {
+            document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+            document.getElementById('viewCantiere').classList.remove('hidden');
+            document.getElementById('titoloCantiere').innerText = db[curIdx].nome;
+            
+            const grid = document.getElementById('gridGiorni');
+            grid.innerHTML = "";
+            for(let i=1; i<=31; i++) {
+                let status = db[curIdx].giornali[i] ? "completed" : "";
+                grid.innerHTML += `<div class="day ${status}" onclick="apriGiornale(${i})">${i}</div>`;
+            }
+        }
+
+        function apriGiornale(g) {
+            document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+            document.getElementById('giornaleLavori').classList.remove('hidden');
+            document.getElementById('dataSelezionata').innerText = "Giorno " + g;
+            document.getElementById('dataSelezionata').dataset.g = g;
+
+            const list = document.getElementById('checklistPresenze');
+            list.innerHTML = db[curIdx].maestranze.length ? "" : "Nessuna ditta configurata.";
+            db[curIdx].maestranze.forEach((m, i) => {
+                list.innerHTML += `<div class="check-row"><input type="checkbox" class="p-check" value="${m.nome} (${m.ditta})"> ${m.nome} [${m.ditta}]</div>`;
             });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'archivio_giornali.csv';
-            a.click();
         }
+
+        function salvaGiorno() {
+            let g = document.getElementById('dataSelezionata').dataset.g;
+            let note = document.getElementById('noteGiorno').value;
+            let pres = Array.from(document.querySelectorAll('.p-check:checked')).map(c => c.value);
+            
+            db[curIdx].giornali[g] = { pres, note };
+            salva();
+            alert("Giornale salvato! PDF in fase di sviluppo.");
+            vaiAlCalendario();
+        }
+
+        function salva() { localStorage.setItem('geom_fazio_db', JSON.stringify(db)); }
     </script>
 </body>
 </html>
