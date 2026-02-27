@@ -18,151 +18,163 @@
         :root { --primary: #0056b3; --past: #f1f3f5; --today: #cfe2ff; --q1: #f8d7da; --q2: #fff3cd; --q3: #cfe2ff; --q4: #f8f9fa; }
         body { background: #f4f7f9; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         section { display: none; } .active-section { display: block; }
-        .calendar-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .cal-header { font-size: 0.7rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; }
-        .cal-day { min-height: 85px; border-radius: 12px; border: 1px solid #edf2f7; padding: 8px; cursor: pointer; background: white; transition: 0.2s; }
-        .cal-day:hover { background: #f8f9fa; }
+        .calendar-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .cal-header { font-size: 0.75rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; padding-bottom: 10px; }
+        .cal-day { min-height: 90px; border-radius: 12px; border: 1px solid #edf2f7; padding: 10px; cursor: pointer; background: white; transition: 0.2s; }
+        .cal-day:hover { background: #f8f9fa; transform: translateY(-2px); }
         .cal-past { background: var(--past); color: #adb5bd; }
         .cal-today { border: 2px solid var(--primary) !important; background: var(--today); font-weight: bold; }
         .cal-empty { background: transparent; border: none; cursor: default; }
-        .quadrant { min-height: 120px; padding: 8px; border-radius: 10px; margin-bottom: 8px; border: 1px solid rgba(0,0,0,0.05); }
-        .q-title { font-size: 0.65rem; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; text-align: center; }
+        .quadrant { min-height: 140px; padding: 10px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.05); }
+        .q-title { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; display: block; text-align: center; letter-spacing: 1px; }
         .q-1 { background: var(--q1); color: #721c24; } .q-2 { background: var(--q2); color: #856404; }
         .q-3 { background: var(--q3); color: #004085; } .q-4 { background: var(--q4); color: #383d41; }
-        .task-item { background: white; margin-bottom: 6px; padding: 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.05); }
-        .section-label { font-size: 0.7rem; font-weight: 700; color: #495057; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .sig-box { border: 1px dashed #cbd5e0; border-radius: 8px; height: 130px; background: #fff; }
-        canvas { width: 100% !important; height: 100% !important; touch-action: none; }
-        .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #ddd; margin: 2px; cursor: pointer; background: white; }
-        .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
-        .anagrafica-ditta { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #0056b3; }
-        .info-header-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 12px; border-radius: 50px; color: #495057; font-weight: 600; }
+        .task-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 10px; font-size: 0.85rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .section-label { font-size: 0.75rem; font-weight: 800; color: #495057; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.5px; }
+        .sig-box { border: 2px dashed #cbd5e0; border-radius: 12px; height: 150px; background: #fff; position: relative; }
+        canvas { width: 100% !important; height: 100% !important; touch-action: none; border-radius: 12px; }
+        .worker-chip { display: inline-block; padding: 6px 14px; border-radius: 50px; font-size: 0.8rem; border: 1px solid #dee2e6; margin: 3px; cursor: pointer; background: white; transition: 0.2s; }
+        .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; box-shadow: 0 2px 6px rgba(0,86,179,0.3); }
+        .anagrafica-ditta { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #0056b3; shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .info-header-badge { font-size: 0.8rem; background: #f1f3f5; padding: 6px 15px; border-radius: 50px; color: #495057; font-weight: 700; border: 1px solid #e9ecef; }
     </style>
 </head>
 <body>
 
-<div class="container py-3" style="max-width: 1200px;">
-    <div id="auth-section" class="card p-4 shadow mt-5" style="display:none; border-radius: 20px;">
-        <h4 class="text-center mb-4 fw-bold">Cantieri Cloud</h4>
-        <input type="email" id="log-email" class="form-control mb-2" placeholder="Email">
-        <input type="password" id="log-pw" class="form-control mb-3" placeholder="Password">
-        <button class="btn btn-primary w-100" onclick="handleLogin()">ACCEDI</button>
+<div class="container py-4" style="max-width: 1300px;">
+    <div id="auth-section" class="card p-5 shadow-lg mt-5 border-0" style="display:none; border-radius: 25px;">
+        <h3 class="text-center mb-4 fw-bold text-primary">Cantieri Cloud</h3>
+        <input type="email" id="log-email" class="form-control form-control-lg mb-3" placeholder="Email">
+        <input type="password" id="log-pw" class="form-control form-control-lg mb-4" placeholder="Password">
+        <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill" onclick="handleLogin()">ACCEDI</button>
     </div>
 
     <div id="pin-section" class="text-center mt-5" style="display:none;">
-        <div class="card p-4 shadow mx-auto" style="max-width: 300px; border-radius: 20px;">
-            <input type="password" id="pin-input" class="form-control text-center fs-1 mb-4 border-0 bg-light" maxlength="4" placeholder="••••">
-            <button class="btn btn-dark w-100 p-3 fw-bold rounded-pill" onclick="checkPin()">SBLOCCA</button>
+        <div class="card p-5 shadow-lg mx-auto border-0" style="max-width: 350px; border-radius: 30px;">
+            <label class="section-label mb-3">Inserisci PIN di Sicurezza</label>
+            <input type="password" id="pin-input" class="form-control text-center fs-1 mb-4 border-0 bg-light rounded-4" maxlength="4" placeholder="••••">
+            <button class="btn btn-dark w-100 p-3 fw-bold rounded-pill shadow" onclick="checkPin()">SBLOCCA SISTEMA</button>
         </div>
     </div>
 
     <div id="main-app" style="display:none;">
-        <header class="d-flex justify-content-between mb-4 align-items-center">
-            <h5 class="fw-bold m-0 text-primary">Gestionale Lombardia</h5>
-            <button class="btn btn-sm btn-light rounded-pill px-3" onclick="auth.signOut()">Esci</button>
+        <header class="d-flex justify-content-between mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm">
+            <h4 class="fw-bold m-0 text-primary">Gestionale Lombardia <small class="text-muted fs-6">Pro</small></h4>
+            <button class="btn btn-sm btn-outline-danger rounded-pill px-4 fw-bold" onclick="auth.signOut()">Esci</button>
         </header>
 
         <section id="section-list" class="active-section">
-            <div class="d-flex justify-content-between mb-3 align-items-center">
-                <h6 class="fw-bold m-0 text-secondary">Commesse Attive Condivise</h6>
-                <button class="btn btn-primary rounded-pill px-4" onclick="openModaleNuovo()">+ Nuova Commessa</button>
+            <div class="d-flex justify-content-between mb-4 align-items-center">
+                <h5 class="fw-bold m-0 text-dark">Archivio Commesse Attive</h5>
+                <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow" onclick="openModaleNuovo()">+ Nuova Commessa</button>
             </div>
-            <div id="cantieri-grid" class="row g-3"></div>
+            <div id="cantieri-grid" class="row g-4"></div>
         </section>
 
         <section id="section-calendar">
-            <div class="calendar-card border-0 shadow">
+            <div class="calendar-card border-0">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="showSection('section-list')">← Elenco</button>
+                    <button class="btn btn-outline-secondary rounded-pill px-3" onclick="showSection('section-list')">← Torna all'Elenco</button>
                     <div class="text-center">
-                        <h5 id="cal-title" class="fw-bold m-0 text-primary"></h5>
-                        <div class="d-flex align-items-center justify-content-center mt-1">
-                            <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="changeMonth(-1)">◀</button>
-                            <span id="current-month-display" class="mx-3 fw-bold text-uppercase small" style="letter-spacing:1px"></span>
-                            <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="changeMonth(1)">▶</button>
+                        <h4 id="cal-title" class="fw-bold m-0 text-primary"></h4>
+                        <div class="d-flex align-items-center justify-content-center mt-2">
+                            <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(-1)">◀</button>
+                            <span id="current-month-display" class="mx-4 fw-bold text-uppercase" style="letter-spacing:2px; font-size: 0.9rem;"></span>
+                            <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-warning fw-bold" onclick="editCurrentCommessa()">⚙️ Anagrafica</button>
+                    <button class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm" onclick="editCurrentCommessa()">⚙️ Anagrafica</button>
                 </div>
-                <div id="calendar-days-container" class="calendar-grid mt-2"></div>
+                <div id="calendar-days-container" class="calendar-grid"></div>
             </div>
         </section>
 
         <section id="section-giornale">
-            <div class="card p-4 shadow border-0" style="border-radius: 20px;">
-                <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
+            <div class="card p-4 shadow-lg border-0" style="border-radius: 25px;">
+                <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-3">
                     <div>
-                        <h5 id="g-date-title" class="m-0 fw-bold text-primary"></h5>
-                        <div class="d-flex gap-2 mt-2">
+                        <h4 id="g-date-title" class="m-0 fw-bold text-primary"></h4>
+                        <div class="d-flex gap-3 mt-3">
                             <span id="badge-cig" class="info-header-badge">CIG: -</span>
                             <span id="badge-cup" class="info-header-badge">CUP: -</span>
                         </div>
                     </div>
-                    <button class="btn-close" onclick="showSection('section-calendar')"></button>
+                    <button class="btn-close bg-light p-3 rounded-circle" onclick="showSection('section-calendar')"></button>
                 </div>
 
-                <div class="row">
+                <div class="row g-4">
                     <div class="col-md-4 border-end">
-                        <span class="section-label">📸 Foto Cantiere</span>
-                        <input type="file" id="photo-input" accept="image/*" capture="environment" multiple style="display:none" onchange="uploadPhoto(this)">
-                        <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="document.getElementById('photo-input').click()">Aggiungi Foto</button>
-                        <div id="photo-gallery" class="d-flex flex-wrap gap-2 mb-3"></div>
+                        <div class="mb-4">
+                            <span class="section-label">📸 Documentazione Fotografica</span>
+                            <input type="file" id="photo-input" accept="image/*" capture="environment" multiple style="display:none" onchange="uploadPhoto(this)">
+                            <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill shadow-sm" onclick="document.getElementById('photo-input').click()">Scatta o Allega Foto</button>
+                            <div id="photo-gallery" class="d-flex flex-wrap gap-2 mt-2"></div>
+                        </div>
                         
-                        <span class="section-label">🌦️ Condizioni Meteo</span>
-                        <input type="text" id="g-meteo" class="form-control mb-3 bg-light border-0" onchange="autoSave()">
+                        <div class="mb-4">
+                            <span class="section-label">🌦️ Situazione Meteo</span>
+                            <input type="text" id="g-meteo" class="form-control border-0 bg-light p-3 rounded-3" placeholder="Es: Sereno, 15°C" onchange="autoSave()">
+                        </div>
                         
-                        <span class="section-label">👷 Appello Maestranze</span>
-                        <div id="presenze-appello" class="mb-3 p-2 bg-light rounded" style="max-height: 300px; overflow-y: auto;"></div>
+                        <div class="mb-4">
+                            <span class="section-label">👷 Appello Maestranze</span>
+                            <div id="presenze-appello" class="p-3 bg-light rounded-4 shadow-sm" style="max-height: 250px; overflow-y: auto;"></div>
+                        </div>
                         
-                        <span class="section-label">🏗️ Descrizione Lavorazioni</span>
-                        <textarea id="g-lavorazioni" class="form-control mb-3 bg-light border-0" rows="6" onchange="autoSave()"></textarea>
+                        <div>
+                            <span class="section-label">🏗️ Descrizione Lavorazioni Realizzate</span>
+                            <textarea id="g-lavorazioni" class="form-control border-0 bg-light p-3 rounded-3" rows="6" placeholder="Descrivi i lavori svolti oggi..." onchange="autoSave()"></textarea>
+                        </div>
                     </div>
 
                     <div class="col-md-4 border-end">
-                        <span class="section-label text-center d-block">✍️ Firme del Giorno</span>
-                        <select id="sign-role" class="form-select mb-3 shadow-sm" onchange="loadSignature()">
-                            <option value="">Seleziona chi firma...</option>
+                        <span class="section-label text-center d-block mb-3">✍️ Firme Digitali del Giorno</span>
+                        <select id="sign-role" class="form-select form-select-lg mb-3 shadow-sm rounded-3 border-0 bg-light" onchange="loadSignature()">
+                            <option value="">-- Chi firma ora? --</option>
                             <option value="DL">Direttore Lavori</option>
                             <option value="ADL">Assistente D.L.</option>
-                            <option value="CSE">Coord. Sicurezza</option>
+                            <option value="CSE">Coord. Sicurezza (CSE)</option>
                             <option value="IMP">Impresa Esecutrice</option>
-                            <option value="RUP">RUP</option>
+                            <option value="RUP">R.U.P.</option>
                             <option value="ARUP">Assistente RUP</option>
                         </select>
-                        <div id="sig-area" style="display:none">
-                            <div class="sig-box mb-2 shadow-sm"><canvas id="sig-pad"></canvas></div>
-                            <div class="d-flex justify-content-between mb-4">
-                                <button class="btn btn-sm btn-link text-muted" onclick="clearSig()">Cancella</button>
-                                <button class="btn btn-sm btn-success px-4 fw-bold shadow-sm" onclick="saveSignatureNow()">SALVA FIRMA</button>
+                        
+                        <div id="sig-area" style="display:none" class="mb-4">
+                            <div class="sig-box mb-3 shadow-sm"><canvas id="sig-pad"></canvas></div>
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-sm btn-link text-danger fw-bold" onclick="clearSig()">CANCELLA</button>
+                                <button class="btn btn-success px-5 fw-bold rounded-pill shadow" onclick="saveSignatureNow()">ACQUISICI FIRMA</button>
                             </div>
                         </div>
 
-                        <div class="bg-light p-3 rounded mb-4">
-                            <span class="section-label">📌 Memo Tecnico (Privato)</span>
-                            <textarea id="g-memo" class="form-control border-0" rows="3" onchange="autoSave()"></textarea>
+                        <div class="bg-white p-3 rounded-4 border mb-4 shadow-sm">
+                            <span class="section-label">📌 Note Interne e Ordini di Servizio</span>
+                            <textarea id="g-memo" class="form-control border-0" rows="4" placeholder="Note tecniche non visibili nel PDF ufficiale..." onchange="autoSave()"></textarea>
                         </div>
 
-                        <button class="btn btn-danger w-100 fw-bold py-3 shadow-sm mb-3" onclick="generatePDF()">SCARICA PDF GIORNALE</button>
+                        <button class="btn btn-danger w-100 fw-bold py-4 rounded-4 shadow-lg mb-3" onclick="generatePDF()">
+                             GENERA E SCARICA PDF GIORNALE
+                        </button>
                     </div>
 
                     <div class="col-md-4">
-                        <span class="section-label text-center d-block">⚡ Matrice Attività (Eisenhower)</span>
-                        <div class="input-group input-group-sm mb-3">
-                            <input type="text" id="t-input" class="form-control" placeholder="Nuovo task...">
-                            <select id="t-q" class="form-select" style="max-width:100px">
+                        <span class="section-label text-center d-block mb-3">⚡ Matrice di Eisenhower (Gestione Attività)</span>
+                        <div class="input-group mb-3 shadow-sm">
+                            <input type="text" id="t-input" class="form-control border-0 bg-light p-3" placeholder="Cosa c'è da fare?">
+                            <select id="t-q" class="form-select border-0 bg-light" style="max-width:100px">
                                 <option value="1">Urgente</option>
                                 <option value="2">Import.</option>
                                 <option value="3">Delega</option>
-                                <option value="4">Varie</option>
+                                <option value="4">Bassa</option>
                             </select>
-                            <button class="btn btn-primary px-3" onclick="addT()">+</button>
+                            <button class="btn btn-primary px-4 fw-bold" onclick="addT()">AGGIUNGI</button>
                         </div>
                         <div class="row g-2">
                             <div class="col-6"><span class="q-title text-danger">Urgente</span><div class="quadrant q-1" id="list-q1"></div></div>
                             <div class="col-6"><span class="q-title text-warning">Importante</span><div class="quadrant q-2" id="list-q2"></div></div>
                             <div class="col-6"><span class="q-title text-primary">Delegabile</span><div class="quadrant q-3" id="list-q3"></div></div>
-                            <div class="col-6"><span class="q-title text-secondary">Varie</span><div class="quadrant q-4" id="list-q4"></div></div>
+                            <div class="col-6"><span class="q-title text-secondary">Varie / Note</span><div class="quadrant q-4" id="list-q4"></div></div>
                         </div>
                     </div>
                 </div>
@@ -171,33 +183,39 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0"><div class="modal-body p-4">
-    <h5 class="fw-bold mb-3">Anagrafica Commessa</h5>
-    <div class="row g-2">
-        <div class="col-md-6"><input type="text" id="c-nome" class="form-control mb-2" placeholder="Nome Cantiere"></div>
-        <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control mb-2" placeholder="Oggetto Lavori"></div>
-        <div class="col-6"><input type="text" id="c-cig" class="form-control mb-2" placeholder="CIG"></div>
-        <div class="col-6"><input type="text" id="c-cup" class="form-control mb-2" placeholder="CUP"></div>
+<div class="modal fade" id="modalCommessa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0 shadow-lg" style="border-radius: 25px;"><div class="modal-body p-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0">Anagrafica della Commessa</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
     </div>
-    <hr>
+    
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><label class="section-label">Nome Cantiere</label><input type="text" id="c-nome" class="form-control bg-light border-0 p-3" placeholder="Es: Ristrutturazione Scuola"></div>
+        <div class="col-md-6"><label class="section-label">Oggetto Lavori</label><input type="text" id="c-oggetto" class="form-control bg-light border-0 p-3" placeholder="Es: Opere di manutenzione..."></div>
+        <div class="col-6"><label class="section-label">Codice CIG</label><input type="text" id="c-cig" class="form-control bg-light border-0 p-3" placeholder="Codice CIG"></div>
+        <div class="col-6"><label class="section-label">Codice CUP</label><input type="text" id="c-cup" class="form-control bg-light border-0 p-3" placeholder="Codice CUP"></div>
+    </div>
+    
+    <hr class="my-4">
     <div class="row">
         <div class="col-md-5 border-end">
-            <span class="section-label">Figure Professionali</span>
-            <input type="text" id="c-dl" class="form-control mb-1 form-control-sm" placeholder="Direttore Lavori">
-            <input type="text" id="c-adl" class="form-control mb-1 form-control-sm" placeholder="Assistente D.L.">
-            <input type="text" id="c-cse" class="form-control mb-1 form-control-sm" placeholder="Coord. Sicurezza">
-            <input type="text" id="c-rup" class="form-control mb-1 form-control-sm" placeholder="RUP">
-            <input type="text" id="c-arup" class="form-control mb-3 form-control-sm" placeholder="Assistente RUP">
+            <span class="section-label mb-3">Figure Professionali</span>
+            <input type="text" id="c-dl" class="form-control mb-2 form-control-sm border-0 bg-light" placeholder="Direttore Lavori">
+            <input type="text" id="c-adl" class="form-control mb-2 form-control-sm border-0 bg-light" placeholder="Assistente D.L.">
+            <input type="text" id="c-cse" class="form-control mb-2 form-control-sm border-0 bg-light" placeholder="Coord. Sicurezza (CSE)">
+            <input type="text" id="c-rup" class="form-control mb-2 form-control-sm border-0 bg-light" placeholder="R.U.P.">
+            <input type="text" id="c-arup" class="form-control mb-4 form-control-sm border-0 bg-light" placeholder="Assistente RUP">
         </div>
-        <div class="col-md-7">
-            <span class="section-label">Imprese e Maestranze</span>
-            <div id="anagrafica-imprese-list"></div>
-            <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="addDittaAnagrafica()">+ Aggiungi Nuova Ditta</button>
+        <div class="col-md-7 ps-4">
+            <span class="section-label mb-3">Database Imprese e Maestranze</span>
+            <div id="anagrafica-imprese-list" style="max-height: 250px; overflow-y: auto;"></div>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-3 rounded-pill fw-bold" onclick="addDittaAnagrafica()">+ Aggiungi Nuova Ditta</button>
         </div>
     </div>
-    <div class="d-grid gap-2 mt-4">
-        <button class="btn btn-primary fw-bold p-3" onclick="saveCommessaData()">SALVA ANAGRAFICA</button>
-        <button id="btn-elimina-c" class="btn btn-link btn-sm text-danger" onclick="deleteCurrentCommessa()" style="display:none">Elimina</button>
+
+    <div class="d-grid gap-3 mt-5">
+        <button class="btn btn-primary btn-lg fw-bold rounded-pill p-3 shadow" onclick="saveCommessaData()">SALVA TUTTE LE MODIFICHE</button>
+        <button id="btn-elimina-c" class="btn btn-link btn-sm text-danger text-decoration-none" onclick="deleteCurrentCommessa()" style="display:none">Elimina definitivamente questa commessa</button>
     </div>
 </div></div></div></div>
 
@@ -205,6 +223,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// CONFIGURAZIONE FIREBASE
 const firebaseConfig = { 
     apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", 
     projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", 
@@ -216,11 +235,12 @@ const auth = firebase.auth(); const db = firebase.firestore();
 let userData = { cantieri: [] }; let cIdx = -1; let activeDate = ""; let sigPad;
 let currentViewDate = new Date(); let tempDitte = []; 
 
+// ACCESSO E PIN
 auth.onAuthStateChanged(user => { if (user) { $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
 function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else { alert("PIN Errato"); } }
 
-// CARICAMENTO CONDIVISO
+// CARICAMENTO DATI (CONDIVISO)
 function loadDB() { 
     db.collection('users').doc('archivio_condiviso').onSnapshot(doc => { 
         if (doc.exists) { userData = doc.data(); renderCantieri(); if(cIdx !== -1) { renderCal(); if(activeDate) { renderTasks(); renderPhotos(); renderAppello(); } } } 
@@ -230,14 +250,40 @@ function loadDB() {
 
 function renderCantieri() {
     let h = ''; (userData.cantieri || []).forEach((c, i) => {
-        h += `<div class="col-6 col-md-4"><div class="card p-3 shadow-sm border-0 h-100 text-center" onclick="openC(${i})" style="cursor:pointer; border-radius:15px"><b>${c.nome}</b><br><small class="text-muted">CIG: ${c.cig || '-'}</small></div></div>`;
+        h += `<div class="col-12 col-md-4"><div class="card p-4 shadow-sm border-0 h-100 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:20px; transition: 0.3s;">
+            <h5 class="fw-bold text-primary mb-2">${c.nome}</h5>
+            <div class="mb-2"><span class="badge bg-light text-dark border">CIG: ${c.cig || '-'}</span></div>
+            <small class="text-muted d-block text-truncate">${c.oggetto || 'Nessun oggetto definito'}</small>
+        </div></div>`;
     });
-    $('#cantieri-grid').html(h);
+    $('#cantieri-grid').html(h || '<div class="col-12 text-center py-5 text-muted">Nessuna commessa presente. Creane una nuova!</div>');
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
 
-// ANAGRAFICA E SAVE
+// ANAGRAFICA E SALVATAGGIO
+function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#btn-elimina-c').hide(); $('#modalCommessa').modal('show'); }
+function editCurrentCommessa() {
+    const c = userData.cantieri[cIdx];
+    $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || '');
+    $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || '');
+    $('#c-dl').val(c.dl || ''); $('#c-adl').val(c.adl || ''); $('#c-cse').val(c.cse || '');
+    $('#c-rup').val(c.rup || ''); $('#c-arup').val(c.arup || '');
+    tempDitte = c.anagraficaDitte || []; renderAnagraficaDitte();
+    $('#btn-elimina-c').show(); $('#modalCommessa').modal('show');
+}
+function addDittaAnagrafica() { const n = prompt("Nome della Ditta:"); if(n) { tempDitte.push({ nome: n.toUpperCase(), operai: [] }); renderAnagraficaDitte(); } }
+function addOperaioAnagrafica(di) { const n = prompt("Nome Operaio:"); if(n) { tempDitte[di].operai.push(n.toUpperCase()); renderAnagraficaDitte(); } }
+function renderAnagraficaDitte() {
+    let h = ''; tempDitte.forEach((d, di) => {
+        h += `<div class="anagrafica-ditta">
+            <div class="d-flex justify-content-between"><strong>${d.nome}</strong><button class="btn btn-sm text-danger p-0" onclick="tempDitte.splice(${di},1);renderAnagraficaDitte()">Elimina</button></div>`;
+        d.operai.forEach((o, oi) => h += `<span class="badge bg-light text-dark border me-1 mb-1">${o} <small class="text-danger ms-1" onclick="tempDitte[${di}].operai.splice(${oi},1);renderAnagraficaDitte()" style="cursor:pointer">×</small></span>`);
+        h += `<br><button class="btn btn-link btn-sm p-0 mt-2 text-primary" onclick="addOperaioAnagrafica(${di})">+ Aggiungi Operaio</button></div>`;
+    });
+    $('#anagrafica-imprese-list').html(h);
+}
+
 function saveCommessaData() {
     const data = {
         nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(),
@@ -257,18 +303,18 @@ function autoSave() {
     db.collection('users').doc('archivio_condiviso').set(userData);
 }
 
-// RESTANTI FUNZIONI (FOTO, CALENDARIO, PDF...)
+// APPELLO E GIORNALE
 function renderAppello() {
-    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {}; const presenti = g.presenti || [];
+    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {}; const pres = g.presenti || [];
     let h = ''; (c.anagraficaDitte || []).forEach(d => {
-        h += `<div class="mb-2"><small class="fw-bold text-primary d-block mb-1" style="font-size:0.65rem">${d.nome}</small>`;
+        h += `<div class="mb-3"><small class="section-label" style="font-size:0.6rem; color:var(--primary)">${d.nome}</small>`;
         d.operai.forEach(o => {
-            const idOp = `${o} (${d.nome})`;
-            h += `<span class="worker-chip ${presenti.includes(idOp)?'selected':''}" onclick="togglePresenza('${idOp}')">${o}</span>`;
+            const id = `${o} (${d.nome})`;
+            h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`;
         });
         h += `</div>`;
     });
-    $('#presenze-appello').html(h || '<small>Configura ditte in anagrafica.</small>');
+    $('#presenze-appello').html(h || '<small class="text-muted">Aggiungi ditte in Anagrafica.</small>');
 }
 function togglePresenza(id) {
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
@@ -276,6 +322,7 @@ function togglePresenza(id) {
     if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id); else g.presenti.push(id);
     autoSave(); renderAppello();
 }
+
 function openG(ds) {
     activeDate = ds; const c = userData.cantieri[cIdx];
     $('#g-date-title').text("GIORNALE DEL " + ds);
@@ -285,33 +332,35 @@ function openG(ds) {
     showSection('section-giornale'); renderPhotos(); renderTasks(); renderAppello();
     sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val("");
 }
+
+// FIRME
 function loadSignature() {
     const r = $("#sign-role").val(); if(!r) return $("#sig-area").hide(); $("#sig-area").show();
-    const canvas = document.getElementById("sig-pad"); canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    const cvs = document.getElementById("sig-pad"); cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight;
     sigPad.clear(); const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     if(g['firma_'+r]) sigPad.fromDataURL(g['firma_'+r]);
 }
 function saveSignatureNow() {
     const r = $("#sign-role").val(); if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
     userData.cantieri[cIdx].giornali[activeDate]['firma_'+r] = sigPad.toDataURL();
-    db.collection('users').doc('archivio_condiviso').set(userData).then(() => alert("Firma Salva"));
+    db.collection('users').doc('archivio_condiviso').set(userData).then(() => alert("Firma acquisita con successo"));
 }
 function clearSig() { sigPad.clear(); }
 
 // FOTO
-async function compressImage(base64) {
+async function compressImage(b64) {
     return new Promise(res => {
-        const img = new Image(); img.src = base64;
+        const img = new Image(); img.src = b64;
         img.onload = () => {
-            const canvas = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width;
-            canvas.width = MAX; canvas.height = img.height * scale;
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            res(canvas.toDataURL('image/jpeg', 0.7));
+            const cvs = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width;
+            cvs.width = MAX; cvs.height = img.height * scale;
+            cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
+            res(cvs.toDataURL('image/jpeg', 0.7));
         };
     });
 }
 async function uploadPhoto(input) {
-    for (let file of input.files) {
+    for (let f of input.files) {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const comp = await compressImage(e.target.result);
@@ -320,69 +369,58 @@ async function uploadPhoto(input) {
             userData.cantieri[cIdx].giornali[activeDate].photos.push(comp);
             autoSave(); renderPhotos();
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(f);
     }
 }
 function renderPhotos() {
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {};
-    if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:60px; height:60px; object-fit:cover; border-radius:8px" onclick="if(confirm('Elimina?')){g.photos.splice(${i},1);autoSave();renderPhotos();}">`));
+    if(g.photos) g.photos.forEach((p,i) => $('#photo-gallery').append(`<img src="${p}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1)" onclick="if(confirm('Eliminare questa foto?')){g.photos.splice(${i},1);autoSave();renderPhotos();}">`));
 }
 
+// PDF
 function generatePDF() {
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
     const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
-    doc.setFontSize(18); doc.setTextColor(0, 86, 179); doc.text("GIORNALE DI CANTIERE", 15, 20);
-    doc.setFontSize(10); doc.setTextColor(0);
-    doc.text(`CANTIERE: ${c.nome} | DATA: ${activeDate}`, 15, 30);
-    doc.text(`CIG: ${c.cig || '-'} | CUP: ${c.cup || '-'}`, 15, 36);
-    const pres = g.presenti || []; let dBody = [];
-    pres.forEach(p => { dBody.push([p.substring(p.indexOf('(')+1, p.indexOf(')')), p.substring(0, p.indexOf('('))]); });
-    doc.autoTable({ startY: 42, head: [['Ditta', 'Operaio']], body: dBody.length ? dBody : [['-', '-']], theme: 'grid' });
-    doc.autoTable({ startY: doc.lastAutoTable.finalY + 5, head: [['Lavorazioni']], body: [[g.lavorazioni || '-']], theme: 'grid' });
+    doc.setFontSize(22); doc.setTextColor(0, 86, 179); doc.text("GIORNALE DI CANTIERE", 15, 25);
+    doc.setFontSize(10); doc.setTextColor(100); doc.text(`Generato il: ${new Date().toLocaleString()}`, 140, 25);
+    doc.setFontSize(12); doc.setTextColor(0); doc.text(`CANTIERE: ${c.nome}`, 15, 38);
+    doc.text(`DATA: ${activeDate} | CIG: ${c.cig || '-'} | CUP: ${c.cup || '-'}`, 15, 45);
+    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 15, 52, {maxWidth: 180});
+    let dBody = []; (g.presenti || []).forEach(p => dBody.push([p.substring(p.indexOf('(')+1, p.indexOf(')')), p.substring(0, p.indexOf('('))]));
+    doc.autoTable({ startY: 60, head: [['Impresa/Ditta', 'Personale Presente']], body: dBody.length?dBody:[['-','-']], theme:'grid', headStyles:{fillColor:[0,86,179]} });
+    doc.autoTable({ startY: doc.lastAutoTable.finalY+5, head:[['Lavorazioni Svolte']], body:[[g.lavorazioni||'-']], theme:'grid' });
+    let fy = doc.lastAutoTable.finalY + 15; let fx = 15;
+    const roles = {DL:"Dir. Lavori", ADL:"Ass. D.L.", CSE:"C.S.E.", IMP:"Impresa", RUP:"R.U.P.", ARUP:"Ass. RUP"};
+    Object.keys(roles).forEach(r => { if(g['firma_'+r]){ doc.setFontSize(8); doc.text(roles[r], fx, fy); doc.addImage(g['firma_'+r], 'PNG', fx, fy+2, 30, 10); fx += 35; if(fx>160){fx=15; fy+=20;} } });
+    if(g.photos && g.photos.length > 0){ doc.addPage(); doc.text("ALLEGATO FOTOGRAFICO", 15, 20); let py=30; g.photos.forEach(p => { if(py>230){doc.addPage(); py=20;} doc.addImage(p,'JPEG',15,py,90,65); py+=75; }); }
     doc.save(`Giornale_${activeDate}.pdf`);
 }
 
+// CALENDARIO E UTILS
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
 function renderCal() {
-    const year = currentViewDate.getFullYear(); const month = currentViewDate.getMonth();
-    const days = new Date(year, month+1, 0).getDate(); const start = new Date(year, month, 1).getDay();
-    const adj = start === 0 ? 6 : start - 1;
+    const y = currentViewDate.getFullYear(); const m = currentViewDate.getMonth();
+    const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+    $('#current-month-display').text(`${monthNames[m]} ${y}`);
+    const days = new Date(y, m+1, 0).getDate(); const start = new Date(y, m, 1).getDay(); const adj = start === 0 ? 6 : start - 1;
     let h = ''; for(let x=0; x<adj; x++) h += `<div class="cal-day cal-empty"></div>`;
     for(let d=1; d<=days; d++) {
-        const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         h += `<div class="cal-day" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
-    $('#calendar-days-container').html(`<div class="cal-header">L</div><div class="cal-header">M</div><div class="cal-header">M</div><div class="cal-header">G</div><div class="cal-header">V</div><div class="cal-header">S</div><div class="cal-header">D</div>${h}`);
+    $('#calendar-days-container').html(`<div class="cal-header">Lun</div><div class="cal-header">Mar</div><div class="cal-header">Mer</div><div class="cal-header">Gio</div><div class="cal-header">Ven</div><div class="cal-header">Sab</div><div class="cal-header">Dom</div>${h}`);
 }
 function addT() {
-    const val = $('#t-input').val(); if(!val) return;
-    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
-    userData.cantieri[cIdx].tasks.push({ id:Date.now(), text:val, q:$('#t-q').val() });
+    const v = $('#t-input').val(); if(!v) return; if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
+    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:v, q:$('#t-q').val()});
     $('#t-input').val(''); db.collection('users').doc('archivio_condiviso').set(userData).then(() => renderTasks());
 }
 function renderTasks() {
-    $('.quadrant').empty();
-    (userData.cantieri[cIdx].tasks || []).forEach(t => { $(`#list-q${t.q}`).append(`<div class="task-item" onclick="deleteTask(${t.id})"><span>${t.text}</span></div>`); });
+    $('.quadrant').empty(); (userData.cantieri[cIdx].tasks || []).forEach(t => { $(`#list-q${t.q}`).append(`<div class="task-item" onclick="deleteTask(${t.id})"><span>${t.text}</span><span class="text-danger">×</span></div>`); });
 }
 function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); db.collection('users').doc('archivio_condiviso').set(userData).then(() => renderTasks()); }
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
-function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#btn-elimina-c').hide(); $('#modalCommessa').modal('show'); }
-function editCurrentCommessa() {
-    const c = userData.cantieri[cIdx]; $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || ''); $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || '');
-    $('#c-dl').val(c.dl || ''); $('#c-adl').val(c.adl || ''); $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); $('#c-arup').val(c.arup || '');
-    tempDitte = c.anagraficaDitte || []; renderAnagraficaDitte(); $('#btn-elimina-c').show(); $('#modalCommessa').modal('show');
-}
-function addDittaAnagrafica() { const n = prompt("Ditta:"); if(n) { tempDitte.push({ nome: n.toUpperCase(), operai: [] }); renderAnagraficaDitte(); } }
-function addOperaioAnagrafica(di) { const n = prompt("Operaio:"); if(n) { tempDitte[di].operai.push(n.toUpperCase()); renderAnagraficaDitte(); } }
-function renderAnagraficaDitte() {
-    let h = ''; tempDitte.forEach((d, di) => {
-        h += `<div class="anagrafica-ditta"><strong>${d.nome}</strong><br>`;
-        d.operai.forEach(o => h += `<span class="badge bg-white text-dark border me-1">${o}</span>`);
-        h += `<br><button class="btn btn-link btn-sm p-0" onclick="addOperaioAnagrafica(${di})">+ Operaio</button></div>`;
-    });
-    $('#anagrafica-imprese-list').html(h);
-}
-function deleteCurrentCommessa() { if(confirm("Eliminare?")) { userData.cantieri.splice(cIdx, 1); db.collection('users').doc('archivio_condiviso').set(userData).then(() => showSection('section-list')); } }
+function deleteCurrentCommessa() { if(confirm("Eliminare definitivamente?")) { userData.cantieri.splice(cIdx, 1); db.collection('users').doc('archivio_condiviso').set(userData).then(() => showSection('section-list')); } }
 </script>
 </body>
 </html>
