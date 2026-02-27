@@ -19,11 +19,10 @@
         body { background: #f4f7f9; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         section { display: none; } .active-section { display: block; }
         
-        /* CALENDARIO REATTIVO */
         .calendar-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(40px, 1fr)); gap: 5px; min-width: 300px; }
-        .cal-header { font-size: 0.65rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; padding-bottom: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cal-day { min-height: 70px; border-radius: 8px; border: 1px solid #edf2f7; padding: 5px; cursor: pointer; background: white; transition: 0.2s; display: flex; flex-direction: column; justify-content: flex-start; }
+        .cal-header { font-size: 0.65rem; font-weight: bold; text-align: center; color: #adb5bd; text-transform: uppercase; padding-bottom: 5px; }
+        .cal-day { min-height: 70px; border-radius: 8px; border: 1px solid #edf2f7; padding: 5px; cursor: pointer; background: white; transition: 0.2s; display: flex; flex-direction: column; }
         .cal-day b { font-size: 0.9rem; }
         .cal-past { background: var(--past) !important; color: #adb5bd; }
         .cal-today { border: 2px solid var(--primary) !important; background: var(--today) !important; font-weight: bold; }
@@ -121,6 +120,7 @@
                             <option value="CSE">Coord. Sicurezza</option>
                             <option value="IMP">Impresa</option>
                             <option value="RUP">R.U.P.</option>
+                            <option value="ARUP">Assistente R.U.P.</option>
                         </select>
                         <div id="sig-area" style="display:none">
                             <div class="sig-box mb-2"><canvas id="sig-pad"></canvas></div>
@@ -173,8 +173,10 @@
         <div class="col-md-5 border-end">
             <span class="section-label">Tecnici</span>
             <input type="text" id="c-dl" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="D.L.">
+            <input type="text" id="c-adl" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="Ass. D.L.">
             <input type="text" id="c-cse" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="C.S.E.">
             <input type="text" id="c-rup" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="R.U.P.">
+            <input type="text" id="c-arup" class="form-control form-control-sm mb-1 border-0 bg-light" placeholder="Ass. R.U.P.">
         </div>
         <div class="col-md-7 ps-3">
             <span class="section-label">Imprese</span>
@@ -182,7 +184,7 @@
             <button class="btn btn-sm btn-outline-primary w-100 mt-2" onclick="addDittaAnagrafica()">+ Ditta</button>
         </div>
     </div>
-    <button class="btn btn-primary w-100 fw-bold rounded-pill p-2 mt-3" onclick="saveCommessaData()">SALVA</button>
+    <button class="btn btn-primary w-100 fw-bold rounded-pill p-2 mt-3" onclick="saveCommessaData()">SALVA TUTTO</button>
 </div></div></div></div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -200,15 +202,10 @@ function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), 
 function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else { alert("PIN Errato"); } }
 
 function loadDB() { 
-    db.collection('users').doc(currentUID).get().then(oldDoc => {
-        let oldData = oldDoc.exists ? oldDoc.data().cantieri : [];
-        db.collection('users').doc('archivio_condiviso').onSnapshot(doc => { 
-            let sharedData = doc.exists ? doc.data().cantieri : [];
-            userData.cantieri = [...oldData, ...sharedData];
-            userData.cantieri = userData.cantieri.filter((v,i,a)=>a.findIndex(t=>(t.nome === v.nome))===i);
-            renderCantieri(); 
-            if(cIdx !== -1) { renderCal(); }
-        });
+    db.collection('users').doc('archivio_condiviso').onSnapshot(doc => { 
+        userData.cantieri = doc.exists ? doc.data().cantieri : [];
+        renderCantieri(); 
+        if(cIdx !== -1) renderCal();
     });
 }
 
@@ -216,31 +213,28 @@ function renderCantieri() {
     let h = ''; userData.cantieri.forEach((c, i) => {
         h += `<div class="col-12 col-md-4"><div class="card p-3 shadow-sm border-0 bg-white" onclick="openC(${i})" style="cursor:pointer; border-radius:15px;"><h6 class="fw-bold text-primary m-0">${c.nome}</h6><small class="text-muted">CIG: ${c.cig || '-'}</small></div></div>`;
     });
-    $('#cantieri-grid').html(h || '<small>Nessun cantiere.</small>');
+    $('#cantieri-grid').html(h || '<small>Nessuna commessa.</small>');
 }
 
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
 
 function renderCal() {
-    const y = currentViewDate.getFullYear(); const m = currentViewDate.getMonth();
+    const y = currentViewDate.getFullYear(), m = currentViewDate.getMonth();
     const today = new Date(); today.setHours(0,0,0,0);
     const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     $('#current-month-display').text(`${monthNames[m]} ${y}`);
-    const days = new Date(y, m+1, 0).getDate();
-    const start = new Date(y, m, 1).getDay();
+    const days = new Date(y, m+1, 0).getDate(), start = new Date(y, m, 1).getDay();
     const adj = start === 0 ? 6 : start - 1;
-    let h = ''; 
-    for(let x=0; x<adj; x++) h += `<div class="cal-day cal-empty"></div>`;
+    let h = ''; for(let x=0; x<adj; x++) h += `<div class="cal-day cal-empty"></div>`;
     for(let d=1; d<=days; d++) {
-        const thisDate = new Date(y, m, d);
         const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        let styleClass = (thisDate < today) ? "cal-past" : (thisDate.getTime() === today.getTime() ? "cal-today" : "");
-        h += `<div class="cal-day ${styleClass}" onclick="openG('${ds}')"><b>${d}</b></div>`;
+        const thisDate = new Date(y, m, d);
+        let cls = (thisDate < today) ? "cal-past" : (thisDate.getTime() === today.getTime() ? "cal-today" : "");
+        h += `<div class="cal-day ${cls}" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
-    const headers = window.innerWidth < 600 ? ['L','M','M','G','V','S','D'] : ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-    let hh = headers.map(n => `<div class="cal-header">${n}</div>`).join('');
-    $('#calendar-days-container').html(hh + h);
+    const hdr = window.innerWidth < 600 ? ['L','M','M','G','V','S','D'] : ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    $('#calendar-days-container').html(hdr.map(n => `<div class="cal-header">${n}</div>`).join('') + h);
 }
 
 function openG(ds) { 
@@ -273,31 +267,30 @@ function autoSave() {
 
 function renderPhotos() { 
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
-    if(g.photos) g.photos.forEach((p) => $('#photo-gallery').append(`<img src="${p}" style="width:50px; height:50px; object-fit:cover; border-radius:5px;">`)); 
+    if(g.photos) g.photos.forEach(p => $('#photo-gallery').append(`<img src="${p}" style="width:50px; height:50px; object-fit:cover; border-radius:5px;">`)); 
 }
 
 async function uploadPhoto(input) { 
     for (let f of input.files) { 
         const reader = new FileReader(); reader.onload = (e) => { 
             const img = new Image(); img.src = e.target.result; img.onload = () => { 
-                const cvs = document.createElement('canvas'); const MAX = 800; const scale = MAX / img.width; 
-                cvs.width = MAX; cvs.height = img.height * scale; cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height); 
-                const comp = cvs.toDataURL('image/jpeg', 0.6); 
+                const cvs = document.createElement('canvas'); const MAX = 800; const sc = MAX / img.width; 
+                cvs.width = MAX; cvs.height = img.height * sc; cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height); 
                 if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {}; 
                 if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = []; 
-                userData.cantieri[cIdx].giornali[activeDate].photos.push(comp); autoSave(); renderPhotos(); 
+                userData.cantieri[cIdx].giornali[activeDate].photos.push(cvs.toDataURL('image/jpeg', 0.6)); autoSave(); renderPhotos(); 
             }; 
         }; reader.readAsDataURL(f); 
     } 
 }
 
 function renderAppello() { 
-    const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {}; const pres = g.presenti || []; 
+    const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {}, pres = g.presenti || []; 
     let h = ''; (c.anagraficaDitte || []).forEach(d => { 
         h += `<div class="mb-2"><small class="fw-bold d-block" style="font-size:0.6rem; color:var(--primary)">${d.nome}</small>`; 
         d.operai.forEach(o => { const id = `${o} (${d.nome})`; h += `<span class="worker-chip ${pres.includes(id)?'selected':''}" onclick="togglePresenza('${id}')">${o}</span>`; }); 
         h += `</div>`; 
-    }); $('#presenze-appello').html(h || '<small>Nessuna ditta.</small>'); 
+    }); $('#presenze-appello').html(h || '<small>-</small>'); 
 }
 
 function togglePresenza(id) { 
@@ -309,8 +302,7 @@ function togglePresenza(id) {
 
 function addT() { 
     const v = $('#t-input').val(); if(!v) return; if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = []; 
-    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:v, q:$('#t-q').val()}); $('#t-input').val(''); 
-    autoSave(); renderTasks(); 
+    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:v, q:$('#t-q').val()}); $('#t-input').val(''); autoSave(); renderTasks(); 
 }
 
 function renderTasks() { 
@@ -324,9 +316,10 @@ function showSection(id) { $('section').removeClass('active-section'); $('#'+id)
 function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#modalCommessa').modal('show'); }
 
 function editCurrentCommessa() { 
-    const c = userData.cantieri[cIdx]; $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || ''); 
-    $('#c-cig').val(c.cig || ''); $('#c-cup').val(c.cup || ''); $('#c-dl').val(c.dl || ''); 
-    $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); 
+    const c = userData.cantieri[cIdx]; 
+    $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto || ''); $('#c-cig').val(c.cig || ''); 
+    $('#c-cup').val(c.cup || ''); $('#c-dl').val(c.dl || ''); $('#c-adl').val(c.adl || ''); 
+    $('#c-cse').val(c.cse || ''); $('#c-rup').val(c.rup || ''); $('#c-arup').val(c.arup || '');
     tempDitte = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); 
     renderAnagraficaDitte(); $('#modalCommessa').modal('show'); 
 }
@@ -345,15 +338,17 @@ function renderAnagraficaDitte() {
 function saveCommessaData() { 
     const data = { 
         nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), 
-        dl: $('#c-dl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), 
+        dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), 
         anagraficaDitte: tempDitte, giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}), 
         tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || []) 
     }; 
     db.collection('users').doc('archivio_condiviso').get().then(doc => { 
         let currentShared = doc.exists ? doc.data().cantieri : []; 
         if(cIdx === -1) { currentShared.push(data); } 
-        else { let index = currentShared.findIndex(c => c.nome === data.nome); if(index !== -1) currentShared[index] = data; else currentShared.push(data); } 
-        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { $('#modalCommessa').modal('hide'); alert("Salvato."); }); 
+        else { currentShared[cIdx] = data; } 
+        db.collection('users').doc('archivio_condiviso').set({cantieri: currentShared}).then(() => { 
+            $('#modalCommessa').modal('hide'); alert("Commessa Aggiornata nel Database."); 
+        }); 
     }); 
 }
 
