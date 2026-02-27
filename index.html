@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giornale Lavori PRO - GeomFazio</title>
+    <title>Giornale Lavori - GeomFazio</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; margin: 0; padding: 15px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 550px; margin: auto; box-sizing: border-box; }
-        h1 { color: #2c3e50; font-size: 22px; text-align: center; margin-bottom: 20px; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-        h2 { color: #2980b9; font-size: 16px; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; }
-        label { display: block; margin: 12px 0 5px; font-weight: bold; color: #34495e; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 15px; box-sizing: border-box; background: #fdfdfd; }
-        input:focus, select:focus { border-color: #3498db; outline: none; background: #fff; }
-        .btn-save { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn-exit { width: 100%; padding: 12px; background: #95a5a6; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 10px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin: auto; box-sizing: border-box; }
+        h1 { color: #2c3e50; font-size: 22px; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; font-size: 16px; margin-top: 20px; text-transform: uppercase; background: #f8f9fa; padding: 5px; }
+        label { display: block; margin: 12px 0 5px; font-weight: bold; color: #34495e; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 8px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         #appContent { display: none; }
-        .company-tag { display: inline-block; background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-bottom: 5px; }
+        .company-tag { display: inline-block; background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -30,9 +28,12 @@
         <h1>GIORNALE DEI LAVORI</h1>
         
         <form id="giornaleForm">
+            <h2>📅 Periodo e Data</h2>
+            <label>Data Sopralluogo:</label>
+            <input type="date" id="dataCantiere">
+
             <div class="company-tag">Ditta Esecutrice</div>
-            <h2 style="margin-top:0;">SIRIMED S.r.l.</h2>
-            
+            <h2 style="margin-top:5px;">SIRIMED S.r.l.</h2>
             <label>Qualifica Staff/Maestranza:</label>
             <select id="staffSirimed">
                 <option value="">-- Seleziona --</option>
@@ -45,11 +46,8 @@
                 <option value="Tubista">Tubista</option>
             </select>
 
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
             <div class="company-tag" style="background: #e67e22;">Subappalto / Affidatario</div>
-            <h2 style="margin-top:0;">Impresa Esterna</h2>
-
+            <h2 style="margin-top:5px;">Impresa Esterna</h2>
             <label>Nome Società / Ditta:</label>
             <input type="text" id="dittaSub" placeholder="Es: Rossi Impianti S.r.l.">
             
@@ -61,18 +59,21 @@
                 <option value="Impianti Idraulici">Impianti Idraulici</option>
                 <option value="Lattoneria / Tubazioni">Lattoneria / Tubazioni</option>
                 <option value="Noleggio / Mezzi">Noleggio / Mezzi</option>
-                <option value="Altro">Altro (specificare nelle note)</option>
             </select>
 
-            <label>Descrizione Lavorazioni Odierne:</label>
-            <input type="text" id="note" placeholder="Esempio: Posa tubazioni piano primo">
+            <h2>📝 Dettaglio Lavori</h2>
+            <label>Descrizione Lavorazioni:</label>
+            <textarea id="note" rows="4" placeholder="Descrivi le attività svolte oggi..."></textarea>
 
-            <button type="button" class="btn-save" onclick="inviaDati()">SALVA NEL GIORNALE</button>
-            <button type="button" class="btn-exit" onclick="location.reload()">CHIUDI SESSIONE</button>
+            <button type="button" class="btn-save" onclick="inviaDati()">SALVA E GENERA RIEPILOGO</button>
+            <button type="button" onclick="location.reload()" style="width:100%; background:#95a5a6; color:white; border:none; padding:10px; margin-top:10px; border-radius:8px;">ESCI</button>
         </form>
     </div>
 
     <script>
+        // Imposta data odierna come predefinita
+        document.getElementById('dataCantiere').valueAsDate = new Date();
+
         function validaPin() {
             if (document.getElementById('pinInput').value === "9731") {
                 document.getElementById('loginCard').style.display = 'none';
@@ -83,20 +84,19 @@
         }
 
         function inviaDati() {
+            const data = document.getElementById('dataCantiere').value;
             const sirimed = document.getElementById('staffSirimed').value;
             const ditta = document.getElementById('dittaSub').value;
             const mansione = document.getElementById('mansioneSub').value;
             const note = document.getElementById('note').value;
 
-            // Logica di identificazione per il futuro PDF
-            let riepilogo = "Dati acquisiti per il Giornale:\n\n";
-            if(sirimed) riepilogo += "- SIRIMED S.r.l.: " + sirimed + "\n";
-            if(ditta) riepilogo += "- " + ditta.toUpperCase() + ": " + mansione + "\n";
-            riepilogo += "- Note: " + note;
+            let riepilogo = "RIEPILOGO GIORNALE DEL " + data + "\n\n";
+            if(sirimed) riepilogo += "SIRIMED: " + sirimed + "\n";
+            if(ditta) riepilogo += "DITTA: " + ditta.toUpperCase() + " (" + mansione + ")\n";
+            riepilogo += "\nDESCRIZIONE:\n" + note;
 
             alert(riepilogo);
-            // Qui in futuro collegheremo il database reale (Firebase)
-            document.getElementById('giornaleForm').reset();
+            // Qui i dati sono pronti per essere inviati al database o PDF
         }
     </script>
 </body>
