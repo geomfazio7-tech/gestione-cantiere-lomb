@@ -416,58 +416,125 @@ async function generatePDF() {
     const doc = new jsPDF();
     const c = userData.cantieri[cIdx];
     const g = c.giornali[activeDate] || {};
+    const margin = 20;
+    const pageWidth = 210;
     
-    // Intestazione PDF
-    doc.setFontSize(16); doc.setTextColor(0, 86, 179);
-    doc.text("GIORNALE DI CANTIERE", 105, 15, { align: "center" });
+    // --- INTESTAZIONE PROFESSIONALE ---
+    doc.setFillColor(0, 86, 179);
+    doc.rect(0, 0, 210, 40, 'F');
     
-    doc.setFontSize(10); doc.setTextColor(0);
-    doc.text(`CANTIERE: ${c.nome}`, 20, 25);
-    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 20, 30);
-    doc.text(`CIG: ${c.cig || '-'} | CUP: ${c.cup || '-'}`, 20, 35);
-    doc.text(`DATA: ${activeDate.split('-').reverse().join('/')}`, 20, 40);
-    doc.text(`METEO: ${g.meteo || '-'}`, 20, 45);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont(undefined, 'bold');
+    doc.text("GIORNALE DI CANTIERE", pageWidth/2, 20, { align: "center" });
     
-    doc.line(20, 48, 190, 48);
-    
-    // Squadra Tecnica
-    doc.setFontSize(9);
-    doc.text(`D.L.: ${c.dl || '-'} | Ass. D.L.: ${c.adl || '-'}`, 20, 53);
-    doc.text(`C.S.E.: ${c.cse || '-'} | R.U.P.: ${c.rup || '-'}`, 20, 58);
-    
-    doc.line(20, 61, 190, 61);
-
-    // Lavorazioni
-    doc.setFont(undefined, 'bold'); doc.text("LAVORAZIONI:", 20, 68);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    const splitLavorazioni = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita", 170);
-    doc.text(splitLavorazioni, 20, 73);
-    let y = 73 + (splitLavorazioni.length * 5);
+    doc.text(`Data: ${activeDate.split('-').reverse().join('/')} | Meteo: ${g.meteo || 'N.D.'}`, pageWidth/2, 30, { align: "center" });
 
-    // Personale
-    doc.setFont(undefined, 'bold'); doc.text("PERSONALE PRESENTE:", 20, y + 5);
+    // --- DATI TECNICI (Layout a due colonne) ---
+    doc.setTextColor(0);
+    let y = 50;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text("DETTAGLI COMMESSA", margin, y);
+    doc.setDrawColor(0, 86, 179);
+    doc.line(margin, y+2, 190, y+2);
+    
+    y += 10;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold'); doc.text("Cantiere:", margin, y);
+    doc.setFont(undefined, 'normal'); doc.text(c.nome || "-", 50, y);
+    
+    doc.setFont(undefined, 'bold'); doc.text("CIG / CUP:", 130, y);
+    doc.setFont(undefined, 'normal'); doc.text(`${c.cig || '-'} / ${c.cup || '-'}`, 160, y);
+    
+    y += 7;
+    doc.setFont(undefined, 'bold'); doc.text("Oggetto:", margin, y);
+    doc.setFont(undefined, 'normal'); 
+    const splitOggetto = doc.splitTextToSize(c.oggetto || "-", 140);
+    doc.text(splitOggetto, 50, y);
+    
+    y += (splitOggetto.length * 5) + 5;
+    
+    // Squadra Tecnica Box
+    doc.setFillColor(248, 249, 250);
+    doc.rect(margin, y, 170, 25, 'F');
+    doc.setFont(undefined, 'bold');
+    doc.text(`D.L.: ${c.dl || '-'}`, margin + 5, y + 8);
+    doc.text(`Ass. D.L.: ${c.adl || '-'}`, 110, y + 8);
+    doc.text(`C.S.E.: ${c.cse || '-'}`, margin + 5, y + 16);
+    doc.text(`R.U.P.: ${c.rup || '-'}`, 110, y + 16);
+    
+    y += 35;
+
+    // --- SEZIONE LAVORAZIONI ---
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text("LAVORAZIONI E ORDINI DI SERVIZIO", margin, y);
+    doc.line(margin, y+2, 190, y+2);
+    
+    y += 10;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const splitLavorazioni = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita per questa data.", 170);
+    
+    // Gestione overflow lavorazioni
+    for(let i=0; i<splitLavorazioni.length; i++) {
+        if(y > 270) { doc.addPage(); y = 20; }
+        doc.text(splitLavorazioni[i], margin, y);
+        y += 6;
+    }
+    
+    y += 10;
+
+    // --- PERSONALE E NOTE ---
+    if(y > 240) { doc.addPage(); y = 20; }
+    
+    doc.setFont(undefined, 'bold');
+    doc.text("PERSONALE E IMPRESE PRESENTI:", margin, y);
     doc.setFont(undefined, 'normal');
     const pres = g.presenti || [];
-    doc.text(pres.length > 0 ? pres.join(", ") : "Nessuno", 20, y + 10);
-    y += 20;
+    const splitPres = doc.splitTextToSize(pres.length > 0 ? pres.join(", ") : "Nessun operatore registrato.", 170);
+    doc.text(splitPres, margin, y+7);
+    
+    y += (splitPres.length * 6) + 15;
 
-    // Firme
-    const ruoli = ['DL', 'ADL', 'CSE', 'IMP', 'RUP', 'ARUP'];
-    ruoli.forEach(r => {
+    if(g.memo) {
+        if(y > 260) { doc.addPage(); y = 20; }
+        doc.setFont(undefined, 'bold');
+        doc.text("NOTE AGGIUNTIVE:", margin, y);
+        doc.setFont(undefined, 'normal');
+        doc.text(doc.splitTextToSize(g.memo, 170), margin, y+7);
+        y += 25;
+    }
+
+    // --- FIRME (Griglia) ---
+    const ruoli = ['DL', 'CSE', 'IMP', 'RUP'];
+    let sigX = margin;
+    y += 10;
+    
+    ruoli.forEach((r, idx) => {
         if(g['firma_'+r]) {
-            if(y > 250) { doc.addPage(); y = 20; }
-            doc.text(`Firma ${r}:`, 20, y);
-            doc.addImage(g['firma_'+r], 'PNG', 20, y + 2, 35, 15);
-            y += 25;
+            if(y > 260) { doc.addPage(); y = 20; }
+            doc.setFontSize(8);
+            doc.text(`Firma ${r}`, sigX + 15, y, { align: 'center' });
+            doc.addImage(g['firma_'+r], 'PNG', sigX, y+2, 30, 15);
+            sigX += 45;
+            if(sigX > 160) { sigX = margin; y += 30; }
         }
     });
 
-    // Foto (una per pagina)
+    // --- FOTO (Allegati) ---
     if(g.photos && g.photos.length > 0) {
         g.photos.forEach((foto, i) => {
             doc.addPage();
-            doc.text(`ALLEGATO FOTOGRAFICO ${i+1}`, 105, 15, { align: "center" });
-            doc.addImage(foto, 'JPEG', 20, 25, 170, 110);
+            doc.setFillColor(0, 86, 179);
+            doc.rect(0, 0, 210, 20, 'F');
+            doc.setTextColor(255);
+            doc.text(`ALLEGATO FOTOGRAFICO ${i+1}`, pageWidth/2, 13, { align: "center" });
+            doc.addImage(foto, 'JPEG', margin, 30, 170, 110);
+            doc.setTextColor(0);
         });
     }
 
