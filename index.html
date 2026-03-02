@@ -37,6 +37,7 @@
         #save-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2d3748; color: white; padding: 8px 20px; border-radius: 30px; display: none; z-index: 9999; }
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; border: 1px solid #e2e8f0; margin: 2px; cursor: pointer; background: #fff; }
         .worker-chip.selected { background: #2d3748; color: white; }
+        .btn-del-cantiere { position: absolute; top: 10px; right: 10px; color: #e53e3e; border: none; background: transparent; padding: 5px; }
     </style>
 </head>
 <body>
@@ -184,7 +185,32 @@ auth.onAuthStateChanged(user => { if(user) { $("#auth-section").hide(); $("#pin-
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()); }
 function checkPin() { if($('#pin-input').val()==="9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else alert("PIN Errato"); }
 function loadDB() { db.collection('users').doc('archivio_condiviso').get().then(doc => { userData.cantieri = doc.exists ? doc.data().cantieri : []; renderList(); }); }
-function renderList() { let h = ''; userData.cantieri.forEach((c, i) => { h += `<div class="col-md-4"><div class="card p-3 shadow-sm" onclick="openC(${i})" style="cursor:pointer"><h6>${c.nome}</h6><small>CIG: ${c.cig || '-'}</small></div></div>`; }); $('#cantieri-grid').html(h); }
+
+function renderList() { 
+    let h = ''; 
+    userData.cantieri.forEach((c, i) => { 
+        h += `<div class="col-md-4 position-relative">
+                <div class="card p-3 shadow-sm" onclick="openC(${i})" style="cursor:pointer">
+                    <h6>${c.nome}</h6>
+                    <small>CIG: ${c.cig || '-'}</small>
+                </div>
+                <button class="btn-del-cantiere" onclick="deleteCommessa(event, ${i})">🗑️</button>
+              </div>`; 
+    }); 
+    $('#cantieri-grid').html(h); 
+}
+
+// NUOVA FUNZIONE ELIMINA COMMESSA
+function deleteCommessa(event, i) {
+    event.stopPropagation(); // Evita di aprire il cantiere mentre clicchi il cestino
+    if(confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE la commessa "${userData.cantieri[i].nome}" e tutti i suoi rapporti?`)) {
+        userData.cantieri.splice(i, 1);
+        db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => {
+            renderList();
+        });
+    }
+}
+
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); window.scrollTo(0,0); }
 function changeMonth(dir) { currentMonth.setMonth(currentMonth.getMonth()+dir); renderCal(); }
@@ -272,12 +298,10 @@ function addDittaG() {
     renderPresenze(); autoSave();
 }
 
-// FUNZIONE PER RIMUOVERE DITTA DAL GIORNALE CORRENTE
 function removeDittaG(nome) {
     if(confirm(`Rimuovere la ditta ${nome} dal giornale di oggi?`)) {
         let g = userData.cantieri[cIdx].giornali[activeDate];
         g.ditteVisibili = g.ditteVisibili.filter(x => x !== nome);
-        // Pulisce anche gli operai presenti di quella ditta
         g.presenti = (g.presenti || []).filter(p => !p.includes(`(${nome})`));
         renderPresenze(); autoSave();
     }
