@@ -271,12 +271,28 @@ function addDittaG() {
     if(!g.ditteVisibili.includes(n)) g.ditteVisibili.push(n);
     renderPresenze(); autoSave();
 }
+
+// FUNZIONE PER RIMUOVERE DITTA DAL GIORNALE CORRENTE
+function removeDittaG(nome) {
+    if(confirm(`Rimuovere la ditta ${nome} dal giornale di oggi?`)) {
+        let g = userData.cantieri[cIdx].giornali[activeDate];
+        g.ditteVisibili = g.ditteVisibili.filter(x => x !== nome);
+        // Pulisce anche gli operai presenti di quella ditta
+        g.presenti = (g.presenti || []).filter(p => !p.includes(`(${nome})`));
+        renderPresenze(); autoSave();
+    }
+}
+
 function renderPresenze() {
     const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
     let h = ''; (g.ditteVisibili || []).forEach(nome => {
         const d = (c.anagraficaDitte || []).find(x => x.nome === nome);
         if(d) {
-            h += `<div class="bg-white p-2 border rounded mb-2 small"><b>${nome}</b><br>`;
+            h += `<div class="bg-white p-2 border rounded mb-2 small">
+                    <div class="d-flex justify-content-between">
+                        <b>${nome}</b>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="removeDittaG('${nome}')" style="text-decoration:none">🗑️</button>
+                    </div><br>`;
             (d.operai || []).forEach(o => {
                 const id = `${o} (${nome})`; const sel = (g.presenti || []).includes(id) ? 'selected' : '';
                 h += `<span class="worker-chip ${sel}" onclick="toggleW('${id}')">${o}</span>`;
@@ -313,7 +329,7 @@ function editCurrentCommessa() {
     tempAna = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); renderAna(); $('#modalC').modal('show');
 }
 function addAnaDitta() { const n = prompt("Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
-function delAnaDitta(i) { if(confirm("Eliminare definitivamente questa ditta?")) { tempAna.splice(i, 1); renderAna(); } } // AGGIUNTA
+function delAnaDitta(i) { if(confirm("Eliminare definitivamente questa ditta dalla commessa?")) { tempAna.splice(i, 1); renderAna(); } }
 function addAnaW(i) { const n = prompt("Operaio:"); if(n) { tempAna[i].operai.push(n.toUpperCase()); renderAna(); } }
 function renderAna() { 
     let h = ''; 
