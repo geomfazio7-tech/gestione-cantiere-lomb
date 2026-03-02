@@ -19,17 +19,24 @@
         section { display: none; } .active-section { display: block; }
         .card { border-radius: 12px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* CALENDARIO FLUIDO CON COLORI DISTINTI */
+        /* CALENDARIO */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #dee2e6; padding: 2px; border-radius: 10px; }
         .cal-day { min-height: 60px; background: #fff; padding: 5px; cursor: pointer; font-size: 0.8rem; display: flex; flex-direction: column; }
         .cal-header { font-weight: bold; text-align: center; font-size: 0.7rem; padding: 5px 0; background: #f8f9fa; }
-        
         .cal-today { border: 2px solid var(--accent) !important; background: #e7f1ff !important; font-weight: bold; }
         .cal-past { background: #f1f3f5; color: #adb5bd; }
         .cal-future { background: #fff; color: #000; }
 
-        /* INPUT */
-        #g-lavorazioni[readonly] { background: #f8f9fa; color: #6c757d; }
+        /* MATRICE EISENHOWER COLORATA */
+        .quadrant { min-height: 120px; border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 0.8rem; }
+        .q-1 { background: #f8d7da; border: 1px solid #f5c6cb; } /* Urgente/Imp */
+        .q-2 { background: #fff3cd; border: 1px solid #ffeeba; } /* Non Urg/Imp */
+        .q-3 { background: #cff4fc; border: 1px solid #b6effb; } /* Urg/Non Imp */
+        .q-4 { background: #f8f9fa; border: 1px solid #dee2e6; } /* Non Urg/Non Imp */
+        .task-item { background: white; margin-bottom: 4px; padding: 4px 8px; border-radius: 5px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-weight: 500; }
+
+        /* INPUT E FIRME */
+        #g-lavorazioni[readonly] { background: #f8f9fa; color: #444; }
         .sig-box { border: 1px solid #ccc; border-radius: 8px; height: 120px; background: white; }
         canvas { width: 100%; height: 100%; touch-action: none; }
         .worker-chip { display: inline-block; padding: 3px 8px; border-radius: 15px; font-size: 0.7rem; border: 1px solid #ccc; margin: 2px; cursor: pointer; background: white; }
@@ -65,7 +72,7 @@
 
         <section id="section-list" class="active-section">
             <div class="d-flex justify-content-between mb-3">
-                <h6 class="fw-bold">COMMESSE ATTIVE</h6>
+                <h6 class="fw-bold text-uppercase">Commesse Attive</h6>
                 <button class="btn btn-primary btn-sm" onclick="openModaleNuovo()">+ Nuova</button>
             </div>
             <div id="cantieri-grid" class="row g-3"></div>
@@ -106,7 +113,7 @@
                                 <option value="Vento">💨 Vento</option>
                                 <option value="Neve">❄️ Neve</option>
                             </select>
-                            <input type="number" id="g-temp" class="form-control form-control-sm" style="width:70px" placeholder="°C" onchange="autoSave()">
+                            <input type="number" id="g-temp" class="form-control form-control-sm" style="width:75px" placeholder="°C" onchange="autoSave()">
                         </div>
                         
                         <label class="fw-bold small">FOTO</label>
@@ -121,12 +128,12 @@
 
                     <div class="col-md-4 border-end">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="fw-bold small">LAVORAZIONI SVOLTE</label>
+                            <label class="fw-bold small text-uppercase">Lavorazioni Svolte</label>
                             <button id="btn-lock" class="btn btn-xs btn-warning py-0 px-2" style="font-size:0.7rem" onclick="toggleLock()">MODIFICA</button>
                         </div>
                         <textarea id="g-lavorazioni" class="form-control mb-3" rows="8" readonly></textarea>
                         
-                        <label class="fw-bold small">NOTE INTERNE</label>
+                        <label class="fw-bold small text-uppercase">Note Interne</label>
                         <textarea id="g-memo" class="form-control mb-3" rows="2" onchange="autoSave()"></textarea>
 
                         <label class="fw-bold small">FIRME DIGITALI</label>
@@ -140,14 +147,19 @@
                             <div class="sig-box mb-2"><canvas id="sig-canvas"></canvas></div>
                             <button class="btn btn-sm btn-success w-100" onclick="saveSig()">Salva Firma</button>
                         </div>
-                        <button class="btn btn-danger w-100 fw-bold mt-4" onclick="generatePDF()">GENERA PDF GIORNALE</button>
+                        <button class="btn btn-danger w-100 fw-bold mt-4" onclick="generatePDF()">SCARICA PDF GIORNALE</button>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="fw-bold small">TASK / EISENHOWER</label>
+                        <label class="fw-bold small">MATRICE EISENHOWER</label>
                         <div class="input-group input-group-sm mb-2">
                             <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
-                            <select id="task-q" class="form-select" style="max-width:60px"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <select id="task-q" class="form-select" style="max-width:80px">
+                                <option value="1">Q1 Urg</option>
+                                <option value="2">Q2 Imp</option>
+                                <option value="3">Q3 Del</option>
+                                <option value="4">Q4 Note</option>
+                            </select>
                             <button class="btn btn-primary" onclick="addTask()">+</button>
                         </div>
                         <div class="row g-1">
@@ -156,6 +168,7 @@
                             <div class="col-6"><div class="quadrant q-3" id="q3"></div></div>
                             <div class="col-6"><div class="quadrant q-4" id="q4"></div></div>
                         </div>
+                        <small class="text-muted" style="font-size:0.65rem">Clicca su un task per eliminarlo.</small>
                     </div>
                 </div>
             </div>
@@ -178,7 +191,7 @@
     </div>
     <label class="fw-bold small">Anagrafica Imprese</label>
     <div id="ana-list" class="mb-2"></div>
-    <button class="btn btn-sm btn-outline-primary" onclick="addAnaDitta()">+ Ditta</button>
+    <button class="btn btn-sm btn-outline-primary" onclick="addAnaDitta()">+ Aggiungi Ditta</button>
     <button class="btn btn-primary w-100 mt-4" onclick="saveC()">SALVA COMMESSA</button>
 </div></div></div></div>
 
@@ -270,6 +283,22 @@ function autoSave() {
       .then(() => setTimeout(() => $('#save-status').fadeOut(), 1000));
 }
 
+function addTask() {
+    const t = $('#task-in').val(); if(!t) return;
+    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
+    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
+    $('#task-in').val(''); autoSave(); renderTasks();
+}
+
+function renderTasks() {
+    $('.quadrant').empty();
+    (userData.cantieri[cIdx].tasks || []).forEach(t => {
+        $(`#q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}</div>`);
+    });
+}
+
+function delT(id) { if(confirm("Eliminare questo task?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id!==id); autoSave(); renderTasks(); } }
+
 function addDittaG() {
     const n = $('#sel-ditta').val(); if(!n) return;
     let g = userData.cantieri[cIdx].giornali[activeDate] || (userData.cantieri[cIdx].giornali[activeDate] = {});
@@ -284,7 +313,7 @@ function renderPresenze() {
     (g.ditteVisibili || []).forEach(nome => {
         const d = (c.anagraficaDitte || []).find(x => x.nome === nome);
         if(d) {
-            h += `<div class="bg-light p-2 rounded mb-2 border"><div class="d-flex justify-content-between"><b>${nome}</b><button class="btn btn-link text-danger btn-sm p-0" onclick="remDittaG('${nome}')">x</button></div>`;
+            h += `<div class="bg-light p-2 rounded mb-2 border small"><div class="d-flex justify-content-between"><b>${nome}</b><button class="btn btn-link text-danger btn-sm p-0" onclick="remDittaG('${nome}')">x</button></div>`;
             (d.operai || []).forEach(o => {
                 const id = `${o} (${nome})`;
                 const sel = (g.presenti || []).includes(id) ? 'selected' : '';
@@ -337,26 +366,17 @@ function handlePhotos(inpt) {
         }; r.readAsDataURL(f);
     }
 }
+
 function renderPhotos() {
     const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     $('#photo-box').empty();
     (g.photos || []).forEach((p, i) => $('#photo-box').append(`<img src="${p}" class="photo-thumb" onclick="delPh(${i})">`));
 }
+
 function delPh(i) { if(confirm("Elimina foto?")) { userData.cantieri[cIdx].giornali[activeDate].photos.splice(i,1); autoSave(); renderPhotos(); } }
 
-function addTask() {
-    const t = $('#task-in').val(); if(!t) return;
-    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
-    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
-    $('#task-in').val(''); autoSave(); renderTasks();
-}
-function renderTasks() {
-    $('.quadrant').empty();
-    (userData.cantieri[cIdx].tasks || []).forEach(t => $(`#q${t.q}`).append(`<div class="task-item bg-white p-1 mb-1 rounded shadow-sm small" onclick="delT(${t.id})">${t.text}</div>`));
-}
-function delT(id) { if(confirm("Elimina task?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id!==id); autoSave(); renderTasks(); } }
-
 function openModaleNuovo() { cIdx = -1; tempAna = []; $('#modalC input').val(''); $('#ana-list').empty(); $('#modalC').modal('show'); }
+
 function editCurrentCommessa() {
     const c = userData.cantieri[cIdx];
     $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto); $('#c-cig').val(c.cig); $('#c-cup').val(c.cup);
@@ -364,8 +384,10 @@ function editCurrentCommessa() {
     tempAna = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); renderAna();
     $('#modalC').modal('show');
 }
+
 function addAnaDitta() { const n = prompt("Nome Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
 function addAnaW(i) { const n = prompt("Operaio:"); if(n) { tempAna[i].operai.push(n.toUpperCase()); renderAna(); } }
+
 function renderAna() {
     let h = ''; tempAna.forEach((d, i) => {
         h += `<div class="p-2 border rounded mb-2 small"><b>${d.nome}</b> <button class="btn btn-link btn-sm py-0" onclick="addAnaW(${i})">+ operaio</button><br>`;
@@ -374,13 +396,13 @@ function renderAna() {
     });
     $('#ana-list').html(h);
 }
+
 function saveC() {
     const d = { nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
     if(cIdx===-1) userData.cantieri.push(d); else userData.cantieri[cIdx] = d;
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => { $('#modalC').modal('hide'); renderList(); });
 }
 
-// PDF CON BOX FIRME E DETTAGLI COMPLETI
 async function generatePDF() {
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
     const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
@@ -396,10 +418,8 @@ async function generatePDF() {
     y += 10; doc.setFontSize(9);
     doc.text("Cantiere:", 15, y); doc.setFont(undefined, 'normal'); doc.text(c.nome || "-", 45, y);
     y += 6; doc.setFont(undefined, 'bold'); doc.text("Oggetto:", 15, y); doc.setFont(undefined, 'normal'); doc.text(doc.splitTextToSize(c.oggetto || "-", 150), 45, y);
-    y += 12; doc.setFont(undefined, 'bold'); doc.text("CIG:", 15, y); doc.setFont(undefined, 'normal'); doc.text(c.cig || "-", 45, y);
-    doc.setFont(undefined, 'bold'); doc.text("CUP:", 100, y); doc.setFont(undefined, 'normal'); doc.text(c.cup || "-", 120, y);
+    y += 12; doc.setFont(undefined, 'bold'); doc.text("CIG / CUP:", 15, y); doc.setFont(undefined, 'normal'); doc.text(`${c.cig || "-"} / ${c.cup || "-"}`, 45, y);
 
-    // BOX FIGURE COINVOLTE CON SPAZIO FIRMA
     y += 15; doc.setFont(undefined, 'bold'); doc.text("FIGURE PROFESSIONALI E FIRME", 15, y);
     doc.line(15, y+2, 195, y+2);
     y += 10;
@@ -416,10 +436,8 @@ async function generatePDF() {
     figure.forEach(f => {
         doc.setFont(undefined, 'bold'); doc.text(f.label, 15, y);
         doc.setFont(undefined, 'normal'); doc.text(f.nome || "-", 45, y);
-        doc.rect(140, y-5, 50, 10); // Casella bianca per firma
-        if(f.sig && g['firma_'+f.sig]) {
-            doc.addImage(g['firma_'+f.sig], 'PNG', 145, y-4, 40, 8);
-        }
+        doc.rect(145, y-5, 45, 10);
+        if(f.sig && g['firma_'+f.sig]) doc.addImage(g['firma_'+f.sig], 'PNG', 147, y-4, 41, 8);
         y += 12;
     });
 
