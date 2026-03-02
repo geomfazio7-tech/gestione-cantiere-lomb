@@ -38,7 +38,6 @@
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; border: 1px solid #dee2e6; margin: 2px; cursor: pointer; background: white; }
         .worker-chip.selected { background: #0056b3; color: white; border-color: #0056b3; }
         
-        /* FOTO CON TASTO ELIMINA */
         .photo-wrapper { position: relative; display: inline-block; }
         .photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn-del-photo { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
@@ -105,7 +104,7 @@
                 <div class="row g-3">
                     <div class="col-lg-4 border-end">
                         <span class="section-label">📸 Foto (Clicca X per eliminare)</span>
-                        <input type="file" id="photo-input" multiple accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+                        <input type="file" id="photo-input" multiple accept="image/*" capture="environment" style="display:none" onchange="uploadPhoto(this)">
                         <button class="btn btn-sm btn-primary w-100 mb-2 rounded-pill" onclick="document.getElementById('photo-input').click()">+ Aggiungi Foto</button>
                         <div id="photo-gallery" class="d-flex flex-wrap gap-2 mb-3"></div>
                         
@@ -209,7 +208,7 @@ const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", auth
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(); const db = firebase.firestore();
 let userData = { cantieri: [] }; let cIdx = -1; let activeDate = ""; let sigPad;
-let currentViewDate = new Date(); let currentUID = "";
+let currentViewDate = new Date(); let currentUID = ""; let tempDitte = [];
 
 auth.onAuthStateChanged(user => { if (user) { currentUID = user.uid; $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
@@ -254,16 +253,12 @@ function openG(ds) {
     activeDate = ds; const c = userData.cantieri[cIdx]; $('#g-date-title').text(ds.split('-').reverse().join('/')); 
     const g = (c.giornali || {})[ds] || {}; 
     $('#g-meteo').val(g.meteo || ''); $('#g-lavorazioni').val(g.lavorazioni || ''); $('#g-memo').val(g.memo || ''); 
-    
-    // Menu selezione ditte (filtrato)
     let sel = $('#select-add-ditta').empty().append('<option value="">-- Seleziona Ditta --</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
-    
     showSection('section-giornale'); renderPhotos(); renderTasks(); renderDitteAttive();
     sigPad = new SignaturePad(document.getElementById("sig-pad")); $("#sig-area").hide(); $("#sign-role").val(""); 
 }
 
-// LOGICA DITTE PERMANENTI
 function addDittaToGiornale() {
     const nome = $('#select-add-ditta').val(); if(!nome) return;
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
@@ -308,7 +303,6 @@ function togglePresenza(id) {
     autoSave(); renderDitteAttive(); 
 }
 
-// LOGICA FOTO CON ELIMINAZIONE
 function renderPhotos() { 
     $('#photo-gallery').empty(); const g = userData.cantieri[cIdx].giornali[activeDate] || {}; 
     if(g.photos) g.photos.forEach((p, idx) => {
@@ -371,7 +365,14 @@ function renderTasks() {
     }); 
 }
 
-function deleteTask(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); autoSave(); renderTasks(); }
+function deleteTask(id) { 
+    if(confirm("Vuoi segnare questo impegno come completato ed eliminarlo?")) {
+        userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id != id); 
+        autoSave(); 
+        renderTasks(); 
+    }
+}
+
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
 function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnagraficaDitte(); $('#modalCommessa').modal('show'); }
 
@@ -410,7 +411,68 @@ function saveCommessaData() {
     }); 
 }
 
-function generatePDF() { alert("Generazione PDF..."); }
+async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const c = userData.cantieri[cIdx];
+    const g = c.giornali[activeDate] || {};
+    
+    // Intestazione PDF
+    doc.setFontSize(16); doc.setTextColor(0, 86, 179);
+    doc.text("GIORNALE DI CANTIERE", 105, 15, { align: "center" });
+    
+    doc.setFontSize(10); doc.setTextColor(0);
+    doc.text(`CANTIERE: ${c.nome}`, 20, 25);
+    doc.text(`OGGETTO: ${c.oggetto || '-'}`, 20, 30);
+    doc.text(`CIG: ${c.cig || '-'} | CUP: ${c.cup || '-'}`, 20, 35);
+    doc.text(`DATA: ${activeDate.split('-').reverse().join('/')}`, 20, 40);
+    doc.text(`METEO: ${g.meteo || '-'}`, 20, 45);
+    
+    doc.line(20, 48, 190, 48);
+    
+    // Squadra Tecnica
+    doc.setFontSize(9);
+    doc.text(`D.L.: ${c.dl || '-'} | Ass. D.L.: ${c.adl || '-'}`, 20, 53);
+    doc.text(`C.S.E.: ${c.cse || '-'} | R.U.P.: ${c.rup || '-'}`, 20, 58);
+    
+    doc.line(20, 61, 190, 61);
+
+    // Lavorazioni
+    doc.setFont(undefined, 'bold'); doc.text("LAVORAZIONI:", 20, 68);
+    doc.setFont(undefined, 'normal');
+    const splitLavorazioni = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita", 170);
+    doc.text(splitLavorazioni, 20, 73);
+    let y = 73 + (splitLavorazioni.length * 5);
+
+    // Personale
+    doc.setFont(undefined, 'bold'); doc.text("PERSONALE PRESENTE:", 20, y + 5);
+    doc.setFont(undefined, 'normal');
+    const pres = g.presenti || [];
+    doc.text(pres.length > 0 ? pres.join(", ") : "Nessuno", 20, y + 10);
+    y += 20;
+
+    // Firme
+    const ruoli = ['DL', 'ADL', 'CSE', 'IMP', 'RUP', 'ARUP'];
+    ruoli.forEach(r => {
+        if(g['firma_'+r]) {
+            if(y > 250) { doc.addPage(); y = 20; }
+            doc.text(`Firma ${r}:`, 20, y);
+            doc.addImage(g['firma_'+r], 'PNG', 20, y + 2, 35, 15);
+            y += 25;
+        }
+    });
+
+    // Foto (una per pagina)
+    if(g.photos && g.photos.length > 0) {
+        g.photos.forEach((foto, i) => {
+            doc.addPage();
+            doc.text(`ALLEGATO FOTOGRAFICO ${i+1}`, 105, 15, { align: "center" });
+            doc.addImage(foto, 'JPEG', 20, 25, 170, 110);
+        });
+    }
+
+    doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
+}
 </script>
 </body>
 </html>
