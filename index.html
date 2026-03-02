@@ -180,7 +180,6 @@ const auth = firebase.auth(), db = firebase.firestore();
 
 let userData = { cantieri: [] }, cIdx = -1, activeDate = "", sigPad, currentMonth = new Date(), tempAna = [];
 
-// Funzioni Sync
 auth.onAuthStateChanged(user => { if(user) { $("#auth-section").hide(); $("#pin-section").show(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()); }
 function checkPin() { if($('#pin-input').val()==="9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else alert("PIN Errato"); }
@@ -314,15 +313,27 @@ function editCurrentCommessa() {
     tempAna = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); renderAna(); $('#modalC').modal('show');
 }
 function addAnaDitta() { const n = prompt("Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
+function delAnaDitta(i) { if(confirm("Eliminare definitivamente questa ditta?")) { tempAna.splice(i, 1); renderAna(); } } // AGGIUNTA
 function addAnaW(i) { const n = prompt("Operaio:"); if(n) { tempAna[i].operai.push(n.toUpperCase()); renderAna(); } }
-function renderAna() { let h = ''; tempAna.forEach((d, i) => { h += `<div class="p-2 border rounded mb-2 small bg-light"><b>${d.nome}</b> <button class="btn btn-link btn-sm" onclick="addAnaW(${i})">+ operaio</button><br>`; (d.operai || []).forEach(o => h += `<span class="badge bg-secondary me-1">${o}</span>`); h += '</div>'; }); $('#ana-list').html(h); }
+function renderAna() { 
+    let h = ''; 
+    tempAna.forEach((d, i) => { 
+        h += `<div class="p-2 border rounded mb-2 small bg-light d-flex justify-content-between align-items-start">
+                <div>
+                    <b>${d.nome}</b> <button class="btn btn-link btn-sm p-0 ms-2" style="text-decoration:none" onclick="addAnaW(${i})">+ operaio</button><br>`; 
+        (d.operai || []).forEach(o => h += `<span class="badge bg-secondary me-1">${o}</span>`); 
+        h += `</div>
+                <button class="btn btn-sm btn-outline-danger border-0 py-0" onclick="delAnaDitta(${i})">🗑️</button>
+              </div>`; 
+    }); 
+    $('#ana-list').html(h); 
+}
 function saveC() {
     const d = { ente: $('#c-ente').val().toUpperCase(), nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
     if(cIdx===-1) userData.cantieri.push(d); else userData.cantieri[cIdx] = d;
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => { $('#modalC').modal('hide'); renderList(); });
 }
 
-// --- GENERAZIONE PDF ---
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -330,7 +341,6 @@ async function generatePDF() {
     const g = c.giornali[activeDate] || {};
     const mainColor = [45, 55, 72];
 
-    // Header
     doc.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255);
@@ -339,27 +349,22 @@ async function generatePDF() {
 
     let y = 50; doc.setTextColor(0); doc.setDrawColor(mainColor[0], mainColor[1], mainColor[2]); doc.setLineWidth(0.5);
 
-    // Stazione Appaltante
     doc.setFontSize(11); doc.setFont("helvetica", "bold");
     doc.text("STAZIONE APPALTANTE:", 15, y); doc.setFont("helvetica", "normal");
     doc.text(c.ente || "-", 65, y); y += 8;
 
-    // Cantiere
     doc.setFont("helvetica", "bold"); doc.text("CANTIERE:", 15, y);
     doc.setFont("helvetica", "normal"); doc.text(c.nome || "-", 65, y); y += 8;
 
-    // Oggetto
     doc.setFont("helvetica", "bold"); doc.text("OGGETTO:", 15, y);
     doc.setFont("helvetica", "normal"); const objL = doc.splitTextToSize(c.oggetto || "-", 130);
     doc.text(objL, 65, y); y += (objL.length * 6) + 4;
 
-    // CIG & CUP
     doc.setFont("helvetica", "bold"); doc.text("CIG:", 15, y);
     doc.setFont("helvetica", "normal"); doc.text(c.cig || "-", 65, y);
     doc.setFont("helvetica", "bold"); doc.text("CUP:", 110, y);
     doc.setFont("helvetica", "normal"); doc.text(c.cup || "-", 130, y); y += 12;
 
-    // Maestranze
     doc.line(15, y, 195, y); y += 8;
     doc.setFont("helvetica", "bold"); doc.text("DITTE E PERSONALE PRESENTE", 15, y); y += 8;
     doc.setFontSize(10);
@@ -374,7 +379,6 @@ async function generatePDF() {
         });
     } else { doc.text("Nessun dato inserito.", 15, y); y += 10; }
 
-    // Lavorazioni (CON TITOLO)
     y += 5; if (y > 270) { doc.addPage(); y = 20; }
     doc.line(15, y, 195, y); y += 8;
     doc.setFont("helvetica", "bold"); doc.text("LAVORAZIONI SVOLTE", 15, y); y += 8;
@@ -382,7 +386,6 @@ async function generatePDF() {
     const lavL = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", 180);
     doc.text(lavL, 15, y); y += (lavL.length * 6) + 15;
 
-    // Foto
     if (g.photos && g.photos.length > 0) {
         if (y > 230) { doc.addPage(); y = 20; }
         doc.line(15, y, 195, y); y += 8;
@@ -395,7 +398,6 @@ async function generatePDF() {
         if (xPos === 110) y += 70;
     }
 
-    // Firme
     const figure = [
         { label: "DIRETTORE LAVORI", nome: c.dl, key: 'DL' },
         { label: "ASSISTENTE D.L.", nome: c.adl, key: 'ADL' },
