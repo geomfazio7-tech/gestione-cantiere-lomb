@@ -16,31 +16,22 @@
     <style>
         :root { --primary: #1a2a6c; --accent: #0052D4; --bg: #f4f7f6; }
         body { background: var(--bg); font-family: 'Segoe UI', sans-serif; color: #333; }
-        
         .navbar-custom { background: linear-gradient(90deg, #1a2a6c, #b21f1f, #fdbb2d); padding: 1rem; }
         .card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         section { display: none; padding-top: 20px; } .active-section { display: block; }
-        
-        /* CALENDARIO */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: #fff; padding: 10px; border-radius: 15px; }
         .cal-day { min-height: 70px; background: #f8f9fa; border-radius: 8px; padding: 8px; cursor: pointer; transition: 0.2s; }
         .cal-header { font-weight: 800; text-align: center; color: var(--primary); font-size: 0.7rem; text-transform: uppercase; padding-bottom: 5px; }
         .cal-today { background: #eef2ff !important; border: 2px solid var(--accent) !important; font-weight: bold; }
         .cal-past { opacity: 0.6; background: #e9ecef; }
-        .cal-future { background: #fff; }
-
-        /* EISENHOWER */
         .quadrant { min-height: 130px; border-radius: 12px; padding: 10px; margin-bottom: 10px; }
         .q-1 { background: #ffe3e3; border-left: 5px solid #ff4b2b; } 
         .q-2 { background: #fff4e0; border-left: 5px solid #fdbb2d; } 
         .q-3 { background: #e0f2ff; border-left: 5px solid #0052D4; } 
         .q-4 { background: #f1f3f5; border-left: 5px solid #6c757d; }
         .task-item { background: white; margin-bottom: 5px; padding: 5px; border-radius: 5px; font-size: 0.75rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-        /* PRESENZE */
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; border: 1px solid #ddd; margin: 2px; cursor: pointer; background: #fff; }
         .worker-chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
-        
         .sig-box { border: 2px dashed #ccc; border-radius: 10px; height: 120px; background: #fff; }
         #save-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #198754; color: white; padding: 8px 20px; border-radius: 30px; display: none; z-index: 9999; }
     </style>
@@ -192,6 +183,7 @@
 </div></div></div></div>
 
 <script>
+// CONFIGURAZIONE FIREBASE
 const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
@@ -297,7 +289,7 @@ function toggleW(id) {
     autoSave(); renderPresenze();
 }
 
-function remDittaG(n) { userData.cantieri[cIdx].giornali[activeDate].ditteVisibili = userData.cantieri[cIdx].giornali[activeDate].ditteVisibly.filter(x => x!==n); autoSave(); renderPresenze(); }
+function remDittaG(n) { userData.cantieri[cIdx].giornali[activeDate].ditteVisibili = userData.cantieri[cIdx].giornali[activeDate].ditteVisibili.filter(x => x!==n); autoSave(); renderPresenze(); }
 
 function addTask() {
     const t = $('#task-in').val(); if(!t) return;
@@ -365,61 +357,129 @@ function saveC() {
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => { $('#modalC').modal('hide'); renderList(); });
 }
 
+// --- GENERAZIONE PDF PROFESSIONALE ---
 async function generatePDF() {
-    const { jsPDF } = window.jspdf; const doc = new jsPDF();
-    const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
-    
-    // Header
-    doc.setFillColor(26, 42, 108); doc.rect(0, 0, 210, 35, 'F');
-    doc.setTextColor(255); doc.setFontSize(20); doc.text("GIORNALE DI CANTIERE", 105, 18, { align: 'center' });
-    doc.setFontSize(10); doc.text(`Report del: ${activeDate.split('-').reverse().join('/')} | Meteo: ${g.meteo || '-'} | ${g.temp || '--'}°C`, 105, 28, { align: 'center' });
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const c = userData.cantieri[cIdx];
+    const g = c.giornali[activeDate] || {};
 
-    doc.setTextColor(0); doc.setFontSize(11); let y = 45;
-    doc.setFont(undefined, 'bold'); doc.text("DETTAGLI COMMESSA", 15, y);
-    doc.setDrawColor(26, 42, 108); doc.line(15, y+2, 195, y+2);
+    // 1. HEADER MODERNO
+    doc.setFillColor(26, 42, 108); // Blu Profondo
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("GIORNALE DI CANTIERE", 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Data Verbale: ${activeDate.split('-').reverse().join('/')} | Meteo: ${g.meteo || '-'} | Temp: ${g.temp || '--'}°C`, 105, 30, { align: 'center' });
+
+    // 2. BOX INFORMAZIONI CANTIERE
+    let y = 50;
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("INFORMAZIONI GENERALI", 15, y);
+    doc.setDrawColor(26, 42, 108);
+    doc.line(15, y+2, 195, y+2);
     
-    y += 10; doc.setFontSize(9);
-    const info = [["Cantiere:", c.nome],["Oggetto:", c.oggetto],["CIG / CUP:", `${c.cig || '-'} / ${c.cup || '-'}`]];
-    info.forEach(row => {
-        doc.setFont(undefined, 'bold'); doc.text(row[0], 15, y);
-        doc.setFont(undefined, 'normal'); doc.text(doc.splitTextToSize(row[1] || '-', 150), 45, y);
-        y += (row[0]==="Oggetto:") ? 12 : 7;
+    y += 10;
+    doc.setFontSize(9);
+    const infoGeneral = [
+        ["Cantiere:", c.nome || "-"],
+        ["Oggetto:", c.oggetto || "-"],
+        ["CIG / CUP:", `${c.cig || '-'} / ${c.cup || '-'}`]
+    ];
+    infoGeneral.forEach(row => {
+        doc.setFont("helvetica", "bold"); doc.text(row[0], 15, y);
+        doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(row[1], 150), 45, y);
+        y += (row[0] === "Oggetto:") ? 12 : 7;
     });
 
-    // Maestranze (Corretto)
-    y += 5; doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text("PERSONALE PRESENTE", 15, y);
+    // 3. MAESTRANZE E DITTE (IL PUNTO RICHIESTO)
+    y += 5;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("PERSONALE E IMPRESE IN CANTIERE", 15, y);
     doc.line(15, y+2, 195, y+2);
-    y += 10; doc.setFontSize(9);
-    if(g.ditteVisibili && g.ditteVisibili.length > 0) {
-        g.ditteVisibili.forEach(ditta => {
-            const operai = (g.presenti || []).filter(p => p.includes(`(${ditta})`)).map(p => p.split(' (')[0]).join(', ');
-            doc.setFont(undefined, 'bold'); doc.text(`${ditta}:`, 15, y);
-            doc.setFont(undefined, 'normal'); doc.text(doc.splitTextToSize(operai || "Nessun operaio segnato", 140), 50, y);
+    y += 10;
+
+    doc.setFontSize(9);
+    if (g.ditteVisibili && g.ditteVisibili.length > 0) {
+        g.ditteVisibili.forEach(dittaNome => {
+            // Estrazione operai presenti specifici per questa ditta
+            const operaiPresenti = (g.presenti || [])
+                .filter(p => p.includes(`(${dittaNome})`))
+                .map(p => p.split(' (')[0]);
+
+            doc.setFont("helvetica", "bold");
+            doc.text(`• ${dittaNome}:`, 15, y);
+            
+            doc.setFont("helvetica", "normal");
+            const testoOperai = operaiPresenti.length > 0 ? operaiPresenti.join(", ") : "Nessun operaio presente segnato.";
+            doc.text(doc.splitTextToSize(testoOperai, 140), 50, y);
             y += 8;
         });
+    } else {
+        doc.setFont("helvetica", "italic");
+        doc.text("Nessuna impresa registrata per questa data.", 15, y);
+        y += 8;
     }
 
-    // Firme e Ruoli
-    y += 5; doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text("FIGURE PROFESSIONALI E FIRME", 15, y);
-    doc.line(15, y+2, 195, y+2); y += 10;
+    // 4. FIGURE PROFESSIONALI E FIRME
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("FIGURE PROFESSIONALI E FIRME", 15, y);
+    doc.line(15, y+2, 195, y+2);
+    y += 10;
+
     const figure = [
-        {l: "Direttore Lavori:", n: c.dl, s: 'DL'}, {l: "Assistente DL:", n: c.adl},
-        {l: "CSE:", n: c.cse, s: 'CSE'}, {l: "RUP:", n: c.rup},
-        {l: "Assistente RUP:", n: c.arup}, {l: "Resp. Impresa:", n: "Firma Visione", s: 'IMP'}
+        {l: "Direttore Lavori:", n: c.dl, s: 'DL'},
+        {l: "Coord. Sicurezza (CSE):", n: c.cse, s: 'CSE'},
+        {l: "RUP:", n: c.rup},
+        {l: "Impresa Affidataria:", n: "Firma per presa visione", s: 'IMP'}
     ];
+
     figure.forEach(f => {
-        doc.setFont(undefined, 'bold'); doc.text(f.l, 15, y);
-        doc.setFont(undefined, 'normal'); doc.text(f.n || "-", 15, y+5);
-        doc.rect(145, y-2, 50, 10);
-        if(f.s && g['firma_'+f.s]) doc.addImage(g['firma_'+f.s], 'PNG', 147, y-1, 46, 8);
+        doc.setFont("helvetica", "bold");
+        doc.text(f.l, 15, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(f.n || "-", 15, y+5);
+        
+        // Box Bianco per firma
+        doc.setDrawColor(200);
+        doc.rect(140, y-3, 55, 12); 
+        
+        if(f.s && g['firma_'+f.s]) {
+            doc.addImage(g['firma_'+f.s], 'PNG', 142, y-2, 50, 10);
+        }
         y += 15;
     });
 
-    // Lavorazioni
-    if(y > 230) { doc.addPage(); y = 20; }
-    y += 5; doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text("DESCRIZIONE LAVORAZIONI", 15, y);
-    doc.line(15, y+2, 195, y+2); y += 10;
-    doc.setFont(undefined, 'normal'); doc.text(doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione.", 180), 15, y);
+    // 5. LAVORAZIONI (CON SALTO PAGINA SE NECESSARIO)
+    if (y > 230) { doc.addPage(); y = 20; }
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("DESCRIZIONE DETTAGLIATA DELLE LAVORAZIONI", 15, y);
+    doc.line(15, y+2, 195, y+2);
+    y += 10;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    const lavTxt = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita per questa data.", 180);
+    doc.text(lavTxt, 15, y);
+
+    // PIÈ DI PAGINA
+    const pages = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`CantieriCloud Pro - Pagina ${i} di ${pages}`, 105, 290, { align: 'center' });
+    }
 
     doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
 }
