@@ -16,28 +16,22 @@
     <style>
         :root { --primary: #4a5568; --accent: #718096; --bg: #f7fafc; --soft-blue: #ebf8ff; }
         body { background: var(--bg); font-family: 'Segoe UI', sans-serif; color: #2d3748; }
-        
         .navbar-custom { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 0.8rem; }
         .navbar-brand { color: #4a5568 !important; letter-spacing: 1px; }
         .card { border-radius: 12px; border: 1px solid #edf2f7; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        
         section { display: none; padding-top: 20px; } .active-section { display: block; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: #fff; padding: 10px; border-radius: 15px; }
         .cal-day { min-height: 70px; background: #f8f9fa; border-radius: 8px; padding: 8px; cursor: pointer; transition: 0.2s; }
         .cal-header { font-weight: 800; text-align: center; color: var(--primary); font-size: 0.7rem; text-transform: uppercase; padding-bottom: 5px; }
         .cal-today { background: var(--soft-blue) !important; border: 2px solid #bee3f8 !important; font-weight: bold; }
-        
         .quadrant { min-height: 130px; border-radius: 12px; padding: 10px; margin-bottom: 10px; }
         .q-1 { background: #fff5f5; border-left: 4px solid #feb2b2; } 
         .q-2 { background: #fffaf0; border-left: 4px solid #fbd38d; } 
-        
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; border: 1px solid #e2e8f0; margin: 2px; cursor: pointer; background: #fff; }
         .worker-chip.selected { background: #4a5568; color: white; border-color: #4a5568; }
         .sig-box { border: 2px dashed #e2e8f0; border-radius: 10px; height: 120px; background: #fff; }
         #save-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #718096; color: white; padding: 8px 20px; border-radius: 30px; display: none; z-index: 9999; font-size: 0.8rem; }
-        
         .photo-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
-        .photo-preview:hover { border-color: #fc8181; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -101,9 +95,9 @@
                         <select id="sel-ditta" class="form-select form-select-sm mb-3" onchange="addDittaG()"></select>
                         <div id="ditte-presenze" class="mb-3"></div>
 
-                        <label class="small fw-bold text-muted text-uppercase">Foto (Clicca per eliminare)</label>
+                        <label class="small fw-bold text-muted text-uppercase">Foto</label>
                         <input type="file" id="photo-in" capture="environment" accept="image/*" class="d-none" onchange="handlePhotos(this)">
-                        <button class="btn btn-outline-secondary btn-sm w-100 mb-2" onclick="$('#photo-in').click()">📸 Scatta o Carica Foto</button>
+                        <button class="btn btn-outline-secondary btn-sm w-100 mb-2" onclick="$('#photo-in').click()">📸 Scatta Foto</button>
                         <div id="photo-box" class="d-flex flex-wrap gap-2"></div>
                     </div>
 
@@ -112,27 +106,30 @@
                             <label class="small fw-bold text-muted text-uppercase">Lavorazioni</label>
                             <button id="btn-lock" class="btn btn-xs btn-outline-dark py-0 px-2" style="font-size:0.6rem" onclick="toggleLock()">MODIFICA</button>
                         </div>
-                        <textarea id="g-lavorazioni" class="form-control mb-3" rows="10" readonly></textarea>
+                        <textarea id="g-lavorazioni" class="form-control mb-3" rows="8" readonly></textarea>
                         
                         <label class="small fw-bold text-muted text-uppercase">Note</label>
                         <textarea id="g-memo" class="form-control mb-3" rows="2" onchange="autoSave()"></textarea>
 
-                        <label class="small fw-bold text-muted text-uppercase">Firme</label>
+                        <label class="small fw-bold text-muted text-uppercase">Firme Digitali</label>
                         <select id="sel-firma" class="form-select form-select-sm mb-2" onchange="initSig()">
-                            <option value="">Chi firma?</option>
-                            <option value="DL">Dir. Lavori</option>
+                            <option value="">Chi deve firmare?</option>
+                            <option value="DL">Direttore Lavori</option>
+                            <option value="ADL">Assistente DL</option>
                             <option value="CSE">CSE</option>
+                            <option value="RUP">RUP</option>
+                            <option value="ARUP">Assistente RUP</option>
                             <option value="IMP">Impresa</option>
                         </select>
                         <div id="sig-container" style="display:none">
                             <div class="sig-box mb-2"><canvas id="sig-canvas"></canvas></div>
-                            <button class="btn btn-sm btn-dark w-100" onclick="saveSig()">Salva Firma</button>
+                            <button class="btn btn-sm btn-dark w-100" onclick="saveSig()">Conferma Firma</button>
                         </div>
                         <button class="btn btn-primary w-100 fw-bold py-3 mt-4" onclick="generatePDF()">📄 GENERA PDF</button>
                     </div>
 
                     <div class="col-lg-4">
-                        <label class="small fw-bold text-muted text-uppercase">Task</label>
+                        <label class="small fw-bold text-muted text-uppercase">Task Veloci</label>
                         <div class="input-group input-group-sm mb-3">
                             <input type="text" id="task-in" class="form-control" placeholder="...">
                             <select id="task-q" class="form-select" style="max-width:80px"><option value="1">Urg</option><option value="2">Imp</option></select>
@@ -167,7 +164,7 @@
 </div>
 
 <div class="modal fade" id="modalC" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0"><div class="modal-body p-4">
-    <h6 class="fw-bold mb-3">Dati Commessa</h6>
+    <h6 class="fw-bold mb-3">Anagrafica Commessa</h6>
     <div class="row g-2 mb-3">
         <div class="col-6"><input type="text" id="c-nome" class="form-control" placeholder="Cantiere"></div>
         <div class="col-6"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
@@ -180,8 +177,8 @@
         <div class="col-6"><input type="text" id="c-arup" class="form-control" placeholder="Assistente RUP"></div>
     </div>
     <div id="ana-list" class="mb-3"></div>
-    <button class="btn btn-sm btn-outline-dark" onclick="addAnaDitta()">+ Ditta</button>
-    <button class="btn btn-dark w-100 mt-3 py-2" onclick="saveC()">SALVA CONFIGURAZIONE</button>
+    <button class="btn btn-sm btn-outline-dark" onclick="addAnaDitta()">+ Aggiungi Ditta</button>
+    <button class="btn btn-dark w-100 mt-3 py-2" onclick="saveC()">SALVA</button>
 </div></div></div></div>
 
 <script>
@@ -191,6 +188,7 @@ const auth = firebase.auth(), db = firebase.firestore();
 
 let userData = { cantieri: [] }, cIdx = -1, activeDate = "", sigPad, currentMonth = new Date(), tempAna = [];
 
+// GESTIONE TASTO INDIETRO SMARTPHONE
 let lastBackPress = 0;
 window.history.pushState(null, null, window.location.href);
 window.onpopstate = function() {
@@ -199,13 +197,8 @@ window.onpopstate = function() {
         if($('.active-section').attr('id') !== 'section-list') {
             showSection('section-list');
             window.history.pushState(null, null, window.location.href);
-        } else {
-            window.history.back();
-        }
-    } else {
-        lastBackPress = now;
-        window.history.pushState(null, null, window.location.href);
-    }
+        } else { window.history.back(); }
+    } else { lastBackPress = now; window.history.pushState(null, null, window.location.href); }
 };
 
 auth.onAuthStateChanged(user => { if(user) { $("#auth-section").hide(); $("#pin-section").show(); } });
@@ -254,6 +247,7 @@ function openG(ds) {
     $('#g-lavorazioni').val(g.lavorazioni || '').prop('readonly', true);
     $('#btn-lock').text('MODIFICA').addClass('btn-outline-dark');
     $('#g-memo').val(g.memo || '');
+    $('#sel-firma').val(""); $('#sig-container').hide();
     let sel = $('#sel-ditta').empty().append('<option value="">+ Ditta</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
     showSection('section-giornale');
@@ -330,10 +324,10 @@ function renderPhotos() {
     $('#photo-box').empty();
     const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     (g.photos || []).forEach((p, i) => {
-        $('#photo-box').append(`<img src="${p}" class="photo-preview" onclick="delPh(${i})" title="Clicca per eliminare">`);
+        $('#photo-box').append(`<img src="${p}" class="photo-preview" onclick="delPh(${i})">`);
     });
 }
-function delPh(i) { if(confirm("Eliminare questa foto?")) { userData.cantieri[cIdx].giornali[activeDate].photos.splice(i,1); autoSave(); renderPhotos(); } }
+function delPh(i) { if(confirm("Eliminare foto?")) { userData.cantieri[cIdx].giornali[activeDate].photos.splice(i,1); autoSave(); renderPhotos(); } }
 
 function initSig() {
     const r = $('#sel-firma').val(); if(!r) return $('#sig-container').hide();
@@ -343,7 +337,7 @@ function initSig() {
     sigPad = new SignaturePad(cvs);
     if(userData.cantieri[cIdx].giornali[activeDate]['firma_'+r]) sigPad.fromDataURL(userData.cantieri[cIdx].giornali[activeDate]['firma_'+r]);
 }
-function saveSig() { userData.cantieri[cIdx].giornali[activeDate]['firma_'+$('#sel-firma').val()] = sigPad.toDataURL(); autoSave(); alert("Firma acquisita"); }
+function saveSig() { userData.cantieri[cIdx].giornali[activeDate]['firma_'+$('#sel-firma').val()] = sigPad.toDataURL(); autoSave(); alert("Firma salvata!"); }
 
 function addTask() {
     const t = $('#task-in').val(); if(!t) return;
@@ -351,7 +345,7 @@ function addTask() {
     userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
     $('#task-in').val(''); autoSave(); renderTasks();
 }
-function renderTasks() { $('.quadrant').empty(); (userData.cantieri[cIdx].tasks || []).forEach(t => $(`#q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}</div>`)); }
+function renderTasks() { $('.quadrant').empty(); (userData.cantieri[cIdx].tasks || []).forEach(t => $(`#q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})" style="font-size:0.7rem; background:#fff; margin:2px; padding:3px; border-radius:4px">${t.text}</div>`)); }
 function delT(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id!==id); autoSave(); renderTasks(); }
 
 function openModaleNuovo() { cIdx = -1; tempAna = []; $('#modalC input').val(''); $('#ana-list').empty(); $('#modalC').modal('show'); }
@@ -374,24 +368,14 @@ function renderAna() {
 }
 function saveC() {
     const d = { 
-        nome: $('#c-nome').val().toUpperCase(), 
-        oggetto: $('#c-oggetto').val(), 
-        cig: $('#c-cig').val(), 
-        cup: $('#c-cup').val(), 
-        dl: $('#c-dl').val(), 
-        adl: $('#c-adl').val(), 
-        cse: $('#c-cse').val(), 
-        rup: $('#c-rup').val(), 
-        arup: $('#c-arup').val(), 
-        anagraficaDitte: tempAna, 
-        giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), 
-        tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) 
+        nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), 
+        dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), 
+        anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) 
     };
     if(cIdx===-1) userData.cantieri.push(d); else userData.cantieri[cIdx] = d;
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => { $('#modalC').modal('hide'); renderList(); });
 }
 
-// PDF CON AGGIUNTA ASSISTENTI E ORDINE CORRETTO
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -412,7 +396,6 @@ async function generatePDF() {
     doc.setFontSize(12);
     doc.text("INFORMAZIONI GENERALI", 15, y);
     doc.line(15, y+2, 195, y+2);
-    
     y += 10;
     doc.setFontSize(9);
     const info = [["Cantiere:", c.nome || "-"], ["Oggetto:", c.oggetto || "-"], ["CIG/CUP:", `${c.cig || '-'} / ${c.cup || '-'}`]];
@@ -423,11 +406,9 @@ async function generatePDF() {
     });
 
     y += 5;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-    doc.text("DITTE E PERSONALE", 15, y);
+    doc.setFont("helvetica", "bold"); doc.text("DITTE E PERSONALE", 15, y);
     doc.line(15, y+2, 195, y+2);
     y += 10;
-    doc.setFontSize(9);
     if (g.ditteVisibili) {
         g.ditteVisibili.forEach(d => {
             const operai = (g.presenti || []).filter(p => p.includes(`(${d})`)).map(p => p.split(' (')[0]).join(', ');
@@ -438,39 +419,36 @@ async function generatePDF() {
     }
 
     y += 5;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-    doc.text("DESCRIZIONE LAVORAZIONI", 15, y);
+    doc.setFont("helvetica", "bold"); doc.text("DESCRIZIONE LAVORAZIONI", 15, y);
     doc.line(15, y+2, 195, y+2);
     y += 10;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
     const splitLavorazioni = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", 180);
     doc.text(splitLavorazioni, 15, y);
     y += (splitLavorazioni.length * 5) + 15;
 
-    if (y > 200) { doc.addPage(); y = 20; }
-    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-    doc.text("FIGURE PROFESSIONALI E FIRME", 15, y);
+    if (y > 180) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold"); doc.text("FIGURE PROFESSIONALI E FIRME", 15, y);
     doc.line(15, y+2, 195, y+2);
     y += 10;
     
+    // Elenco figure con mappatura firma
     const figure = [
         {l: "Direttore Lavori:", n: c.dl, s: 'DL'},
-        {l: "Assistente DL:", n: c.adl},
+        {l: "Assistente DL:", n: c.adl, s: 'ADL'},
         {l: "CSE:", n: c.cse, s: 'CSE'},
-        {l: "RUP:", n: c.rup},
-        {l: "Assistente RUP:", n: c.arup},
-        {l: "Impresa:", n: "Firma visionata", s: 'IMP'}
+        {l: "RUP:", n: c.rup, s: 'RUP'},
+        {l: "Assistente RUP:", n: c.arup, s: 'ARUP'},
+        {l: "Impresa:", n: "Per presa visione", s: 'IMP'}
     ];
     
     figure.forEach(f => {
-        if(y > 275) { doc.addPage(); y = 20; }
+        if(y > 270) { doc.addPage(); y = 20; }
         doc.setFontSize(9); doc.setFont("helvetica", "bold");
         doc.text(f.l, 15, y);
         doc.setFont("helvetica", "normal"); doc.text(f.n || "-", 15, y+5);
-        if(f.s) {
-            doc.rect(140, y-2, 55, 12);
-            if(g['firma_'+f.s]) doc.addImage(g['firma_'+f.s], 'PNG', 142, y-1, 50, 10);
-        }
+        doc.rect(140, y-2, 55, 12);
+        if(g['firma_'+f.s]) doc.addImage(g['firma_'+f.s], 'PNG', 142, y-1, 50, 10);
         y += 15;
     });
 
