@@ -25,17 +25,18 @@
         .cal-day { min-height: 70px; background: #fff; border: 1px solid #edf2f7; border-radius: 8px; padding: 8px; cursor: pointer; }
         .cal-header { font-weight: 800; text-align: center; color: var(--primary); font-size: 0.7rem; text-transform: uppercase; }
         .cal-past { background: #f1f5f9 !important; color: #94a3b8; }
-        .cal-today { background: var(--soft-blue) !important; border: 2px solid #3182ce !important; font-weight: bold; }
-        
-        /* TASK MATRICE */
-        .quadrant { min-height: 150px; border-radius: 12px; padding: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .cal-today { background: var(--soft-blue) !important; border: 2px solid #3182ce !important; font-weight: bold; color: #2c5282; }
+        .cal-future { background: #ffffff; color: #2d3748; }
+
+        /* TASK MATRIX */
+        .quadrant { min-height: 150px; border-radius: 12px; padding: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
         .q-1 { background: #fff5f5; border-top: 4px solid #feb2b2; } 
         .q-2 { background: #fffaf0; border-top: 4px solid #fbd38d; } 
-        .task-item { background: white; border-radius: 6px; padding: 5px 8px; margin-bottom: 5px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #edf2f7; }
-        .btn-del-task { color: #fc8181; cursor: pointer; border: none; background: none; font-size: 0.9rem; }
+        .task-item { background: white; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .btn-del-task { color: #e53e3e; cursor: pointer; border: none; background: none; font-size: 1rem; }
 
-        .sig-box { border: 2px dashed #cbd5e0; border-radius: 10px; height: 120px; background: #f8fafc; }
-        #save-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #718096; color: white; padding: 8px 20px; border-radius: 30px; display: none; z-index: 9999; }
+        .sig-box { border: 2px dashed #cbd5e0; border-radius: 10px; height: 140px; background: #f8fafc; }
+        #save-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #4a5568; color: white; padding: 8px 20px; border-radius: 30px; display: none; z-index: 9999; }
         .worker-chip { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; border: 1px solid #e2e8f0; margin: 2px; cursor: pointer; background: #fff; }
         .worker-chip.selected { background: #4a5568; color: white; }
     </style>
@@ -55,7 +56,7 @@
     <div class="container">
         <section id="section-list" class="active-section">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold m-0 text-secondary">Commesse</h4>
+                <h4 class="fw-bold m-0">Commesse</h4>
                 <button class="btn btn-dark btn-sm px-4" onclick="openModaleNuovo()">+ Nuova</button>
             </div>
             <div id="cantieri-grid" class="row g-4"></div>
@@ -86,30 +87,36 @@
                 
                 <div class="row g-4">
                     <div class="col-lg-4 border-end">
-                        <label class="small fw-bold text-muted text-uppercase">Meteo</label>
+                        <label class="small fw-bold text-muted">METEO</label>
                         <div class="input-group mb-3">
-                            <select id="g-meteo" class="form-select" onchange="autoSave()"><option value="Soleggiato">☀️ Soleggiato</option><option value="Nuvoloso">☁️ Nuvoloso</option><option value="Pioggia">🌧️ Pioggia</option><option value="Vento">💨 Vento</option></select>
+                            <select id="g-meteo" class="form-select" onchange="autoSave()">
+                                <option value="Soleggiato">☀️ Soleggiato</option>
+                                <option value="Nuvoloso">☁️ Nuvoloso</option>
+                                <option value="Pioggia">🌧️ Pioggia</option>
+                                <option value="Vento">💨 Vento</option>
+                            </select>
                             <input type="number" id="g-temp" class="form-control" placeholder="°C" onchange="autoSave()">
                         </div>
-                        <label class="small fw-bold text-muted text-uppercase">Maestranze</label>
+                        <label class="small fw-bold text-muted">DITTE/MAESTRANZE</label>
                         <select id="sel-ditta" class="form-select form-select-sm mb-3" onchange="addDittaG()"></select>
                         <div id="ditte-presenze" class="mb-3"></div>
-                        <input type="file" id="photo-in" capture="environment" accept="image/*" class="d-none" onchange="handlePhotos(this)">
                         <button class="btn btn-outline-secondary btn-sm w-100 mb-2" onclick="$('#photo-in').click()">📸 Foto</button>
+                        <input type="file" id="photo-in" capture="environment" accept="image/*" class="d-none" onchange="handlePhotos(this)">
                         <div id="photo-box" class="d-flex flex-wrap gap-2"></div>
                     </div>
 
                     <div class="col-lg-4 border-end">
                         <div class="d-flex justify-content-between mb-2">
-                            <label class="small fw-bold text-muted text-uppercase">Lavorazioni</label>
-                            <button id="btn-lock" class="btn btn-xs btn-outline-dark py-0 px-2" style="font-size:0.6rem" onclick="toggleLock()">MODIFICA</button>
+                            <label class="small fw-bold text-muted">LAVORAZIONI</label>
+                            <button id="btn-lock" class="btn btn-xs btn-outline-dark py-0 px-2" style="font-size:0.6rem" onclick="toggleLock()">SBLOCCA</button>
                         </div>
                         <textarea id="g-lavorazioni" class="form-control mb-3" rows="8" readonly></textarea>
-                        <label class="small fw-bold text-muted text-uppercase">Note</label>
+                        <label class="small fw-bold text-muted">NOTE</label>
                         <textarea id="g-memo" class="form-control mb-3" rows="2" onchange="autoSave()"></textarea>
-                        <label class="small fw-bold text-muted text-uppercase">Firme Digitali</label>
+
+                        <label class="small fw-bold text-muted">FIRME</label>
                         <select id="sel-firma" class="form-select form-select-sm mb-2" onchange="initSig()">
-                            <option value="">Chi firma?</option>
+                            <option value="">Seleziona chi firma...</option>
                             <option value="DL">Dir. Lavori</option><option value="ADL">Ass. DL</option>
                             <option value="CSE">CSE</option><option value="RUP">RUP</option>
                             <option value="ARUP">Ass. RUP</option><option value="IMP">Impresa</option>
@@ -118,22 +125,22 @@
                             <div class="sig-box mb-2"><canvas id="sig-canvas"></canvas></div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-danger w-50" onclick="clearSig()">Pulisci</button>
-                                <button class="btn btn-sm btn-dark w-50" onclick="saveSig()">Salva Firma</button>
+                                <button class="btn btn-sm btn-dark w-50" onclick="saveSig()">Salva</button>
                             </div>
                         </div>
                         <button class="btn btn-primary w-100 fw-bold py-3 mt-4" onclick="generatePDF()">📄 GENERA PDF</button>
                     </div>
 
                     <div class="col-lg-4">
-                        <label class="small fw-bold text-muted text-uppercase">Task Matrix</label>
+                        <label class="small fw-bold text-muted">TASK MATRIX</label>
                         <div class="input-group input-group-sm mb-3">
-                            <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
+                            <input type="text" id="task-in" class="form-control" placeholder="Nuovo...">
                             <select id="task-q" class="form-select" style="max-width:80px"><option value="1">Urg</option><option value="2">Imp</option></select>
                             <button class="btn btn-dark" onclick="addTask()">+</button>
                         </div>
                         <div class="row g-2">
-                            <div class="col-6"><small class="fw-bold text-danger">URGENTE</small><div class="quadrant q-1" id="q1"></div></div>
-                            <div class="col-6"><small class="fw-bold text-warning">IMPORTANTE</small><div class="quadrant q-2" id="q2"></div></div>
+                            <div class="col-6"><small class="text-danger fw-bold">URGENTE</small><div class="quadrant q-1" id="q1"></div></div>
+                            <div class="col-6"><small class="text-warning fw-bold">IMPORTANTE</small><div class="quadrant q-2" id="q2"></div></div>
                         </div>
                     </div>
                 </div>
@@ -143,7 +150,7 @@
 </div>
 
 <div class="modal fade" id="modalC" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content border-0"><div class="modal-body p-4">
-    <h6 class="fw-bold mb-3">Configurazione Commessa</h6>
+    <h6 class="fw-bold mb-3">Anagrafica Cantiere</h6>
     <div class="row g-2 mb-3">
         <div class="col-6"><input type="text" id="c-nome" class="form-control" placeholder="Cantiere"></div>
         <div class="col-6"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
@@ -160,8 +167,8 @@
     <button class="btn btn-dark w-100 mt-3 py-2" onclick="saveC()">SALVA</button>
 </div></div></div></div>
 
-<div id="auth-section" class="container mt-5 pt-5"><div class="card p-4 mx-auto" style="max-width:400px"><h4 class="text-center mb-4">ACCESSO</h4><input type="email" id="log-email" class="form-control mb-2" placeholder="Email"><input type="password" id="log-pw" class="form-control mb-3" placeholder="Password"><button class="btn btn-dark w-100" onclick="handleLogin()">Entra</button></div></div>
-<div id="pin-section" class="container mt-5 pt-5" style="display:none;"><div class="card p-5 mx-auto text-center" style="max-width:350px"><h5>Codice PIN</h5><input type="password" id="pin-input" class="form-control text-center fs-1 mb-4" maxlength="4"><button class="btn btn-dark w-100" onclick="checkPin()">Sblocca</button></div></div>
+<div id="auth-section" class="container mt-5 pt-5"><div class="card p-4 mx-auto border-0 shadow-lg" style="max-width:400px"><h4 class="text-center mb-4">ACCESSO</h4><input type="email" id="log-email" class="form-control mb-2" placeholder="Email"><input type="password" id="log-pw" class="form-control mb-3" placeholder="Password"><button class="btn btn-dark w-100" onclick="handleLogin()">Accedi</button></div></div>
+<div id="pin-section" class="container mt-5 pt-5" style="display:none;"><div class="card p-5 mx-auto text-center border-0 shadow-lg" style="max-width:350px"><h5>PIN</h5><input type="password" id="pin-input" class="form-control text-center fs-1 mb-4" maxlength="4"><button class="btn btn-dark w-100" onclick="checkPin()">Entra</button></div></div>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" };
@@ -175,11 +182,11 @@ function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), 
 function checkPin() { if($('#pin-input').val()==="9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else alert("PIN Errato"); }
 
 function loadDB() { db.collection('users').doc('archivio_condiviso').get().then(doc => { userData.cantieri = doc.exists ? doc.data().cantieri : []; renderList(); }); }
-function renderList() { let h = ''; userData.cantieri.forEach((c, i) => { h += `<div class="col-md-4"><div class="card p-3" onclick="openC(${i})" style="cursor:pointer"><h6>${c.nome}</h6><small>CIG: ${c.cig || '-'}</small></div></div>`; }); $('#cantieri-grid').html(h); }
+function renderList() { let h = ''; userData.cantieri.forEach((c, i) => { h += `<div class="col-md-4"><div class="card p-3 shadow-sm" onclick="openC(${i})" style="cursor:pointer"><h6>${c.nome}</h6><small>CIG: ${c.cig || '-'}</small></div></div>`; }); $('#cantieri-grid').html(h); }
 function openC(i) { cIdx = i; showSection('section-calendar'); $('#cal-title').text(userData.cantieri[i].nome); renderCal(); }
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
-function changeMonth(dir) { currentMonth.setMonth(currentMonth.getMonth()+dir); renderCal(); }
 
+function changeMonth(dir) { currentMonth.setMonth(currentMonth.getMonth()+dir); renderCal(); }
 function renderCal() {
     const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
     const today = new Date().setHours(0,0,0,0);
@@ -189,7 +196,7 @@ function renderCal() {
     for(let i=0; i<start; i++) h += '<div></div>';
     for(let d=1; d<=days; d++) {
         const loopDate = new Date(y, m, d).setHours(0,0,0,0);
-        let cls = loopDate < today ? "cal-past" : (loopDate === today ? "cal-today" : "");
+        let cls = loopDate < today ? "cal-past" : (loopDate === today ? "cal-today" : "cal-future");
         h += `<div class="cal-day ${cls}" onclick="openG('${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}')"><b>${d}</b></div>`;
     }
     $('#calendar-days').html(h);
@@ -197,7 +204,7 @@ function renderCal() {
 
 function openG(ds) {
     activeDate = ds; const c = userData.cantieri[cIdx];
-    $('#g-date-label').text(ds.split('-').reverse().join('/'));
+    $('#g-date-label').text("DATA: " + ds.split('-').reverse().join('/'));
     const g = (c.giornali || {})[ds] || {};
     $('#g-meteo').val(g.meteo || 'Soleggiato'); $('#g-temp').val(g.temp || '');
     $('#g-lavorazioni').val(g.lavorazioni || '').prop('readonly', true);
@@ -205,8 +212,7 @@ function openG(ds) {
     $('#sel-firma').val(""); $('#sig-container').hide();
     let sel = $('#sel-ditta').empty().append('<option value="">+ Ditta</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
-    showSection('section-giornale');
-    renderPresenze(); renderPhotos(); renderTasks();
+    showSection('section-giornale'); renderPresenze(); renderPhotos(); renderTasks();
 }
 
 function autoSave() {
@@ -216,21 +222,11 @@ function autoSave() {
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => setTimeout(() => $('#save-status').fadeOut(), 800));
 }
 
-function toggleLock() { const f = $('#g-lavorazioni'); if(f.prop('readonly')) f.prop('readonly', false).focus(); else { f.prop('readonly', true); autoSave(); } }
-
-function addTask() {
-    const t = $('#task-in').val(); if(!t) return;
-    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
-    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
-    $('#task-in').val(''); renderTasks(); autoSave();
+function toggleLock() {
+    const f = $('#g-lavorazioni');
+    if(f.prop('readonly')) { f.prop('readonly', false).focus(); $('#btn-lock').text('SALVA'); }
+    else { f.prop('readonly', true); $('#btn-lock').text('SBLOCCA'); autoSave(); }
 }
-function renderTasks() {
-    $('.quadrant').empty();
-    (userData.cantieri[cIdx].tasks || []).forEach(t => {
-        $(`#q${t.q}`).append(`<div class="task-item"><span>${t.text}</span><button class="btn-del-task" onclick="delTask(${t.id})">🗑️</button></div>`);
-    });
-}
-function delTask(id) { if(confirm("Eliminare task?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); renderTasks(); autoSave(); } }
 
 function initSig() {
     const r = $('#sel-firma').val(); if(!r) return $('#sig-container').hide();
@@ -244,7 +240,24 @@ function initSig() {
     }, 150);
 }
 function clearSig() { sigPad.clear(); }
-function saveSig() { userData.cantieri[cIdx].giornali[activeDate]['firma_'+$('#sel-firma').val()] = sigPad.toDataURL(); autoSave(); alert("Firma salvata!"); }
+function saveSig() { 
+    userData.cantieri[cIdx].giornali[activeDate]['firma_'+$('#sel-firma').val()] = sigPad.toDataURL(); 
+    autoSave(); alert("Firma Salvata!"); 
+}
+
+function addTask() {
+    const t = $('#task-in').val(); if(!t) return;
+    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
+    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
+    $('#task-in').val(''); renderTasks(); autoSave();
+}
+function renderTasks() {
+    $('.quadrant').empty();
+    (userData.cantieri[cIdx].tasks || []).forEach(t => {
+        $(`#q${t.q}`).append(`<div class="task-item"><span>${t.text}</span><button class="btn-del-task" onclick="delT(${t.id})">🗑️</button></div>`);
+    });
+}
+function delT(id) { if(confirm("Eliminare?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); renderTasks(); autoSave(); } }
 
 function addDittaG() {
     const n = $('#sel-ditta').val(); if(!n) return;
@@ -287,7 +300,7 @@ function handlePhotos(inpt) {
         }; r.readAsDataURL(f);
     }
 }
-function renderPhotos() { $('#photo-box').empty(); (userData.cantieri[cIdx].giornali[activeDate].photos || []).forEach((p, i) => $('#photo-box').append(`<img src="${p}" style="width:50px;height:50px;object-fit:cover" onclick="delPh(${i})">`)); }
+function renderPhotos() { $('#photo-box').empty(); (userData.cantieri[cIdx].giornali[activeDate].photos || []).forEach((p, i) => $('#photo-box').append(`<img src="${p}" style="width:60px;height:60px;object-fit:cover" onclick="delPh(${i})">`)); }
 function delPh(i) { if(confirm("Eliminare foto?")) { userData.cantieri[cIdx].giornali[activeDate].photos.splice(i,1); renderPhotos(); autoSave(); } }
 
 function openModaleNuovo() { cIdx = -1; tempAna = []; $('#modalC input').val(''); $('#ana-list').empty(); $('#modalC').modal('show'); }
@@ -299,92 +312,99 @@ function editCurrentCommessa() {
 }
 function addAnaDitta() { const n = prompt("Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
 function addAnaW(i) { const n = prompt("Operaio:"); if(n) { tempAna[i].operai.push(n.toUpperCase()); renderAna(); } }
-function renderAna() { let h = ''; tempAna.forEach((d, i) => { h += `<div class="p-2 border rounded mb-2 small"><b>${d.nome}</b> <button class="btn btn-link btn-sm" onclick="addAnaW(${i})">+ operaio</button><br>`; (d.operai || []).forEach(o => h += `<span class="badge bg-secondary me-1">${o}</span>`); h += '</div>'; }); $('#ana-list').html(h); }
+function renderAna() { let h = ''; tempAna.forEach((d, i) => { h += `<div class="p-2 border rounded mb-2 small bg-light"><b>${d.nome}</b> <button class="btn btn-link btn-sm" onclick="addAnaW(${i})">+ operaio</button><br>`; (d.operai || []).forEach(o => h += `<span class="badge bg-secondary me-1">${o}</span>`); h += '</div>'; }); $('#ana-list').html(h); }
 function saveC() {
     const d = { nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
     if(cIdx===-1) userData.cantieri.push(d); else userData.cantieri[cIdx] = d;
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => { $('#modalC').modal('hide'); renderList(); });
 }
 
+// GENERAZIONE PDF AGGIORNATA
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const c = userData.cantieri[cIdx];
     const g = c.giornali[activeDate] || {};
 
-    // INTESTAZIONE
-    doc.setFillColor(74, 85, 104); doc.rect(0, 0, 210, 35, 'F');
-    doc.setTextColor(255); doc.setFontSize(18); doc.text("GIORNALE DI CANTIERE", 105, 18, { align: 'center' });
-    doc.setFontSize(10); doc.text(`${activeDate.split('-').reverse().join('/')} | ${g.meteo || '-'} | ${g.temp || '--'}°C`, 105, 28, { align: 'center' });
+    // Header
+    doc.setFillColor(74, 85, 104); doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255); doc.setFontSize(22); doc.text("GIORNALE DI CANTIERE", 105, 20, { align: 'center' });
+    doc.setFontSize(11); doc.text(`Data: ${activeDate.split('-').reverse().join('/')}  |  Meteo: ${g.meteo || '-'}  |  Temp: ${g.temp || '--'}°C`, 105, 30, { align: 'center' });
 
-    let y = 45; doc.setTextColor(0);
-    doc.setFont("helvetica", "bold"); doc.text("Cantiere:", 15, y); 
-    doc.setFont("helvetica", "normal"); doc.text(c.nome, 40, y); y += 6;
-    doc.setFont("helvetica", "bold"); doc.text("Oggetto:", 15, y); 
-    doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(c.oggetto || "-", 150), 40, y); y += 12;
+    let y = 50; doc.setTextColor(0);
+    
+    // Info Commessa
+    doc.setFont("helvetica", "bold"); doc.text("COMMESSA:", 15, y);
+    doc.setFont("helvetica", "normal"); doc.text(c.nome || "-", 45, y); y += 7;
+    doc.setFont("helvetica", "bold"); doc.text("OGGETTO:", 15, y);
+    doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(c.oggetto || "-", 150), 45, y); y += 15;
 
-    // SEZIONE MAESTRANZE (Ripristinata)
-    doc.setFont("helvetica", "bold"); doc.text("MAESTRANZE E DITTE PRESENTI:", 15, y); y += 6;
-    doc.setFont("helvetica", "normal");
+    // --- SEZIONE DITTE E MAESTRANZE ---
+    doc.setFont("helvetica", "bold"); doc.text("DITTE E PERSONALE PRESENTE:", 15, y);
+    doc.line(15, y+2, 195, y+2); y += 10;
+    doc.setFontSize(10);
     if (g.ditteVisibili && g.ditteVisibili.length > 0) {
-        g.ditteVisibili.forEach(ditta => {
-            const operai = (g.presenti || []).filter(p => p.includes(`(${ditta})`)).map(p => p.split(' (')[0]).join(', ');
-            doc.text(`- ${ditta}: ${operai || "nessun operaio selezionato"}`, 20, y); y += 6;
+        g.ditteVisibili.forEach(dittaNome => {
+            const presentiDitta = (g.presenti || []).filter(p => p.includes(`(${dittaNome})`)).map(p => p.split(' (')[0]);
+            doc.setFont("helvetica", "bold"); doc.text(dittaNome + ":", 15, y);
+            doc.setFont("helvetica", "normal");
+            const listaOperai = presentiDitta.length > 0 ? presentiDitta.join(", ") : "Nessun operaio segnalato";
+            const lines = doc.splitTextToSize(listaOperai, 140);
+            doc.text(lines, 55, y);
+            y += (lines.length * 5) + 5;
         });
-    } else { doc.text("Nessuna ditta registrata per oggi.", 20, y); y += 6; }
-    y += 4;
-
-    // LAVORAZIONI
-    doc.setFont("helvetica", "bold"); doc.text("DESCRIZIONE DELLE LAVORAZIONI:", 15, y); y += 6;
-    doc.setFont("helvetica", "normal");
-    const lines = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", 180);
-    doc.text(lines, 15, y); y += (lines.length * 5) + 15;
-
-    // NOTE
-    if(g.memo) {
-        doc.setFont("helvetica", "bold"); doc.text("NOTE/ANNOTAZIONI:", 15, y); y += 6;
-        doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(g.memo, 180), 15, y); y += 20;
+    } else {
+        doc.text("Nessun dato sulle ditte inserito.", 15, y); y += 10;
     }
 
-    // SEZIONE FIRME (LAYOUT A CASELLE)
-    if(y > 220) { doc.addPage(); y = 30; }
-    doc.setFont("helvetica", "bold"); doc.text("FIRME DELLE FIGURE PROFESSIONALI:", 15, y); y += 10;
-    
+    // Lavorazioni
+    y += 5;
+    doc.setFont("helvetica", "bold"); doc.text("DESCRIZIONE DELLE LAVORAZIONI:", 15, y);
+    doc.line(15, y+2, 195, y+2); y += 10;
+    doc.setFont("helvetica", "normal");
+    const lavLines = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione descritta.", 180);
+    doc.text(lavLines, 15, y);
+    y += (lavLines.length * 6) + 15;
+
+    // --- GRIGLIA FIRME ---
+    if (y > 200) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold"); doc.text("PROSPETTO FIRME:", 15, y);
+    doc.line(15, y+2, 195, y+2); y += 10;
+
     const figure = [
-        {l: "Il Direttore Lavori", n: c.dl, s: 'DL'},
-        {l: "L'Assistente DL", n: c.adl, s: 'ADL'},
-        {l: "Il CSE", n: c.cse, s: 'CSE'},
-        {l: "Il RUP", n: c.rup, s: 'RUP'},
-        {l: "L'Assistente RUP", n: c.arup, s: 'ARUP'},
-        {l: "L'Impresa (Visione)", n: "Per Presa Visione", s: 'IMP'}
+        { label: "Direttore Lavori", nome: c.dl, key: 'DL' },
+        { label: "Assistente DL", nome: c.adl, key: 'ADL' },
+        { label: "CSE", nome: c.cse, key: 'CSE' },
+        { label: "RUP", nome: c.rup, key: 'RUP' },
+        { label: "Assistente RUP", nome: c.arup, key: 'ARUP' },
+        { label: "Impresa", nome: "Presa Visione", key: 'IMP' }
     ];
 
-    // Disegno caselle 2 per riga
+    // Disegno 2 caselle per riga
     let startX = 15;
-    figure.forEach((f, i) => {
-        if(i % 2 === 0 && i !== 0) { y += 35; startX = 15; }
-        if(y > 270) { doc.addPage(); y = 30; }
-
-        // Rettangolo casella
+    figure.forEach((f, index) => {
+        // Disegna Box
         doc.setDrawColor(200);
-        doc.rect(startX, y, 90, 30);
+        doc.rect(startX, y, 85, 25); // Casella firma
         
-        // Testo Figura
         doc.setFontSize(8); doc.setFont("helvetica", "bold");
-        doc.text(f.l, startX + 2, y + 5);
+        doc.text(f.label, startX + 2, y + 5);
         doc.setFont("helvetica", "normal");
-        doc.text(doc.splitTextToSize(f.n || "-", 40), startX + 2, y + 12);
+        doc.text(doc.splitTextToSize(f.nome || "-", 80), startX + 2, y + 10);
 
-        // Spazio Firma / Immagine Firma
-        if(g['firma_'+f.s]) {
-            doc.addImage(g['firma_'+f.s], 'PNG', startX + 45, y + 5, 40, 20);
-        } else {
-            doc.setFontSize(7); doc.setTextColor(150);
-            doc.text("Firma qui", startX + 60, y + 25);
-            doc.setTextColor(0);
+        // Inserimento Firma Immagine
+        if (g['firma_' + f.key]) {
+            doc.addImage(g['firma_' + f.key], 'PNG', startX + 20, y + 8, 45, 15);
         }
 
-        startX += 95;
+        if (index % 2 === 0) {
+            startX = 110; // Sposta a destra per la seconda colonna
+        } else {
+            startX = 15; // Torna a sinistra
+            y += 30; // Vai alla riga successiva
+        }
+        
+        if (y > 270) { doc.addPage(); y = 20; }
     });
 
     doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
