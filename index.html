@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CantieriCloud Pro - Versione Integrale</title>
+    <title>CantieriCloud Pro - Lombardia</title>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -14,171 +14,163 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     
     <style>
-        :root { --primary: #0056b3; --today: #cfe2ff; --past: #f1f3f5; }
-        body { background: #f4f7f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        :root { --primary: #0056b3; --today: #cfe2ff; --past: #f1f3f5; --future: #ffffff; }
+        body { background: #f4f7f9; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
         section { display: none; } .active-section { display: block; }
         
-        /* Calendario Strutturato */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; width: 100%; }
-        .cal-header { text-align: center; font-weight: bold; font-size: 0.8rem; color: #6c757d; padding: 10px 0; text-transform: uppercase; }
-        .cal-day { min-height: 100px; border-radius: 12px; padding: 10px; cursor: pointer; border: 1px solid #dee2e6; transition: all 0.2s; position: relative; background: white; }
-        .cal-day:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .cal-past { background-color: var(--past); color: #adb5bd; }
-        .cal-today { background-color: var(--today) !important; border: 2px solid var(--primary) !important; font-weight: bold; }
-        .cal-future { background-color: #ffffff; }
+        /* CALENDARIO RIDIMENSIONATO ALLO SCHERMO */
+        .calendar-container { width: 100%; max-width: 100%; margin: 0 auto; background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; width: 100%; }
+        .cal-header { text-align: center; font-weight: bold; color: #6c757d; padding: 10px 0; font-size: 0.9rem; text-transform: uppercase; }
+        
+        .cal-day { 
+            aspect-ratio: 1 / 0.8; /* Mantiene la proporzione rettangolare su ogni schermo */
+            border: 1px solid #dee2e6; 
+            border-radius: 10px; 
+            padding: 10px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .cal-day:hover { transform: scale(1.02); z-index: 2; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        /* COLORAZIONE GIORNI */
+        .cal-past { background-color: var(--past) !important; color: #adb5bd; }
+        .cal-today { background-color: var(--today) !important; border: 2px solid var(--primary) !important; font-weight: bold; color: var(--primary); }
+        .cal-future { background-color: var(--future) !important; color: #212529; }
 
-        /* Matrice Eisenhower Integrale */
-        .eisenhower-container { background: #fff; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .quadrant { min-height: 130px; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.05); }
-        .q1 { background: #f8d7da; color: #842029; } /* Urgente/Imp */
-        .q2 { background: #fff3cd; color: #664d03; } /* Non Urg/Imp */
-        .q3 { background: #cfe2ff; color: #084298; } /* Urgente/Non Imp */
-        .q4 { background: #e2e3e5; color: #41464b; } /* Delega */
-        .task-item { background: white; margin-top: 5px; padding: 6px 10px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; }
+        /* MATRICE EISENHOWER */
+        .quadrant { min-height: 140px; padding: 12px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.05); }
+        .q1 { background: #f8d7da; color: #842029; }
+        .q2 { background: #fff3cd; color: #664d03; }
+        .q3 { background: #cfe2ff; color: #084298; }
+        .q4 { background: #e2e3e5; color: #41464b; }
+        .task-item { background: white; margin-top: 6px; padding: 8px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        /* Input Lavorazioni */
+        /* LAVORAZIONI */
         #g-lavorazioni[readonly] { background-color: #f8f9fa; color: #6c757d; border: 1px dashed #ced4da; cursor: not-allowed; }
         
-        .photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin: 4px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .sig-box { border: 2px dashed #ccc; border-radius: 10px; height: 140px; background: white; }
-        #save-status { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 10px 20px; border-radius: 50px; display: none; z-index: 9999; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .sig-box { border: 2px dashed #ccc; height: 150px; background: white; border-radius: 10px; }
+        #save-status { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 10px 20px; border-radius: 50px; display: none; z-index: 9999; }
     </style>
 </head>
 <body>
 
-<div id="save-status">✓ Sincronizzazione Cloud...</div>
+<div id="save-status">✓ Sincronizzato Cloud</div>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3">
     
-    <div id="auth-section" class="card p-4 mx-auto mt-5 shadow-lg border-0" style="max-width: 420px; border-radius: 20px;">
-        <div class="text-center mb-4">
-            <h3 class="fw-bold text-primary">CANTIERI CLOUD</h3>
-            <p class="text-muted small">Gestione Commesse Lombardia</p>
-        </div>
-        <input type="email" id="log-email" class="form-control mb-3 py-2" placeholder="Email">
-        <input type="password" id="log-pw" class="form-control mb-4 py-2" placeholder="Password">
-        <button class="btn btn-primary w-100 py-2 fw-bold" style="border-radius: 10px;" onclick="handleLogin()">ACCEDI</button>
+    <div id="auth-section" class="card p-4 mx-auto mt-5 shadow" style="max-width: 400px;">
+        <h3 class="text-center fw-bold text-primary mb-4">CANTIERI CLOUD</h3>
+        <input type="email" id="log-email" class="form-control mb-3" placeholder="Email">
+        <input type="password" id="log-pw" class="form-control mb-4" placeholder="Password">
+        <button class="btn btn-primary w-100 fw-bold" onclick="handleLogin()">ACCEDI</button>
     </div>
 
     <div id="pin-section" class="text-center mt-5" style="display:none;">
-        <div class="card p-5 mx-auto shadow-lg border-0" style="max-width: 380px; border-radius: 20px;">
-            <h5 class="fw-bold mb-4">Inserisci PIN di Sblocco</h5>
-            <input type="password" id="pin-input" class="form-control text-center fs-1 mb-4" maxlength="4" placeholder="••••" style="letter-spacing: 15px; border: none; background: #f0f2f5;">
-            <button class="btn btn-dark w-100 py-3 fw-bold" style="border-radius: 12px;" onclick="checkPin()">SBLOCCA SCHEDE</button>
+        <div class="card p-5 mx-auto shadow" style="max-width: 350px;">
+            <h5 class="fw-bold mb-4">PIN di Sicurezza</h5>
+            <input type="password" id="pin-input" class="form-control text-center fs-1 mb-4" maxlength="4" placeholder="••••">
+            <button class="btn btn-dark w-100 py-3 fw-bold" onclick="checkPin()">SBLOCCA</button>
         </div>
     </div>
 
     <div id="main-app" style="display:none;">
-        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm">
-            <h5 class="fw-bold m-0 text-primary">Gestionale Lombardia <span class="badge bg-primary ms-2">PRO</span></h5>
-            <button class="btn btn-sm btn-outline-danger px-4" style="border-radius: 8px;" onclick="auth.signOut()">Esci</button>
+        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <h5 class="fw-bold m-0 text-primary">Gestionale Lombardia</h5>
+            <button class="btn btn-sm btn-outline-danger" onclick="auth.signOut()">Esci</button>
         </header>
 
         <section id="section-list" class="active-section">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold text-muted text-uppercase">Commesse Attive</h6>
-                <button class="btn btn-primary btn-sm px-3" style="border-radius: 8px;" onclick="openModaleNuovo()">+ Nuovo Cantiere</button>
+            <div class="d-flex justify-content-between mb-3">
+                <h6 class="fw-bold text-muted">LE TUE COMMESSE</h6>
+                <button class="btn btn-primary btn-sm" onclick="openModaleNuovo()">+ Nuovo Cantiere</button>
             </div>
             <div id="cantieri-grid" class="row g-3"></div>
         </section>
 
         <section id="section-calendar">
-            <div class="card p-4 border-0 shadow-sm" style="border-radius: 20px;">
+            <div class="calendar-container">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-3" onclick="showSection('section-list')">Indietro</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="showSection('section-list')">Indietro</button>
                     <div class="text-center">
-                        <h4 id="cal-title" class="fw-bold text-primary m-0"></h4>
-                        <div class="d-flex align-items-center justify-content-center mt-2">
+                        <h4 id="cal-title" class="fw-bold m-0 text-primary"></h4>
+                        <div class="mt-2">
                             <button class="btn btn-link text-dark py-0" onclick="changeMonth(-1)">◀</button>
-                            <span id="current-month" class="fw-bold mx-3 text-uppercase" style="letter-spacing: 1px;"></span>
+                            <span id="current-month" class="fw-bold mx-3 text-uppercase"></span>
                             <button class="btn btn-link text-dark py-0" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
-                    <button class="btn btn-warning btn-sm px-3 fw-bold" onclick="editCurrentCommessa()">IMPOSTAZIONI</button>
+                    <button class="btn btn-warning btn-sm fw-bold" onclick="editCurrentCommessa()">⚙ CONFIG</button>
                 </div>
                 <div class="calendar-grid" id="calendar-days"></div>
             </div>
         </section>
 
         <section id="section-giornale">
-            <div class="card p-4 border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="card p-4 shadow-lg border-0">
                 <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-                    <h5 id="g-date-label" class="fw-bold m-0 text-primary"></h5>
+                    <h5 id="g-date-label" class="fw-bold text-primary m-0"></h5>
                     <button class="btn-close" onclick="showSection('section-calendar')"></button>
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-xl-3 col-lg-4">
-                        <div class="p-3 bg-light rounded-4 mb-4">
-                            <label class="fw-bold small text-muted mb-2 d-block">☀️ METEO E TEMPERATURE</label>
-                            <div class="d-flex gap-2">
+                    <div class="col-lg-3 col-md-4">
+                        <div class="p-3 bg-light rounded mb-4">
+                            <label class="fw-bold small mb-2">METEO E GRADI</label>
+                            <div class="d-flex gap-2 mb-2">
                                 <select id="g-meteo" class="form-select form-select-sm" onchange="autoSave()">
                                     <option value="Soleggiato">☀️ Soleggiato</option>
                                     <option value="Nuvoloso">☁️ Nuvoloso</option>
                                     <option value="Pioggia">🌧️ Pioggia</option>
                                     <option value="Neve">❄️ Neve</option>
-                                    <option value="Nebbia">🌫️ Nebbia</option>
                                 </select>
-                                <div class="input-group input-group-sm w-50">
-                                    <input type="number" id="g-temp" class="form-control" placeholder="°C" onchange="autoSave()">
-                                    <span class="input-group-text">°C</span>
-                                </div>
+                                <input type="number" id="g-temp" class="form-control form-control-sm w-50" placeholder="°C" onchange="autoSave()">
                             </div>
                         </div>
-
-                        <label class="fw-bold small text-muted mb-2">📸 FOTOGRAFIE</label>
-                        <input type="file" id="ph-in" multiple accept="image/*" capture="environment" class="d-none" onchange="handlePhotos(this)">
-                        <button class="btn btn-outline-primary btn-sm w-100 mb-3" style="border-radius: 8px;" onclick="$('#ph-in').click()">+ Scatta Foto</button>
+                        <button class="btn btn-outline-primary btn-sm w-100 mb-3" onclick="$('#ph-in').click()">+ Aggiungi Foto</button>
+                        <input type="file" id="ph-in" multiple accept="image/*" class="d-none" onchange="handlePhotos(this)">
                         <div id="photo-list" class="d-flex flex-wrap mb-4"></div>
-
-                        <label class="fw-bold small text-muted mb-2">👷 IMPRESE PRESENTI</label>
+                        
+                        <label class="fw-bold small mb-2">PRESENZE DITTE</label>
                         <select id="sel-ditta-g" class="form-select form-select-sm mb-3" onchange="addDittaG()"></select>
                         <div id="presenze-list"></div>
                     </div>
 
-                    <div class="col-xl-6 col-lg-5">
+                    <div class="col-lg-6 col-md-8">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="fw-bold small text-muted text-uppercase">🏗️ Descrizione Lavori</label>
+                            <label class="fw-bold small">DESCRIZIONE LAVORI</label>
                             <div>
                                 <button id="btn-edit-lav" class="btn btn-sm btn-warning py-0 px-3 fw-bold" onclick="setLock(false)">MODIFICA</button>
                                 <button id="btn-save-lav" class="btn btn-sm btn-success py-0 px-3 fw-bold d-none" onclick="setLock(true)">SALVA</button>
                             </div>
                         </div>
-                        <textarea id="g-lavorazioni" class="form-control mb-4" rows="16" readonly style="border-radius: 12px;"></textarea>
+                        <textarea id="g-lavorazioni" class="form-control mb-4" rows="18" readonly></textarea>
                         
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label class="fw-bold small text-muted">DIRETTORE LAVORI</label>
-                                <div class="sig-box mb-2"><canvas id="sig-dl"></canvas></div>
-                                <button class="btn btn-xs btn-outline-secondary w-100 py-0" onclick="clearSig('dl')">Pulisci</button>
-                            </div>
-                            <div class="col-6">
-                                <label class="fw-bold small text-muted">IMPRESA</label>
-                                <div class="sig-box mb-2"><canvas id="sig-imp"></canvas></div>
-                                <button class="btn btn-xs btn-outline-secondary w-100 py-0" onclick="clearSig('imp')">Pulisci</button>
-                            </div>
+                        <div class="row">
+                            <div class="col-6"><label class="small fw-bold">Firma D.L.</label><div class="sig-box mb-1"><canvas id="sig-dl"></canvas></div><button class="btn btn-xs btn-light w-100 py-0" onclick="clearSig('dl')">Pulisci</button></div>
+                            <div class="col-6"><label class="small fw-bold">Firma Impresa</label><div class="sig-box mb-1"><canvas id="sig-imp"></canvas></div><button class="btn btn-xs btn-light w-100 py-0" onclick="clearSig('imp')">Pulisci</button></div>
                         </div>
-                        <button class="btn btn-danger w-100 mt-4 py-3 fw-bold shadow-sm" style="border-radius: 15px;" onclick="generatePDF()">ESPORTA GIORNALE PDF</button>
+                        <button class="btn btn-danger w-100 mt-4 py-3 fw-bold shadow" onclick="generatePDF()">GENERA PDF GIORNALE</button>
                     </div>
 
-                    <div class="col-xl-3 col-lg-3">
-                        <div class="eisenhower-container">
-                            <h6 class="text-center fw-bold text-uppercase small mb-3 border-bottom pb-2">Matrice di Eisenhower</h6>
-                            <div class="input-group input-group-sm mb-3">
-                                <input type="text" id="task-input" class="form-control" placeholder="Nuovo task...">
-                                <select id="task-q" class="form-select" style="max-width: 60px;">
-                                    <option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option>
-                                </select>
-                                <button class="btn btn-primary" onclick="addTask()">+</button>
-                            </div>
-                            <div class="quadrant q1" id="q1"><div class="fw-bold x-small mb-1">URGENTE / IMP.</div></div>
-                            <div class="quadrant q2" id="q2"><div class="fw-bold x-small mb-1">NON URG. / IMP.</div></div>
-                            <div class="quadrant q3" id="q3"><div class="fw-bold x-small mb-1">URGENTE / NON IMP.</div></div>
-                            <div class="quadrant q4" id="q4"><div class="fw-bold x-small mb-1">DELEGA / ELIMINA</div></div>
+                    <div class="col-lg-3">
+                        <h6 class="fw-bold text-center border-bottom pb-2">MATRICE EISENHOWER</h6>
+                        <div class="input-group input-group-sm mb-3">
+                            <input type="text" id="task-input" class="form-control" placeholder="Nuovo impegno...">
+                            <select id="task-q" class="form-select" style="max-width: 60px;"><option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option></select>
+                            <button class="btn btn-primary" onclick="addTask()">+</button>
                         </div>
+                        <div class="quadrant q1" id="q1"><small class="fw-bold d-block">URGENTE / IMP.</small></div>
+                        <div class="quadrant q2" id="q2"><small class="fw-bold d-block">NON URG. / IMP.</small></div>
+                        <div class="quadrant q3" id="q3"><small class="fw-bold d-block">URGENTE / NON IMP.</small></div>
+                        <div class="quadrant q4" id="q4"><small class="fw-bold d-block">DELEGA / ELIMINA</small></div>
                         
-                        <label class="fw-bold small text-muted mt-4 mb-2">📝 NOTE RAPIDE</label>
-                        <textarea id="g-memo" class="form-control" rows="5" onchange="autoSave()" style="border-radius: 12px;"></textarea>
+                        <label class="fw-bold small mt-3">NOTE / MEMO</label>
+                        <textarea id="g-memo" class="form-control" rows="4" onchange="autoSave()"></textarea>
                     </div>
                 </div>
             </div>
@@ -186,37 +178,15 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalC" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content p-4 border-0 shadow" style="border-radius: 20px;">
-    <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">Impostazioni Commessa</h5>
-    <div class="row g-3 mb-4">
-        <div class="col-md-6"><input type="text" id="c-nome" class="form-control" placeholder="Nome Cantiere"></div>
-        <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
-        <div class="col-md-4"><input type="text" id="c-cig" class="form-control" placeholder="CIG"></div>
-        <div class="col-md-4"><input type="text" id="c-cup" class="form-control" placeholder="CUP"></div>
-        <div class="col-md-4"><input type="text" id="c-dl" class="form-control" placeholder="D.L."></div>
-        <div class="col-md-4"><input type="text" id="c-cse" class="form-control" placeholder="C.S.E."></div>
-        <div class="col-md-4"><input type="text" id="c-rup" class="form-control" placeholder="R.U.P."></div>
-        <div class="col-md-4"><input type="text" id="c-impresa" class="form-control" placeholder="Impresa Principale"></div>
-    </div>
-    <div id="ana-list" class="mb-3 p-2 bg-light rounded-3"></div>
-    <button class="btn btn-outline-primary btn-sm mb-4" onclick="addDittaAna()">+ Aggiungi Impresa all'Anagrafica</button>
-    <button class="btn btn-primary w-100 py-2 fw-bold" onclick="saveC()">SALVA CONFIGURAZIONE</button>
-</div></div></div>
-
 <script>
-// CONFIG FIREBASE
 const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
 
 let userData = { cantieri: [] }, cIdx = -1, activeDate = "", currentViewDate = new Date(), sigs = {}, tempAna = [];
 
-// AUTH FLOW
-auth.onAuthStateChanged(user => {
-    if(user) { $("#auth-section").hide(); $("#pin-section").show(); }
-    else { $("#auth-section").show(); $("#pin-section, #main-app").hide(); }
-});
-
+// AUTH
+auth.onAuthStateChanged(user => { if(user) { $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); $("#pin-section, #main-app").hide(); } });
 function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()); }
 function checkPin() { if($('#pin-input').val()==="9731") { $("#pin-section").hide(); $("#main-app").show(); initApp(); } else alert("PIN Errato"); }
 
@@ -228,10 +198,9 @@ function initApp() {
     });
 }
 
-// LOGICA LISTA E CALENDARIO
 function renderList() {
     let h = ''; userData.cantieri.forEach((c, i) => {
-        h += `<div class="col-md-4"><div class="card p-3 shadow-sm border-start border-primary border-4" onclick="openC(${i})" style="cursor:pointer"><b>${c.nome}</b><br><small class="text-muted">CIG: ${c.cig}</small></div></div>`;
+        h += `<div class="col-md-4"><div class="card p-3 shadow-sm border-start border-primary border-4" onclick="openC(${i})" style="cursor:pointer"><b>${c.nome}</b></div></div>`;
     });
     $('#cantieri-grid').html(h);
 }
@@ -240,12 +209,15 @@ function openC(i) { cIdx = i; $('#cal-title').text(userData.cantieri[i].nome); s
 function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); window.scrollTo(0,0); }
 function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCal(); }
 
+// CALENDARIO RIDIMENSIONATO E COLORATO
 function renderCal() {
     const y = currentViewDate.getFullYear(), m = currentViewDate.getMonth();
     const today = new Date(); today.setHours(0,0,0,0);
     $('#current-month').text(new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' }).format(currentViewDate));
     
-    let h = ''; ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].forEach(d => h += `<div class="cal-header">${d}</div>`);
+    let h = ''; 
+    ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].forEach(d => h += `<div class="cal-header">${d}</div>`);
+    
     const firstDay = (new Date(y, m, 1).getDay() + 6) % 7;
     const days = new Date(y, m + 1, 0).getDate();
 
@@ -257,6 +229,7 @@ function renderCal() {
         if(checkDate.getTime() === today.getTime()) cls = "cal-today";
         
         const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        // L'evento onclick è associato direttamente al div
         h += `<div class="cal-day ${cls}" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
     $('#calendar-days').html(h);
@@ -271,14 +244,13 @@ function openG(ds) {
     $('#g-memo').val(g.memo || '');
     setLock(true);
     
-    let sel = $('#sel-ditta-g').empty().append('<option value="">+ Aggiungi Ditta</option>');
+    let sel = $('#sel-ditta-g').empty().append('<option value="">+ Ditta Presente</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
     
     showSection('section-giornale');
     setupSigs(g); renderPresenze(); renderPhotos(); renderTasks();
 }
 
-// LOCK SYSTEM
 function setLock(lock) {
     $('#g-lavorazioni').prop('readonly', lock);
     if(lock) { $('#btn-edit-lav').removeClass('d-none'); $('#btn-save-lav').addClass('d-none'); autoSave(); }
@@ -298,7 +270,6 @@ function autoSave() {
       .then(() => { $('#save-status').fadeIn().delay(1000).fadeOut(); });
 }
 
-// FIRME
 function setupSigs(g) {
     ['dl', 'imp'].forEach(id => {
         const cvs = document.getElementById('sig-'+id);
@@ -309,7 +280,7 @@ function setupSigs(g) {
 }
 function clearSig(id) { sigs[id].clear(); autoSave(); }
 
-// EISENHOWER LOGIC
+// EISENHOWER
 function addTask() {
     const t = $('#task-input').val(); if(!t) return;
     if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
@@ -319,12 +290,11 @@ function addTask() {
 function renderTasks() {
     $('.quadrant .task-item').remove();
     (userData.cantieri[cIdx].tasks || []).forEach(t => {
-        $(`#q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}<span>✓</span></div>`);
+        $(`#q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}</div>`);
     });
 }
 function delT(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); autoSave(); renderTasks(); }
 
-// FOTO E PRESENZE
 function handlePhotos(inp) {
     for(let f of inp.files) {
         const r = new FileReader();
@@ -338,7 +308,7 @@ function handlePhotos(inp) {
 function renderPhotos() {
     const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     $('#photo-list').empty();
-    (g.photos || []).forEach(p => $('#photo-list').append(`<img src="${p}" class="photo-thumb">`));
+    (g.photos || []).forEach(p => $('#photo-list').append(`<img src="${p}" style="width:70px;height:70px;object-fit:cover;margin:2px;border-radius:5px">`));
 }
 function addDittaG() {
     const n = $('#sel-ditta-g').val(); if(!n) return;
@@ -349,41 +319,26 @@ function addDittaG() {
 }
 function renderPresenze() {
     const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
-    let h = ''; (g.ditteVisibili || []).forEach(n => h += `<div class="bg-white p-2 border rounded-3 mb-1 small fw-bold">${n}</div>`);
+    let h = ''; (g.ditteVisibili || []).forEach(n => h += `<div class="bg-white p-1 border rounded mb-1 small fw-bold">${n}</div>`);
     $('#presenze-list').html(h);
 }
 
-// PDF
 async function generatePDF() {
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
-    const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
-    doc.text("GIORNALE DI CANTIERE - " + activeDate, 20, 20);
-    doc.text("Meteo: " + g.meteo + " | Temp: " + g.temp + "°C", 20, 30);
-    doc.text("Descrizione Lavori:", 20, 40);
-    doc.text(doc.splitTextToSize(g.lavorazioni || "", 170), 20, 50);
+    doc.text("GIORNALE DI CANTIERE - " + activeDate, 10, 10);
+    doc.text("Lavori: " + $('#g-lavorazioni').val(), 10, 20);
     doc.save(`Giornale_${activeDate}.pdf`);
 }
 
-// CONFIG MODAL
 function openModaleNuovo() { cIdx = -1; tempAna = []; $('#modalC input').val(''); $('#modalC').modal('show'); }
 function editCurrentCommessa() {
     const c = userData.cantieri[cIdx];
-    $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto); $('#c-cig').val(c.cig);
+    $('#c-nome').val(c.nome);
     tempAna = JSON.parse(JSON.stringify(c.anagraficaDitte || []));
-    renderAna(); $('#modalC').modal('show');
-}
-function addDittaAna() { const n = prompt("Nome Ditta:"); if(n) { tempAna.push({nome: n.toUpperCase(), operai: []}); renderAna(); } }
-function renderAna() {
-    let h = ''; tempAna.forEach(d => h += `<div class="p-2 border rounded mb-1 bg-white small fw-bold">${d.nome}</div>`);
-    $('#ana-list').html(h);
+    $('#modalC').modal('show');
 }
 function saveC() {
-    const d = { 
-        nome: $('#c-nome').val().toUpperCase(), cig: $('#c-cig').val(), oggetto: $('#c-oggetto').val(),
-        dl: $('#c-dl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(),
-        anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}),
-        tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || [])
-    };
+    const d = { nome: $('#c-nome').val().toUpperCase(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
     if(cIdx===-1) userData.cantieri.push(d); else userData.cantieri[cIdx] = d;
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => $('#modalC').modal('hide'));
 }
