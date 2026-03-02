@@ -400,4 +400,34 @@ async function generatePDF() {
         { label: "DIRETTORE LAVORI", nome: c.dl, key: 'DL' },
         { label: "ASSISTENTE D.L.", nome: c.adl, key: 'ADL' },
         { label: "C.S.E. (Sicurezza)", nome: c.cse, key: 'CSE' },
-        { label: "R.U.P.", nome: c.rup, key
+        { label: "R.U.P.", nome: c.rup, key: 'RUP' },
+        { label: "ASSISTENTE R.U.P.", nome: c.arup, key: 'ARUP' },
+        { label: "IMPRESA", nome: "Responsabile Cantiere", key: 'IMP' }
+    ];
+
+    const boxH = 18; const totalFirmeH = figure.length * boxH;
+    if ((297 - y) < totalFirmeH + 25) { doc.addPage(); y = 20; }
+    let startYFirme = Math.max(y + 10, 297 - totalFirmeH - 15);
+    doc.line(15, startYFirme - 5, 195, startYFirme - 5);
+    doc.setFont("helvetica", "bold"); doc.text("QUADRO DELLE FIRME", 15, startYFirme - 8);
+
+    figure.forEach((f) => {
+        doc.setDrawColor(mainColor[0], mainColor[1], mainColor[2]);
+        doc.rect(15, startYFirme, 180, boxH);
+        doc.line(100, startYFirme, 100, startYFirme + boxH);
+        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.text(f.label, 18, startYFirme + 6);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text(f.nome || "-", 18, startYFirme + 12);
+        if (g['firma_' + f.key]) doc.addImage(g['firma_' + f.key], 'PNG', 115, startYFirme + 2, 45, boxH - 4);
+        startYFirme += boxH;
+    });
+
+    doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
+}
+</script>
+
+<div id="auth-section" class="container mt-5 pt-5"><div class="card p-4 mx-auto border-0 shadow-lg" style="max-width:400px"><h4 class="text-center mb-4">ACCESSO</h4><input type="email" id="log-email" class="form-control mb-2" placeholder="Email"><input type="password" id="log-pw" class="form-control mb-3" placeholder="Password"><button class="btn btn-dark w-100" onclick="handleLogin()">Accedi</button></div></div>
+<div id="pin-section" class="container mt-5 pt-5" style="display:none;"><div class="card p-5 mx-auto text-center border-0 shadow-lg" style="max-width:350px"><h5>PIN DI SBLOCCO</h5><input type="password" id="pin-input" class="form-control text-center fs-1 mb-4" maxlength="4"><button class="btn btn-dark w-100" onclick="checkPin()">Sblocca</button></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+    </html> 
