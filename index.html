@@ -107,7 +107,7 @@
                         <textarea id="g-lavorazioni" class="form-control mb-3" rows="8" readonly></textarea>
                         <label class="small fw-bold text-muted text-uppercase">Note</label>
                         <textarea id="g-memo" class="form-control mb-3" rows="2" onchange="autoSave()"></textarea>
-                        <label class="small fw-bold text-muted text-uppercase">Firme</label>
+                        <label class="small fw-bold text-muted text-uppercase">Firme Digitali</label>
                         <select id="sel-firma" class="form-select form-select-sm mb-2" onchange="initSig()">
                             <option value="">Chi firma?</option>
                             <option value="DL">Dir. Lavori</option><option value="ADL">Ass. DL</option>
@@ -118,7 +118,7 @@
                             <div class="sig-box mb-2"><canvas id="sig-canvas"></canvas></div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-danger w-50" onclick="clearSig()">Pulisci</button>
-                                <button class="btn btn-sm btn-dark w-50" onclick="saveSig()">Salva</button>
+                                <button class="btn btn-sm btn-dark w-50" onclick="saveSig()">Salva Firma</button>
                             </div>
                         </div>
                         <button class="btn btn-primary w-100 fw-bold py-3 mt-4" onclick="generatePDF()">📄 GENERA PDF</button>
@@ -218,7 +218,6 @@ function autoSave() {
 
 function toggleLock() { const f = $('#g-lavorazioni'); if(f.prop('readonly')) f.prop('readonly', false).focus(); else { f.prop('readonly', true); autoSave(); } }
 
-// TASK MANAGEMENT CON CONFERMA
 function addTask() {
     const t = $('#task-in').val(); if(!t) return;
     if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
@@ -228,20 +227,10 @@ function addTask() {
 function renderTasks() {
     $('.quadrant').empty();
     (userData.cantieri[cIdx].tasks || []).forEach(t => {
-        $(`#q${t.q}`).append(`
-            <div class="task-item">
-                <span>${t.text}</span>
-                <button class="btn-del-task" onclick="delTask(${t.id})">🗑️</button>
-            </div>
-        `);
+        $(`#q${t.q}`).append(`<div class="task-item"><span>${t.text}</span><button class="btn-del-task" onclick="delTask(${t.id})">🗑️</button></div>`);
     });
 }
-function delTask(id) {
-    if(confirm("Eliminare definitivamente questo task?")) {
-        userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id);
-        renderTasks(); autoSave();
-    }
-}
+function delTask(id) { if(confirm("Eliminare task?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); renderTasks(); autoSave(); } }
 
 function initSig() {
     const r = $('#sel-firma').val(); if(!r) return $('#sig-container').hide();
@@ -318,14 +307,86 @@ function saveC() {
 }
 
 async function generatePDF() {
-    const { jsPDF } = window.jspdf; const doc = new jsPDF(); const c = userData.cantieri[cIdx]; const g = c.giornali[activeDate] || {};
-    doc.setFillColor(74, 85, 104); doc.rect(0, 0, 210, 35, 'F'); doc.setTextColor(255); doc.setFontSize(18); doc.text("GIORNALE DI CANTIERE", 105, 18, { align: 'center' });
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const c = userData.cantieri[cIdx];
+    const g = c.giornali[activeDate] || {};
+
+    // INTESTAZIONE
+    doc.setFillColor(74, 85, 104); doc.rect(0, 0, 210, 35, 'F');
+    doc.setTextColor(255); doc.setFontSize(18); doc.text("GIORNALE DI CANTIERE", 105, 18, { align: 'center' });
     doc.setFontSize(10); doc.text(`${activeDate.split('-').reverse().join('/')} | ${g.meteo || '-'} | ${g.temp || '--'}°C`, 105, 28, { align: 'center' });
-    let y = 50; doc.setTextColor(0); doc.setFontSize(11); doc.text("Cantiere: " + c.nome, 15, y); y += 7; doc.text("Oggetto: " + (c.oggetto || "-"), 15, y); y += 15;
-    doc.setFont("helvetica", "bold"); doc.text("LAVORAZIONI:", 15, y); y += 7; doc.setFont("helvetica", "normal");
-    const lines = doc.splitTextToSize(g.lavorazioni || "-", 180); doc.text(lines, 15, y); y += (lines.length * 5) + 15;
-    const figure = [{l: "Dir. Lavori", n: c.dl, s: 'DL'}, {l: "Ass. DL", n: c.adl, s: 'ADL'}, {l: "CSE", n: c.cse, s: 'CSE'}, {l: "RUP", n: c.rup, s: 'RUP'}, {l: "Ass. RUP", n: c.arup, s: 'ARUP'}, {l: "Impresa", n: "Visionato", s: 'IMP'}];
-    figure.forEach(f => { if(y > 270) { doc.addPage(); y = 20; } doc.text(f.l + ": " + (f.n || "-"), 15, y); if(g['firma_'+f.s]) doc.addImage(g['firma_'+f.s], 'PNG', 140, y-5, 40, 10); y += 12; });
+
+    let y = 45; doc.setTextColor(0);
+    doc.setFont("helvetica", "bold"); doc.text("Cantiere:", 15, y); 
+    doc.setFont("helvetica", "normal"); doc.text(c.nome, 40, y); y += 6;
+    doc.setFont("helvetica", "bold"); doc.text("Oggetto:", 15, y); 
+    doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(c.oggetto || "-", 150), 40, y); y += 12;
+
+    // SEZIONE MAESTRANZE (Ripristinata)
+    doc.setFont("helvetica", "bold"); doc.text("MAESTRANZE E DITTE PRESENTI:", 15, y); y += 6;
+    doc.setFont("helvetica", "normal");
+    if (g.ditteVisibili && g.ditteVisibili.length > 0) {
+        g.ditteVisibili.forEach(ditta => {
+            const operai = (g.presenti || []).filter(p => p.includes(`(${ditta})`)).map(p => p.split(' (')[0]).join(', ');
+            doc.text(`- ${ditta}: ${operai || "nessun operaio selezionato"}`, 20, y); y += 6;
+        });
+    } else { doc.text("Nessuna ditta registrata per oggi.", 20, y); y += 6; }
+    y += 4;
+
+    // LAVORAZIONI
+    doc.setFont("helvetica", "bold"); doc.text("DESCRIZIONE DELLE LAVORAZIONI:", 15, y); y += 6;
+    doc.setFont("helvetica", "normal");
+    const lines = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", 180);
+    doc.text(lines, 15, y); y += (lines.length * 5) + 15;
+
+    // NOTE
+    if(g.memo) {
+        doc.setFont("helvetica", "bold"); doc.text("NOTE/ANNOTAZIONI:", 15, y); y += 6;
+        doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(g.memo, 180), 15, y); y += 20;
+    }
+
+    // SEZIONE FIRME (LAYOUT A CASELLE)
+    if(y > 220) { doc.addPage(); y = 30; }
+    doc.setFont("helvetica", "bold"); doc.text("FIRME DELLE FIGURE PROFESSIONALI:", 15, y); y += 10;
+    
+    const figure = [
+        {l: "Il Direttore Lavori", n: c.dl, s: 'DL'},
+        {l: "L'Assistente DL", n: c.adl, s: 'ADL'},
+        {l: "Il CSE", n: c.cse, s: 'CSE'},
+        {l: "Il RUP", n: c.rup, s: 'RUP'},
+        {l: "L'Assistente RUP", n: c.arup, s: 'ARUP'},
+        {l: "L'Impresa (Visione)", n: "Per Presa Visione", s: 'IMP'}
+    ];
+
+    // Disegno caselle 2 per riga
+    let startX = 15;
+    figure.forEach((f, i) => {
+        if(i % 2 === 0 && i !== 0) { y += 35; startX = 15; }
+        if(y > 270) { doc.addPage(); y = 30; }
+
+        // Rettangolo casella
+        doc.setDrawColor(200);
+        doc.rect(startX, y, 90, 30);
+        
+        // Testo Figura
+        doc.setFontSize(8); doc.setFont("helvetica", "bold");
+        doc.text(f.l, startX + 2, y + 5);
+        doc.setFont("helvetica", "normal");
+        doc.text(doc.splitTextToSize(f.n || "-", 40), startX + 2, y + 12);
+
+        // Spazio Firma / Immagine Firma
+        if(g['firma_'+f.s]) {
+            doc.addImage(g['firma_'+f.s], 'PNG', startX + 45, y + 5, 40, 20);
+        } else {
+            doc.setFontSize(7); doc.setTextColor(150);
+            doc.text("Firma qui", startX + 60, y + 25);
+            doc.setTextColor(0);
+        }
+
+        startX += 95;
+    });
+
     doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
 }
 </script>
