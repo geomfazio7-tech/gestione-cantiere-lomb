@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CantieriCloud Pro - Lombardia</title>
+    <title>CantieriCloud Pro</title>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -15,165 +15,172 @@
     
     <style>
         :root { --primary: #004085; --accent: #007bff; }
-        body { background: #e9ecef; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+        body { background: #f4f7f9; font-family: -apple-system, sans-serif; }
         section { display: none; } .active-section { display: block; }
-        .card { border-radius: 12px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* CALENDARIO RESPONSIVE */
-        .calendar-container { overflow-x: auto; background: white; border-radius: 8px; padding: 5px; }
+        /* CALENDARIO ADATTIVO TOTALMENTE RESPONSIVE */
         .calendar-grid { 
             display: grid; 
-            grid-template-columns: repeat(7, minmax(120px, 1fr)); 
-            gap: 2px; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 1px; 
             background: #dee2e6; 
-            min-width: 800px; /* Impedisce al calendario di rimpicciolirsi troppo */
+            border: 1px solid #dee2e6;
+            width: 100%;
         }
-        .cal-header { background: #f8f9fa; font-weight: bold; text-align: center; padding: 10px; font-size: 0.8rem; border-bottom: 2px solid #dee2e6; }
-        .cal-day { min-height: 90px; background: #fff; padding: 8px; cursor: pointer; transition: 0.2s; position: relative; }
-        .cal-day:hover { background: #f0f7ff; }
-        .cal-today { background: #e7f1ff !important; box-shadow: inset 0 0 0 2px var(--accent); }
-        .cal-past { background: #f8f9fa; color: #adb5bd; }
-        .day-num { font-weight: bold; font-size: 1.1rem; }
+        .cal-header { 
+            background: #eee; 
+            font-weight: bold; 
+            text-align: center; 
+            padding: 5px 0; 
+            font-size: 0.7rem; 
+        }
+        .cal-day { 
+            background: #fff; 
+            aspect-ratio: 1 / 1.2; /* Mantiene la cella proporzionata su ogni schermo */
+            padding: 5px; 
+            cursor: pointer; 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+        }
+        .cal-day:active { background: #e7f1ff; }
+        .cal-today { box-shadow: inset 0 0 0 2px var(--accent); background: #f0f7ff !important; }
+        .cal-past { color: #ccc; }
+        .day-num { font-weight: bold; font-size: 0.9rem; }
 
-        /* EISENHOWER */
-        .quadrant { min-height: 100px; border-radius: 8px; padding: 8px; margin-bottom: 8px; font-size: 0.8rem; border: 1px solid rgba(0,0,0,0.1); }
-        .q-1 { background: #f8d7da; border-left: 4px solid #dc3545; }
-        .q-2 { background: #fff3cd; border-left: 4px solid #ffc107; }
-        .q-3 { background: #cff4fc; border-left: 4px solid #0dcaf0; }
-        .q-4 { background: #f8f9fa; border-left: 4px solid #6c757d; }
-        .task-item { background: white; margin-bottom: 3px; padding: 4px 8px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 0.75rem; }
-
-        /* LOCK SYSTEM */
-        #g-lavorazioni[readonly] { background-color: #fdfdfe; color: #6c757d; border: 1px dashed #ccc; }
-        .sig-box { border: 1px solid #ccc; height: 120px; background: white; border-radius: 5px; }
-        #save-status { position: fixed; bottom: 15px; left: 15px; background: #198754; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; display: none; z-index: 2000; }
+        /* UI ELEMENTS */
+        .card { border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .quadrant { min-height: 80px; border-radius: 8px; padding: 8px; margin-bottom: 5px; font-size: 0.75rem; }
+        .q-1 { background: #fee2e2; border-left: 4px solid #ef4444; }
+        .q-2 { background: #fef3c7; border-left: 4px solid #f59e0b; }
+        .q-3 { background: #e0f2fe; border-left: 4px solid #0ea5e9; }
+        .q-4 { background: #f3f4f6; border-left: 4px solid #6b7280; }
+        
+        #g-lavorazioni[readonly] { background: #f9fafb; color: #4b5563; }
+        .sig-box { border: 1px solid #ddd; height: 120px; background: white; border-radius: 8px; touch-action: none; }
+        #save-status { position: fixed; top: 10px; right: 10px; background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; display: none; z-index: 9999; }
     </style>
 </head>
 <body>
 
-<div id="save-status">✓ Sincronizzato</div>
+<div id="save-status">Sincronizzato Cloud</div>
 
-<div class="container-fluid py-3">
-    <div id="auth-section" class="card p-4 mx-auto mt-5" style="max-width: 400px;">
-        <h3 class="text-center text-primary fw-bold">CantieriCloud</h3>
+<div class="container-fluid py-2">
+    <div id="auth-section" class="card p-4 mx-auto mt-4" style="max-width: 380px;">
+        <h4 class="text-center fw-bold text-primary mb-3">CantieriCloud</h4>
         <input type="email" id="log-email" class="form-control mb-2" placeholder="Email">
         <input type="password" id="log-pw" class="form-control mb-3" placeholder="Password">
         <button class="btn btn-primary w-100" onclick="handleLogin()">Accedi</button>
     </div>
 
     <div id="pin-section" class="text-center mt-5" style="display:none;">
-        <div class="card p-5 mx-auto" style="max-width: 320px;">
-            <input type="password" id="pin-input" class="form-control text-center fs-1 mb-3" maxlength="4" placeholder="••••">
+        <div class="card p-4 mx-auto" style="max-width: 300px;">
+            <p class="small text-muted">Inserisci PIN</p>
+            <input type="password" id="pin-input" class="form-control text-center fs-2 mb-3" maxlength="4" placeholder="••••" inputmode="numeric">
             <button class="btn btn-dark w-100" onclick="checkPin()">Sblocca</button>
         </div>
     </div>
 
     <div id="main-app" style="display:none;">
-        <header class="d-flex justify-content-between mb-3 bg-white p-3 rounded shadow-sm align-items-center">
-            <h5 class="fw-bold m-0 text-primary">Gestionale Lombardia</h5>
-            <button class="btn btn-sm btn-outline-danger" onclick="auth.signOut()">Esci</button>
+        <header class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold m-0">LOMBARDIA Cloud</h6>
+            <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="location.reload()">Esci</button>
         </header>
 
         <section id="section-list" class="active-section">
-            <div class="d-flex justify-content-between mb-3">
-                <h6 class="fw-bold text-muted">COMMESSE ATTIVE</h6>
-                <button class="btn btn-primary btn-sm" onclick="openModaleNuovo()">+ Nuova Commessa</button>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-primary">COMMESSE ATTIVE</span>
+                <button class="btn btn-sm btn-primary" onclick="openModaleNuovo()">+ Aggiungi</button>
             </div>
-            <div id="cantieri-grid" class="row g-3"></div>
+            <div id="cantieri-grid" class="row g-2"></div>
         </section>
 
         <section id="section-calendar">
             <div class="card p-2">
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2">
-                    <button class="btn btn-sm btn-secondary" onclick="showSection('section-list')">Indietro</button>
-                    <h5 id="cal-title" class="fw-bold m-0 text-primary"></h5>
-                    <button class="btn btn-sm btn-warning" onclick="editCurrentCommessa()">⚙️ Config</button>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <button class="btn btn-xs btn-outline-secondary" onclick="showSection('section-list')">←</button>
+                    <span id="cal-title" class="fw-bold small"></span>
+                    <button class="btn btn-xs btn-outline-warning" onclick="editCurrentCommessa()">⚙️</button>
                 </div>
-                <div class="text-center mb-3">
-                    <button class="btn btn-outline-dark btn-sm" onclick="changeMonth(-1)">◀</button>
-                    <span id="month-display" class="fw-bold text-uppercase mx-3 fs-6"></span>
-                    <button class="btn btn-outline-dark btn-sm" onclick="changeMonth(1)">▶</button>
+                <div class="d-flex justify-content-center align-items-center mb-2">
+                    <button class="btn btn-link py-0" onclick="changeMonth(-1)">◀</button>
+                    <span id="month-display" class="fw-bold text-uppercase small mx-2"></span>
+                    <button class="btn btn-link py-0" onclick="changeMonth(1)">▶</button>
                 </div>
-                <div class="calendar-container">
-                    <div id="calendar-days" class="calendar-grid"></div>
-                </div>
+                <div id="calendar-days" class="calendar-grid"></div>
             </div>
         </section>
 
         <section id="section-giornale">
             <div class="card p-3">
-                <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
-                    <h6 id="g-date-label" class="fw-bold m-0 text-primary"></h6>
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <span id="g-date-label" class="fw-bold small text-primary"></span>
                     <button class="btn-close" onclick="showSection('section-calendar')"></button>
                 </div>
-                
+
                 <div class="row g-3">
-                    <div class="col-md-3 border-end">
-                        <div class="bg-light p-2 rounded mb-3">
-                            <label class="fw-bold small mb-1">METEO</label>
-                            <select id="g-meteo" class="form-select form-select-sm mb-2" onchange="autoSave()">
-                                <option value="Soleggiato">☀️ Soleggiato</option>
-                                <option value="Nuvoloso">☁️ Nuvoloso</option>
-                                <option value="Coperto">🌫️ Coperto / Nebbia</option>
-                                <option value="Pioggia">🌧️ Pioggia</option>
-                                <option value="Temporale">⛈️ Temporale</option>
-                                <option value="Vento">💨 Vento Forte</option>
-                                <option value="Neve">❄️ Neve</option>
-                            </select>
-                            <input type="number" id="g-temp" class="form-control form-control-sm" placeholder="Gradi °C" onchange="autoSave()">
-                        </div>
-                        
-                        <label class="fw-bold small mb-1">FOTO</label>
-                        <input type="file" id="photo-in" multiple accept="image/*" class="d-none" onchange="handlePhotos(this)">
-                        <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="document.getElementById('photo-in').click()">+ Foto</button>
-                        <div id="photo-box" class="d-flex flex-wrap gap-1 mb-3"></div>
-
-                        <label class="fw-bold small mb-1">DITTE</label>
-                        <select id="sel-ditta" class="form-select form-select-sm mb-2" onchange="addDittaG()"></select>
-                        <div id="ditte-presenze"></div>
-                    </div>
-
-                    <div class="col-md-6 border-end">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="fw-bold small">LAVORAZIONI SVOLTE</label>
-                            <div>
-                                <button id="btn-edit-lav" class="btn btn-sm btn-warning py-0 px-2 fw-bold" onclick="toggleLock(false)">MODIFICA</button>
-                                <button id="btn-save-lav" class="btn btn-sm btn-success py-0 px-2 fw-bold d-none" onclick="toggleLock(true)">SALVA</button>
+                    <div class="col-12 col-md-3 border-end">
+                        <div class="row g-2 mb-3">
+                            <div class="col-8">
+                                <label class="x-small fw-bold">METEO</label>
+                                <select id="g-meteo" class="form-select form-select-sm" onchange="autoSave()">
+                                    <option value="Soleggiato">☀️ Soleggiato</option>
+                                    <option value="Nuvoloso">☁️ Nuvoloso</option>
+                                    <option value="Coperto">🌫️ Coperto</option>
+                                    <option value="Pioggia">🌧️ Pioggia</option>
+                                    <option value="Vento">💨 Vento</option>
+                                    <option value="Neve">❄️ Neve</option>
+                                    <option value="Temporale">⛈️ Temporale</option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label class="x-small fw-bold">°C</label>
+                                <input type="number" id="g-temp" class="form-control form-control-sm" onchange="autoSave()">
                             </div>
                         </div>
-                        <textarea id="g-lavorazioni" class="form-control mb-3" rows="12" readonly></textarea>
+                        <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="$('#photo-in').click()">+ Aggiungi Foto</button>
+                        <input type="file" id="photo-in" multiple accept="image/*" class="d-none" onchange="handlePhotos(this)">
+                        <div id="photo-box" class="d-flex flex-wrap gap-1 mb-3"></div>
+                        <select id="sel-ditta" class="form-select form-select-sm mb-2" onchange="addDittaG()"></select>
+                        <div id="ditte-presenze" class="small"></div>
+                    </div>
+
+                    <div class="col-12 col-md-6 border-end">
+                        <div class="d-flex justify-content-between mb-1">
+                            <label class="fw-bold small">LAVORAZIONI</label>
+                            <button id="btn-lock" class="btn btn-xs btn-warning py-0 px-2" onclick="toggleLock()">MODIFICA</button>
+                        </div>
+                        <textarea id="g-lavorazioni" class="form-control mb-3 small" rows="10" readonly></textarea>
                         
                         <div class="row g-2">
                             <div class="col-6">
-                                <label class="small fw-bold">Firma DL</label>
+                                <label class="x-small fw-bold">Firma DL</label>
                                 <div class="sig-box mb-1"><canvas id="sig-dl"></canvas></div>
-                                <button class="btn btn-xs btn-light w-100 py-0" style="font-size:0.7rem" onclick="clearSig('dl')">Pulisci</button>
+                                <button class="btn btn-xs btn-light w-100 py-0" onclick="clearSig('dl')">Reset</button>
                             </div>
                             <div class="col-6">
-                                <label class="small fw-bold">Firma Impresa</label>
+                                <label class="x-small fw-bold">Firma Impresa</label>
                                 <div class="sig-box mb-1"><canvas id="sig-imp"></canvas></div>
-                                <button class="btn btn-xs btn-light w-100 py-0" style="font-size:0.7rem" onclick="clearSig('imp')">Pulisci</button>
+                                <button class="btn btn-xs btn-light w-100 py-0" onclick="clearSig('imp')">Reset</button>
                             </div>
                         </div>
-                        <button class="btn btn-danger w-100 fw-bold mt-4 py-3" onclick="generatePDF()">SCARICA PDF</button>
+                        <button class="btn btn-danger w-100 fw-bold mt-4" onclick="generatePDF()">SCARICA PDF GIORNALE</button>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="fw-bold small mb-2 d-block text-center">MATRICE EISENHOWER</label>
+                    <div class="col-12 col-md-3">
+                        <label class="fw-bold small d-block text-center mb-2">EISENHOWER</label>
                         <div class="input-group input-group-sm mb-2">
-                            <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
-                            <select id="task-q" class="form-select" style="max-width:60px">
-                                <option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option>
-                            </select>
+                            <input type="text" id="task-in" class="form-control" placeholder="Task...">
+                            <select id="task-q" class="form-select" style="max-width:55px"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
                             <button class="btn btn-primary" onclick="addTask()">+</button>
                         </div>
-                        <div class="quadrant q-1" id="q1"><small class="fw-bold">Urgente/Imp.</small></div>
-                        <div class="quadrant q-2" id="q2"><small class="fw-bold">Non Urgente/Imp.</small></div>
-                        <div class="quadrant q-3" id="q3"><small class="fw-bold">Urgente/Non Imp.</small></div>
-                        <div class="quadrant q-4" id="q4"><small class="fw-bold">Delega</small></div>
-                        
-                        <label class="fw-bold small mt-3 mb-1">NOTE INTERNE</label>
-                        <textarea id="g-memo" class="form-control" rows="3" onchange="autoSave()"></textarea>
+                        <div id="q1" class="quadrant q-1"></div>
+                        <div id="q2" class="quadrant q-2"></div>
+                        <div id="q3" class="quadrant q-3"></div>
+                        <div id="q4" class="quadrant q-4"></div>
+                        <label class="fw-bold small mt-3">NOTE</label>
+                        <textarea id="g-memo" class="form-control small" rows="2" onchange="autoSave()"></textarea>
                     </div>
                 </div>
             </div>
@@ -182,34 +189,27 @@
 </div>
 
 <div class="modal fade" id="modalC" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content p-3">
-    <h5 class="fw-bold text-primary">Dati Commessa</h5>
-    <div class="row g-2 mb-3">
-        <div class="col-12"><input type="text" id="c-nome" class="form-control" placeholder="Nome Cantiere"></div>
-        <div class="col-12"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
+    <input type="text" id="c-nome" class="form-control mb-2" placeholder="Nome Cantiere">
+    <input type="text" id="c-oggetto" class="form-control mb-2" placeholder="Oggetto">
+    <div class="row g-2 mb-2">
         <div class="col-6"><input type="text" id="c-cig" class="form-control" placeholder="CIG"></div>
         <div class="col-6"><input type="text" id="c-cup" class="form-control" placeholder="CUP"></div>
-        <div class="col-4"><input type="text" id="c-dl" class="form-control" placeholder="D.L."></div>
-        <div class="col-4"><input type="text" id="c-cse" class="form-control" placeholder="C.S.E."></div>
-        <div class="col-4"><input type="text" id="c-rup" class="form-control" placeholder="R.U.P."></div>
     </div>
     <div id="ana-list" class="mb-2"></div>
-    <button class="btn btn-sm btn-outline-primary" onclick="addAnaDitta()">+ Aggiungi Ditta</button>
-    <button class="btn btn-primary w-100 mt-4" onclick="saveC()">SALVA</button>
+    <button class="btn btn-sm btn-outline-primary mb-3" onclick="addAnaDitta()">+ Aggiungi Ditta</button>
+    <button class="btn btn-primary w-100" onclick="saveC()">SALVA COMMESSA</button>
 </div></div></div>
 
 <script>
-// CONFIGURAZIONE E FIREBASE (Mantenuta tua)
 const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.firestore();
 let userData = { cantieri: [] }, cIdx = -1, activeDate = "", currentMonth = new Date(), tempAna = [], sigs = {};
 
-// AUTH E PIN
-auth.onAuthStateChanged(user => { if(user) { $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); $("#pin-section, #main-app").hide(); } });
-function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
+auth.onAuthStateChanged(user => { if(user) { $("#auth-section").hide(); $("#pin-section").show(); } });
+function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()); }
 function checkPin() { if($('#pin-input').val()==="9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else alert("PIN Errato"); }
 
-// DATABASE - CARICAMENTO UNA TANTUM PER EVITARE LOOP
 function loadDB() {
     db.collection('users').doc('archivio_condiviso').get().then(doc => {
         userData.cantieri = doc.exists ? doc.data().cantieri : [];
@@ -219,96 +219,95 @@ function loadDB() {
 
 function renderList() {
     let h = ''; userData.cantieri.forEach((c, i) => {
-        h += `<div class="col-md-4"><div class="card p-3 border-start border-primary border-4" onclick="openC(${i})" style="cursor:pointer">
-            <h6 class="fw-bold m-0 text-primary">${c.nome}</h6><small class="text-muted">CIG: ${c.cig || '-'}</small>
+        h += `<div class="col-6 col-md-4"><div class="card p-2 text-center" onclick="openC(${i})" style="cursor:pointer">
+            <span class="fw-bold small text-primary">${c.nome}</span>
         </div></div>`;
     });
     $('#cantieri-grid').html(h);
 }
 
 function openC(i) { cIdx = i; $('#cal-title').text(userData.cantieri[i].nome); showSection('section-calendar'); renderCal(); }
-function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); }
+function showSection(id) { $('section').removeClass('active-section'); $('#'+id).addClass('active-section'); window.scrollTo(0,0); }
 function changeMonth(dir) { currentMonth.setMonth(currentMonth.getMonth()+dir); renderCal(); }
 
-// CALENDARIO RESPONSIVE FIX
 function renderCal() {
     const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date().setHours(0,0,0,0);
     $('#month-display').text(new Intl.DateTimeFormat('it-IT', {month:'long', year:'numeric'}).format(currentMonth));
-    
-    let h = ''; ['LUN','MAR','MER','GIO','VEN','SAB','DOM'].forEach(d => h += `<div class="cal-header">${d}</div>`);
+    let h = ''; ['L','M','M','G','V','S','D'].forEach(d => h += `<div class="cal-header">${d}</div>`);
     const start = (new Date(y, m, 1).getDay() + 6) % 7;
     const days = new Date(y, m+1, 0).getDate();
-
     for(let i=0; i<start; i++) h += '<div class="cal-day cal-past"></div>';
     for(let d=1; d<=days; d++) {
-        const checkDate = new Date(y, m, d);
-        let cls = checkDate.getTime() === today.getTime() ? "cal-today" : (checkDate < today ? "cal-past" : "");
+        const check = new Date(y, m, d).setHours(0,0,0,0);
+        let cls = check === today ? "cal-today" : (check < today ? "cal-past" : "");
         const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         h += `<div class="cal-day ${cls}" onclick="openG('${ds}')"><span class="day-num">${d}</span></div>`;
     }
     $('#calendar-days').html(h);
 }
 
-// GIORNALE E SALVATAGGIO
 function openG(ds) {
     activeDate = ds; const c = userData.cantieri[cIdx];
-    $('#g-date-label').text("DATA: " + ds.split('-').reverse().join('/'));
+    $('#g-date-label').text(ds.split('-').reverse().join('/'));
     const g = (c.giornali || {})[ds] || {};
     $('#g-meteo').val(g.meteo || 'Soleggiato');
     $('#g-temp').val(g.temp || '');
-    $('#g-lavorazioni').val(g.lavorazioni || '');
+    $('#g-lavorazioni').val(g.lavorazioni || '').prop('readonly', true);
+    $('#btn-lock').text('MODIFICA').removeClass('btn-success').addClass('btn-warning');
     $('#g-memo').val(g.memo || '');
-    
-    toggleLock(true);
     let sel = $('#sel-ditta').empty().append('<option value="">+ Ditta</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
-    
     showSection('section-giornale');
     setupSigs(g); renderPresenze(); renderPhotos(); renderTasks();
 }
 
-function toggleLock(lock) {
-    $('#g-lavorazioni').prop('readonly', lock);
-    if(lock) { $('#btn-edit-lav').removeClass('d-none'); $('#btn-save-lav').addClass('d-none'); autoSave(); }
-    else { $('#btn-edit-lav').addClass('d-none'); $('#btn-save-lav').removeClass('d-none'); }
+function toggleLock() {
+    const isLocked = $('#g-lavorazioni').prop('readonly');
+    if(isLocked) {
+        $('#g-lavorazioni').prop('readonly', false).focus();
+        $('#btn-lock').text('SALVA').removeClass('btn-warning').addClass('btn-success');
+    } else {
+        $('#g-lavorazioni').prop('readonly', true);
+        $('#btn-lock').text('MODIFICA').removeClass('btn-success').addClass('btn-warning');
+        autoSave();
+    }
 }
 
 function autoSave() {
-    if(!userData.cantieri[cIdx].giornali) userData.cantieri[cIdx].giornali = {};
-    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
-    const g = userData.cantieri[cIdx].giornali[activeDate];
+    const c = userData.cantieri[cIdx];
+    if(!c.giornali) c.giornali = {};
+    if(!c.giornali[activeDate]) c.giornali[activeDate] = {};
+    const g = c.giornali[activeDate];
     g.meteo = $('#g-meteo').val(); g.temp = $('#g-temp').val();
     g.lavorazioni = $('#g-lavorazioni').val(); g.memo = $('#g-memo').val();
     g.firma_dl = sigs.dl.isEmpty() ? g.firma_dl : sigs.dl.toDataURL();
     g.firma_imp = sigs.imp.isEmpty() ? g.firma_imp : sigs.imp.toDataURL();
-    
-    db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => {
-        $('#save-status').fadeIn().delay(1000).fadeOut();
+    db.collection('users').doc('archivio_condiviso').update({cantieri: userData.cantieri}).then(() => {
+        $('#save-status').fadeIn().delay(800).fadeOut();
     });
 }
 
-// FIRME
 function setupSigs(g) {
     ['dl', 'imp'].forEach(id => {
         const cvs = document.getElementById('sig-'+id);
         cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight;
         sigs[id] = new SignaturePad(cvs);
         if(g['firma_'+id]) sigs[id].fromDataURL(g['firma_'+id]);
+        sigs[id].onEnd = () => autoSave();
     });
 }
 function clearSig(id) { sigs[id].clear(); autoSave(); }
 
-// FOTO
 function handlePhotos(inpt) {
     for(let f of inpt.files) {
         const r = new FileReader();
         r.onload = (e) => {
             const img = new Image(); img.src = e.target.result;
             img.onload = () => {
-                const c = document.createElement('canvas'); const m = 800; const s = m/img.width;
-                c.width = m; c.height = img.height*s;
-                c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+                const c = document.createElement('canvas');
+                c.width = 600; c.height = img.height * (600/img.width);
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
                 if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = [];
                 userData.cantieri[cIdx].giornali[activeDate].photos.push(c.toDataURL('image/jpeg', 0.6));
                 autoSave(); renderPhotos();
@@ -319,24 +318,10 @@ function handlePhotos(inpt) {
 function renderPhotos() {
     const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     $('#photo-box').empty();
-    (g.photos || []).forEach((p, i) => $('#photo-box').append(`<img src="${p}" style="width:50px;height:50px;object-fit:cover;border-radius:5px" onclick="delPh(${i})">`));
+    (g.photos || []).forEach((p, i) => $('#photo-box').append(`<img src="${p}" style="width:45px;height:45px;object-fit:cover;border-radius:4px" onclick="delPh(${i})">`));
 }
 function delPh(i) { if(confirm("Elimina foto?")) { userData.cantieri[cIdx].giornali[activeDate].photos.splice(i,1); autoSave(); renderPhotos(); } }
 
-// EISENHOWER
-function addTask() {
-    const t = $('#task-in').val(); if(!t) return;
-    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
-    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
-    $('#task-in').val(''); autoSave(); renderTasks();
-}
-function renderTasks() {
-    $('.quadrant .task-item').remove();
-    (userData.cantieri[cIdx].tasks || []).forEach(t => $(`#q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}</div>`));
-}
-function delT(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id!==id); autoSave(); renderTasks(); }
-
-// DITTE
 function addDittaG() {
     const n = $('#sel-ditta').val(); if(!n) return;
     let g = userData.cantieri[cIdx].giornali[activeDate];
@@ -345,31 +330,38 @@ function addDittaG() {
     autoSave(); renderPresenze();
 }
 function renderPresenze() {
-    const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
-    let h = '';
-    (g.ditteVisibili || []).forEach(nome => {
-        h += `<div class="bg-white p-1 rounded mb-1 border small"><b>${nome}</b> <button class="btn btn-link text-danger btn-sm p-0" onclick="remDittaG('${nome}')">x</button></div>`;
-    });
+    const g = userData.cantieri[cIdx].giornali[activeDate] || {};
+    let h = ''; (g.ditteVisibili || []).forEach(nome => h += `<div class="bg-light p-1 mb-1 rounded border d-flex justify-content-between"><span>${nome}</span><span class="text-danger" onclick="remDittaG('${nome}')">×</span></div>`);
     $('#ditte-presenze').html(h);
 }
 function remDittaG(n) { userData.cantieri[cIdx].giornali[activeDate].ditteVisibili = userData.cantieri[cIdx].giornali[activeDate].ditteVisibly.filter(x => x!==n); autoSave(); renderPresenze(); }
 
-// CONFIG
+function addTask() {
+    const t = $('#task-in').val(); if(!t) return;
+    if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
+    userData.cantieri[cIdx].tasks.push({id:Date.now(), text:t, q:$('#task-q').val()});
+    $('#task-in').val(''); autoSave(); renderTasks();
+}
+function renderTasks() {
+    $('.quadrant').empty();
+    (userData.cantieri[cIdx].tasks || []).forEach(t => $(`#q${t.q}`).append(`<div class="task-item bg-white p-1 mb-1 rounded shadow-sm small" onclick="delT(${t.id})">${t.text}</div>`));
+}
+function delT(id) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id!==id); autoSave(); renderTasks(); }
+
 function openModaleNuovo() { cIdx = -1; tempAna = []; $('#modalC input').val(''); $('#ana-list').empty(); $('#modalC').modal('show'); }
 function editCurrentCommessa() {
     const c = userData.cantieri[cIdx];
     $('#c-nome').val(c.nome); $('#c-oggetto').val(c.oggetto); $('#c-cig').val(c.cig); $('#c-cup').val(c.cup);
-    $('#c-dl').val(c.dl); $('#c-cse').val(c.cse); $('#c-rup').val(c.rup);
     tempAna = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); renderAna();
     $('#modalC').modal('show');
 }
 function addAnaDitta() { const n = prompt("Nome Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
 function renderAna() {
-    let h = ''; tempAna.forEach((d, i) => h += `<div class="p-1 border-bottom small">${d.nome}</div>`);
+    let h = ''; tempAna.forEach(d => h += `<div class="small p-1 border-bottom">${d.nome}</div>`);
     $('#ana-list').html(h);
 }
 function saveC() {
-    const d = { nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), dl: $('#c-dl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
+    const d = { nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
     if(cIdx===-1) userData.cantieri.push(d); else userData.cantieri[cIdx] = d;
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => $('#modalC').modal('hide'));
 }
@@ -377,10 +369,14 @@ function saveC() {
 async function generatePDF() {
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
     const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
-    doc.text(`GIORNALE DI CANTIERE - ${activeDate}`, 10, 10);
-    doc.text(`Cantiere: ${c.nome}`, 10, 20);
-    doc.text(`Meteo: ${g.meteo} ${g.temp}°C`, 10, 30);
-    doc.text(`Lavorazioni: ${g.lavorazioni}`, 10, 40);
+    doc.setFontSize(18); doc.text("GIORNALE DI CANTIERE", 105, 15, {align:'center'});
+    doc.setFontSize(10); doc.text(`Cantiere: ${c.nome} | Data: ${activeDate}`, 10, 25);
+    doc.text(`Meteo: ${g.meteo} | Temp: ${g.temp}°C`, 10, 32);
+    doc.line(10, 35, 200, 35);
+    doc.text("LAVORAZIONI SVOLTE:", 10, 45);
+    doc.setFontSize(9);
+    const splitLav = doc.splitTextToSize(g.lavorazioni || "Nessuna", 180);
+    doc.text(splitLav, 10, 52);
     doc.save(`Giornale_${activeDate}.pdf`);
 }
 </script>
