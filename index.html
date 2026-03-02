@@ -17,17 +17,19 @@
         body { background: #f4f7f9; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
         section { display: none; } .active-section { display: block; }
         
-        /* UI Elements */
         .card { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .btn-pill { border-radius: 50px; font-weight: 600; padding: 8px 20px; }
         
         /* Calendar */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-        .cal-day { min-height: 80px; background: white; border-radius: 10px; padding: 8px; cursor: pointer; border: 1px solid #eee; transition: 0.2s; }
+        .cal-day { min-height: 85px; background: white; border-radius: 10px; padding: 8px; cursor: pointer; border: 1px solid #eee; transition: 0.2s; }
         .cal-day:hover { background: #f8f9fa; }
         .cal-today { border: 2px solid var(--primary) !important; background: var(--today) !important; }
-        .cal-past { background: var(--past); color: #adb5bd; }
         .cal-header { font-size: 0.7rem; font-weight: bold; text-align: center; color: #6c757d; text-transform: uppercase; padding: 5px 0; }
+
+        /* Lavorazioni Lock System */
+        #g-lavorazioni[readonly] { background-color: #f8f9fa; color: #6c757d; cursor: not-allowed; border: 1px dashed #ccc; }
+        #g-lavorazioni { transition: all 0.3s ease; border: 2px solid #dee2e6; }
 
         /* Eisenhower Matrix */
         .quadrant { min-height: 100px; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 0.8rem; }
@@ -37,30 +39,26 @@
         .q-4 { background: #e2e3e5; border: 1px solid #d6d8db; }
         .task-item { background: white; margin-bottom: 4px; padding: 6px 10px; border-radius: 6px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        /* Photos */
         .photo-gallery { display: flex; flex-wrap: wrap; gap: 10px; }
         .photo-wrapper { position: relative; width: 80px; height: 80px; }
         .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
-        .btn-del-photo { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 10px; }
 
-        /* Workers */
         .worker-chip { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; border: 1px solid #ddd; margin: 2px; cursor: pointer; background: white; }
         .worker-chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Signature */
         .sig-box { border: 2px dashed #ccc; border-radius: 10px; height: 120px; background: #fff; margin-bottom: 10px; }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; }
-
-        #save-indicator { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 5px 15px; border-radius: 20px; display: none; font-size: 0.8rem; z-index: 9999; }
+        
+        #save-indicator { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 6px 16px; border-radius: 20px; display: none; font-size: 0.85rem; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-<div id="save-indicator">Sincronizzazione...</div>
+<div id="save-indicator">✓ Sincronizzato con Cloud</div>
 
-<div class="container-fluid py-3" style="max-width: 1300px;">
+<div class="container-fluid py-3" style="max-width: 1400px;">
     <div id="auth-section" class="card p-4 mx-auto mt-5" style="max-width: 400px; display:none;">
-        <h4 class="text-center fw-bold text-primary mb-4">CantieriCloud LOGIN</h4>
+        <h4 class="text-center fw-bold text-primary mb-4">CANTIERI LOMBARDIA</h4>
         <input type="email" id="log-email" class="form-control mb-3" placeholder="Email">
         <input type="password" id="log-pw" class="form-control mb-4" placeholder="Password">
         <button class="btn btn-primary w-100 btn-pill" onclick="handleLogin()">ACCEDI</button>
@@ -68,35 +66,35 @@
 
     <div id="pin-section" class="text-center mt-5" style="display:none;">
         <div class="card p-5 mx-auto" style="max-width: 320px;">
-            <label class="mb-3 fw-bold">Inserisci PIN</label>
-            <input type="password" id="pin-input" class="form-control text-center fs-2 mb-4 border-0 bg-light" maxlength="4" placeholder="••••">
-            <button class="btn btn-dark w-100 btn-pill py-3" onclick="checkPin()">SBLOCCA</button>
+            <label class="mb-3 fw-bold">Codice di Sicurezza</label>
+            <input type="password" id="pin-input" class="form-control text-center fs-2 mb-4 bg-light border-0" maxlength="4" placeholder="••••">
+            <button class="btn btn-dark w-100 btn-pill py-3" onclick="checkPin()">SBLOCCA SCHEDE</button>
         </div>
     </div>
 
     <div id="main-app" style="display:none;">
         <header class="d-flex justify-content-between align-items-center bg-white p-3 rounded-4 shadow-sm mb-4">
-            <h5 class="fw-bold m-0 text-primary">Gestionale Lombardia</h5>
-            <button class="btn btn-sm btn-outline-danger btn-pill" onclick="auth.signOut()">Esci</button>
+            <h5 class="fw-bold m-0 text-primary">Sistema Gestionale Cantieri</h5>
+            <button class="btn btn-sm btn-outline-danger btn-pill" onclick="auth.signOut()">Disconnetti</button>
         </header>
 
         <section id="section-list" class="active-section">
             <div class="d-flex justify-content-between mb-3 align-items-center">
-                <h6 class="fw-bold m-0 text-secondary">ARCHIVIO COMMESSE</h6>
-                <button class="btn btn-primary btn-sm btn-pill" onclick="openModaleNuovo()">+ Nuova Commessa</button>
+                <h6 class="fw-bold m-0 text-secondary text-uppercase">Archivio Progetti</h6>
+                <button class="btn btn-primary btn-sm btn-pill" onclick="openModaleNuovo()">+ Nuovo Cantiere</button>
             </div>
             <div id="cantieri-grid" class="row g-3"></div>
         </section>
 
         <section id="section-calendar">
-            <div class="card p-3 shadow-sm mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button class="btn btn-sm btn-light border btn-pill" onclick="showSection('section-list')">← Indietro</button>
+            <div class="card p-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <button class="btn btn-sm btn-light border btn-pill" onclick="showSection('section-list')">← Torna all'elenco</button>
                     <div class="text-center">
-                        <h5 id="cal-title" class="fw-bold text-primary m-0"></h5>
-                        <div class="d-flex align-items-center justify-content-center mt-1">
+                        <h4 id="cal-title" class="fw-bold text-primary m-0"></h4>
+                        <div class="d-flex align-items-center justify-content-center mt-2">
                             <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(-1)">◀</button>
-                            <span id="current-month-display" class="mx-2 fw-bold text-uppercase small"></span>
+                            <span id="current-month-display" class="mx-3 fw-bold text-uppercase"></span>
                             <button class="btn btn-link btn-sm text-dark" onclick="changeMonth(1)">▶</button>
                         </div>
                     </div>
@@ -107,63 +105,84 @@
         </section>
 
         <section id="section-giornale">
-            <div class="card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                     <h5 id="g-date-title" class="fw-bold text-primary m-0"></h5>
                     <button class="btn-close" onclick="showSection('section-calendar')"></button>
                 </div>
 
                 <div class="row g-4">
                     <div class="col-lg-4 border-end">
-                        <label class="small fw-bold text-muted mb-2 d-block">📸 DOCUMENTAZIONE FOTOGRAFICA</label>
-                        <input type="file" id="photo-input" multiple accept="image/*" capture="environment" class="d-none" onchange="uploadPhoto(this)">
-                        <button class="btn btn-outline-primary btn-sm w-100 mb-3 btn-pill" onclick="document.getElementById('photo-input').click()">+ Scatta/Carica Foto</button>
-                        <div id="photo-gallery" class="photo-gallery mb-4"></div>
-
-                        <label class="small fw-bold text-muted mb-2 d-block">👷 PERSONALE E IMPRESE</label>
-                        <div class="input-group mb-2">
-                            <select id="select-add-ditta" class="form-select form-select-sm bg-light"></select>
-                            <button class="btn btn-success btn-sm" onclick="addDittaToGiornale()">Aggiungi</button>
-                        </div>
-                        <div id="ditte-attive-container"></div>
-                    </div>
-
-                    <div class="col-lg-4 border-end">
-                        <label class="small fw-bold text-muted mb-1 d-block">🏗️ DESCRIZIONE LAVORAZIONI</label>
-                        <textarea id="g-lavorazioni" class="form-control mb-3 bg-light border-0" rows="8" placeholder="Descrivi le attività del giorno..." onchange="autoSave()"></textarea>
-
-                        <label class="small fw-bold text-muted mb-1 d-block">✍️ FIRME DIGITALI</label>
-                        <select id="sign-role" class="form-select form-select-sm mb-2" onchange="loadSignature()">
-                            <option value="">Seleziona Ruolo per Firmare</option>
-                            <option value="DL">Direttore Lavori</option>
-                            <option value="CSE">Coord. Sicurezza</option>
-                            <option value="IMP">Impresa Esecutrice</option>
-                            <option value="RUP">R.U.P.</option>
-                        </select>
-                        <div id="sig-area" style="display:none">
-                            <div class="sig-box"><canvas id="sig-pad"></canvas></div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-secondary w-50" onclick="clearSig()">Pulisci</button>
-                                <button class="btn btn-sm btn-success w-50" onclick="saveSignatureNow()">Conferma Firma</button>
+                        <div class="p-3 bg-light rounded-4 mb-4">
+                            <label class="small fw-bold text-muted mb-2 d-block">🌤️ CONDIZIONI METEOROLOGICHE</label>
+                            <div class="row g-2">
+                                <div class="col-7">
+                                    <select id="g-meteo-select" class="form-select form-select-sm" onchange="autoSave()">
+                                        <option value="Soleggiato">☀️ Soleggiato</option>
+                                        <option value="Nuvoloso">☁️ Nuvoloso</option>
+                                        <option value="Pioggia">🌧️ Pioggia</option>
+                                        <option value="Neve">❄️ Neve</option>
+                                        <option value="Nebbia">🌫️ Nebbia</option>
+                                        <option value="Vento">💨 Forte Vento</option>
+                                    </select>
+                                </div>
+                                <div class="col-5">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" id="g-temp" class="form-control" placeholder="°C" onchange="autoSave()">
+                                        <span class="input-group-text">°C</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <label class="small fw-bold text-muted mb-1 d-block">📌 NOTE AGGIUNTIVE</label>
-                            <textarea id="g-memo" class="form-control form-control-sm bg-light mb-3" rows="2" onchange="autoSave()"></textarea>
-                            <button class="btn btn-danger w-100 fw-bold btn-pill py-2" onclick="generatePDF()">GENERA PDF PROFESSIONALE</button>
-                        </div>
+                        <label class="small fw-bold text-muted mb-2 d-block">📸 FOTO DEL GIORNO</label>
+                        <input type="file" id="photo-input" multiple accept="image/*" capture="environment" class="d-none" onchange="uploadPhoto(this)">
+                        <button class="btn btn-outline-primary btn-sm w-100 mb-3 btn-pill" onclick="document.getElementById('photo-input').click()">+ Aggiungi Immagini</button>
+                        <div id="photo-gallery" class="photo-gallery mb-4"></div>
+
+                        <label class="small fw-bold text-muted mb-2 d-block">👷 PRESENZE IN CANTIERE</label>
+                        <select id="select-add-ditta" class="form-select form-select-sm mb-2" onchange="addDittaToGiornale()"></select>
+                        <div id="ditte-attive-container"></div>
                     </div>
 
-                    <div class="col-lg-4">
-                        <label class="small fw-bold text-muted mb-2 d-block text-center">⚡ MATRICE DI PRIORITÀ (Eisenhower)</label>
+                    <div class="col-lg-5 border-end">
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <label class="small fw-bold text-muted m-0 text-uppercase">🏗️ Descrizione Lavori</label>
+                            <div>
+                                <button id="btn-edit-lav" class="btn btn-warning btn-sm py-0 px-3 fw-bold" onclick="toggleLockLav(false)">MODIFICA</button>
+                                <button id="btn-save-lav" class="btn btn-success btn-sm py-0 px-3 fw-bold d-none" onclick="toggleLockLav(true)">SALVA</button>
+                            </div>
+                        </div>
+                        <textarea id="g-lavorazioni" class="form-control mb-4 shadow-sm" rows="12" placeholder="Sblocca per inserire i dati..." readonly></textarea>
+
+                        <div class="p-3 bg-light rounded-4">
+                            <label class="small fw-bold text-muted mb-2 d-block">✍️ ACQUISIZIONE FIRME</label>
+                            <select id="sign-role" class="form-select form-select-sm mb-3" onchange="loadSignature()">
+                                <option value="">Scegli chi deve firmare...</option>
+                                <option value="DL">Direttore Lavori (D.L.)</option>
+                                <option value="CSE">Coord. Sicurezza (C.S.E.)</option>
+                                <option value="IMP">Impresa Esecutrice</option>
+                            </select>
+                            <div id="sig-area" style="display:none">
+                                <div class="sig-box shadow-inner"><canvas id="sig-pad"></canvas></div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-secondary w-50" onclick="clearSig()">Cancella</button>
+                                    <button class="btn btn-sm btn-success w-50" onclick="saveSignatureNow()">Conferma</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger w-100 fw-bold btn-pill py-3 mt-4 shadow" onclick="generatePDF()">GENERA DOCUMENTO PDF UFFICIALE</button>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <label class="small fw-bold text-muted mb-2 d-block">📌 NOTE E MEMO</label>
+                        <textarea id="g-memo" class="form-control form-control-sm mb-4" rows="3" placeholder="Appunti veloci..." onchange="autoSave()"></textarea>
+
+                        <div class="text-center p-2 bg-dark text-white rounded-top small fw-bold">MATRICE DI EISENHOWER</div>
                         <div class="input-group input-group-sm mb-3">
-                            <input type="text" id="t-input" class="form-control" placeholder="Nuovo impegno...">
-                            <select id="t-q" class="form-select" style="max-width:110px">
-                                <option value="1">Urgente</option>
-                                <option value="2">Importante</option>
-                                <option value="3">Delega</option>
-                                <option value="4">Memo</option>
+                            <input type="text" id="t-input" class="form-control" placeholder="Nuovo task...">
+                            <select id="t-q" class="form-select" style="max-width:70px">
+                                <option value="1">Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option>
                             </select>
                             <button class="btn btn-primary" onclick="addT()">+</button>
                         </div>
@@ -182,36 +201,36 @@
 
 <div class="modal fade" id="modalCommessa" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content card">
+        <div class="modal-content card shadow-lg">
             <div class="modal-body p-4">
-                <h5 class="fw-bold text-primary mb-4">DATI TECNICI DELLA COMMESSA</h5>
+                <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">DATI TECNICI COMMESSA</h5>
                 <div class="row g-3">
-                    <div class="col-md-6"><label class="small fw-bold">Nome Cantiere</label><input type="text" id="c-nome" class="form-control bg-light border-0"></div>
-                    <div class="col-md-6"><label class="small fw-bold">Oggetto Lavori</label><input type="text" id="c-oggetto" class="form-control bg-light border-0"></div>
-                    <div class="col-md-3"><label class="small fw-bold">CIG</label><input type="text" id="c-cig" class="form-control bg-light border-0"></div>
-                    <div class="col-md-3"><label class="small fw-bold">CUP</label><input type="text" id="c-cup" class="form-control bg-light border-0"></div>
-                    <div class="col-md-3"><label class="small fw-bold">Meteo Default</label><input type="text" id="g-meteo" class="form-control bg-light border-0"></div>
+                    <div class="col-md-6"><label class="small fw-bold">Denominazione Cantiere</label><input type="text" id="c-nome" class="form-control bg-light"></div>
+                    <div class="col-md-6"><label class="small fw-bold">Oggetto dei Lavori</label><input type="text" id="c-oggetto" class="form-control bg-light"></div>
+                    <div class="col-md-3"><label class="small fw-bold">CIG</label><input type="text" id="c-cig" class="form-control bg-light"></div>
+                    <div class="col-md-3"><label class="small fw-bold">CUP</label><input type="text" id="c-cup" class="form-control bg-light"></div>
+                    <div class="col-md-6"><label class="small fw-bold">Direttore Lavori</label><input type="text" id="c-dl" class="form-control bg-light"></div>
+                    <div class="col-md-4"><label class="small fw-bold">C.S.E.</label><input type="text" id="c-cse" class="form-control bg-light"></div>
+                    <div class="col-md-4"><label class="small fw-bold">R.U.P.</label><input type="text" id="c-rup" class="form-control bg-light"></div>
+                    <div class="col-md-4"><label class="small fw-bold">Impresa Mandataria</label><input type="text" id="c-mandataria" class="form-control bg-light"></div>
                 </div>
-                <hr>
-                <div class="row g-3">
-                    <div class="col-md-4"><label class="small fw-bold">Direttore Lavori</label><input type="text" id="c-dl" class="form-control form-control-sm border-0 bg-light"></div>
-                    <div class="col-md-4"><label class="small fw-bold">C.S.E.</label><input type="text" id="c-cse" class="form-control form-control-sm border-0 bg-light"></div>
-                    <div class="col-md-4"><label class="small fw-bold">R.U.P.</label><input type="text" id="c-rup" class="form-control form-control-sm border-0 bg-light"></div>
-                </div>
-                <hr>
+                <hr class="my-4">
                 <div id="anagrafica-container">
-                    <label class="small fw-bold d-block mb-2">ANAGRAFICA IMPRESE E PERSONALE</label>
-                    <div id="anagrafica-list" class="mb-3" style="max-height: 200px; overflow-y:auto;"></div>
-                    <button class="btn btn-sm btn-outline-primary btn-pill" onclick="addDittaAnagrafica()">+ Aggiungi Impresa</button>
+                    <label class="small fw-bold d-block mb-2">ANAGRAFICA IMPRESE E PERSONALE OPERATIVO</label>
+                    <div id="anagrafica-list" class="mb-3" style="max-height: 250px; overflow-y:auto;"></div>
+                    <button class="btn btn-sm btn-outline-primary btn-pill" onclick="addDittaAnagrafica()">+ Registra Nuova Impresa</button>
                 </div>
-                <button class="btn btn-primary w-100 btn-pill mt-4 p-2" onclick="saveCommessaData()">SALVA MODIFICHE COMMESSA</button>
+                <div class="d-flex gap-2 mt-5">
+                    <button class="btn btn-secondary w-50 btn-pill" data-bs-dismiss="modal">Chiudi</button>
+                    <button class="btn btn-primary w-50 btn-pill" onclick="saveCommessaData()">SALVA TUTTO</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Firebase & State
+// --- LOGICA CORE ---
 const firebaseConfig = { apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig", authDomain: "gestionecantierilombardia.firebaseapp.com", projectId: "gestionecantierilombardia", storageBucket: "gestionecantierilombardia.firebasestorage.app", messagingSenderId: "341647926497", appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0" };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(); const db = firebase.firestore();
@@ -219,8 +238,8 @@ let userData = { cantieri: [] }, cIdx = -1, activeDate = "", sigPad, currentView
 
 auth.onAuthStateChanged(user => { if (user) { $("#auth-section").hide(); $("#pin-section").show(); } else { $("#auth-section").show(); $("#main-app, #pin-section").hide(); } });
 
-function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert("Errore: " + e.message)); }
-function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else { alert("PIN Errato"); } }
+function handleLogin() { auth.signInWithEmailAndPassword($('#log-email').val(), $('#log-pw').val()).catch(e => alert(e.message)); }
+function checkPin() { if ($("#pin-input").val() === "9731") { $("#pin-section").hide(); $("#main-app").show(); loadDB(); } else alert("PIN Errato"); }
 
 function loadDB() {
     db.collection('users').doc('archivio_condiviso').onSnapshot(doc => {
@@ -232,9 +251,13 @@ function loadDB() {
 
 function renderCantieri() {
     let h = ''; userData.cantieri.forEach((c, i) => {
-        h += `<div class="col-md-4"><div class="card p-3" onclick="openC(${i})" style="cursor:pointer;"><h6 class="fw-bold text-primary mb-1">${c.nome}</h6><p class="small text-muted m-0">CIG: ${c.cig || '-'}</p></div></div>`;
+        h += `<div class="col-md-4"><div class="card p-3 h-100" onclick="openC(${i})" style="cursor:pointer; border-left: 5px solid var(--primary);">
+                <h6 class="fw-bold text-primary mb-1">${c.nome}</h6>
+                <p class="small text-muted m-0">${c.oggetto ? c.oggetto.substring(0, 50)+'...' : 'Nessun oggetto'}</p>
+                <div class="mt-2"><span class="badge bg-light text-dark border">CIG: ${c.cig || '-'}</span></div>
+              </div></div>`;
     });
-    $('#cantieri-grid').html(h || '<p class="text-center w-100 py-5">Nessun cantiere in archivio.</p>');
+    $('#cantieri-grid').html(h || '<p class="text-center w-100 py-5">Nessun cantiere creato.</p>');
 }
 
 function openC(i) { cIdx = i; $('#cal-title').text(userData.cantieri[i].nome); showSection('section-calendar'); renderCal(); }
@@ -245,38 +268,37 @@ function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() 
 
 function renderCal() {
     const y = currentViewDate.getFullYear(), m = currentViewDate.getMonth();
-    const today = new Date(); today.setHours(0,0,0,0);
     const months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     $('#current-month-display').text(`${months[m]} ${y}`);
-    
     const daysInMonth = new Date(y, m+1, 0).getDate();
     const firstDay = new Date(y, m, 1).getDay();
     const adjStart = firstDay === 0 ? 6 : firstDay - 1;
-    
     let h = '';
-    const headers = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-    headers.forEach(d => h += `<div class="cal-header">${d}</div>`);
-    
+    ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].forEach(d => h += `<div class="cal-header">${d}</div>`);
     for(let i=0; i<adjStart; i++) h += `<div></div>`;
     for(let d=1; d<=daysInMonth; d++) {
         const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday = new Date(y, m, d).getTime() === today.getTime() ? 'cal-today' : '';
-        const isPast = new Date(y, m, d) < today ? 'cal-past' : '';
-        h += `<div class="cal-day ${isToday} ${isPast}" onclick="openG('${ds}')"><b>${d}</b></div>`;
+        h += `<div class="cal-day" onclick="openG('${ds}')"><b>${d}</b></div>`;
     }
     $('#calendar-days-container').html(h);
 }
 
 function openG(ds) {
     activeDate = ds; const c = userData.cantieri[cIdx];
-    $('#g-date-title').text("GIORNALE DEL " + ds.split('-').reverse().join('/'));
+    $('#g-date-title').text("GIORNALE DI CANTIERE - " + ds.split('-').reverse().join('/'));
     const g = (c.giornali || {})[ds] || {};
     
-    $('#g-lavorazioni').val(g.lavorazioni || '');
+    // Caricamento dati
+    $('#g-meteo-select').val(g.meteo || 'Soleggiato');
+    $('#g-temp').val(g.temp || '');
+    $('#g-lavorazioni').val(g.lavorazioni || '').prop('readonly', true);
     $('#g-memo').val(g.memo || '');
-    $('#g-meteo').val(g.meteo || c.meteoDefault || '');
     
-    let sel = $('#select-add-ditta').empty().append('<option value="">Seleziona...</option>');
+    // Reset Bottoni Lock
+    $('#btn-edit-lav').removeClass('d-none');
+    $('#btn-save-lav').addClass('d-none');
+    
+    let sel = $('#select-add-ditta').empty().append('<option value="">Aggiungi ditta presente...</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
     
     showSection('section-giornale');
@@ -285,74 +307,53 @@ function openG(ds) {
     $('#sig-area').hide(); $('#sign-role').val('');
 }
 
+// --- FUNZIONE LOCK/UNLOCK ---
+function toggleLockLav(lock) {
+    if(!lock) { // Sblocca
+        $('#g-lavorazioni').prop('readonly', false).focus();
+        $('#btn-edit-lav').addClass('d-none');
+        $('#btn-save-lav').removeClass('d-none');
+    } else { // Salva e Blocca
+        $('#g-lavorazioni').prop('readonly', true);
+        $('#btn-edit-lav').removeClass('d-none');
+        $('#btn-save-lav').addClass('d-none');
+        autoSave();
+    }
+}
+
 function autoSave() {
     $('#save-indicator').fadeIn(200);
     if(!userData.cantieri[cIdx].giornali) userData.cantieri[cIdx].giornali = {};
     if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
     
     const g = userData.cantieri[cIdx].giornali[activeDate];
+    g.meteo = $('#g-meteo-select').val();
+    g.temp = $('#g-temp').val();
     g.lavorazioni = $('#g-lavorazioni').val();
     g.memo = $('#g-memo').val();
-    g.meteo = $('#g-meteo').val();
     
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri})
       .then(() => setTimeout(() => $('#save-indicator').fadeOut(500), 1000));
 }
 
-// Gestione Firme
-function loadSignature() {
-    const role = $('#sign-role').val();
-    if(!role) { $('#sig-area').hide(); return; }
-    $('#sig-area').show();
-    const canvas = document.getElementById("sig-pad");
-    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-    sigPad.clear();
-    const g = userData.cantieri[cIdx].giornali[activeDate] || {};
-    if(g['firma_'+role]) sigPad.fromDataURL(g['firma_'+role]);
-}
-
-function clearSig() { sigPad.clear(); }
-
-function saveSignatureNow() {
-    const role = $('#sign-role').val();
-    if(!userData.cantieri[cIdx].giornali[activeDate]) userData.cantieri[cIdx].giornali[activeDate] = {};
-    userData.cantieri[cIdx].giornali[activeDate]['firma_'+role] = sigPad.toDataURL();
-    autoSave();
-    alert("Firma salvata correttamente.");
-}
-
-// Foto
+// --- GESTIONE FOTO E PRESENZE ---
 async function uploadPhoto(input) {
     for (let f of input.files) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-            img.onload = () => {
-                const cvs = document.createElement('canvas');
-                const MAX = 1000; const sc = MAX / img.width;
-                cvs.width = MAX; cvs.height = img.height * sc;
-                cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
-                if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = [];
-                userData.cantieri[cIdx].giornali[activeDate].photos.push(cvs.toDataURL('image/jpeg', 0.6));
-                autoSave(); renderPhotos();
-            };
+            if(!userData.cantieri[cIdx].giornali[activeDate].photos) userData.cantieri[cIdx].giornali[activeDate].photos = [];
+            userData.cantieri[cIdx].giornali[activeDate].photos.push(e.target.result);
+            autoSave(); renderPhotos();
         };
         reader.readAsDataURL(f);
     }
 }
-
 function renderPhotos() {
     const g = userData.cantieri[cIdx].giornali[activeDate] || {};
     $('#photo-gallery').empty();
-    (g.photos || []).forEach((p, i) => {
-        $('#photo-gallery').append(`<div class="photo-wrapper"><img src="${p}" class="photo-thumb"><button class="btn-del-photo" onclick="delPhoto(${i})">X</button></div>`);
-    });
+    (g.photos || []).forEach((p, i) => $('#photo-gallery').append(`<div class="photo-wrapper"><img src="${p}" class="photo-thumb"></div>`));
 }
 
-function delPhoto(i) { if(confirm("Eliminare foto?")) { userData.cantieri[cIdx].giornali[activeDate].photos.splice(i,1); autoSave(); renderPhotos(); } }
-
-// Ditte e Operai
 function addDittaToGiornale() {
     const n = $('#select-add-ditta').val(); if(!n) return;
     let g = userData.cantieri[cIdx].giornali[activeDate];
@@ -382,31 +383,43 @@ function renderDitteAttive() {
 function toggleW(id) {
     let g = userData.cantieri[cIdx].giornali[activeDate];
     if(!g.presenti) g.presenti = [];
-    if(g.presenti.includes(id)) g.presenti = g.presenti.filter(x => x !== id);
-    else g.presenti.push(id);
+    g.presenti = g.presenti.includes(id) ? g.presenti.filter(x => x !== id) : [...g.presenti, id];
     autoSave(); renderDitteAttive();
 }
-
 function remDittaG(n) { userData.cantieri[cIdx].giornali[activeDate].ditteVisibili = userData.cantieri[cIdx].giornali[activeDate].ditteVisibili.filter(x => x !== n); autoSave(); renderDitteAttive(); }
 
-// Task
+// --- FIRME ---
+function loadSignature() {
+    const role = $('#sign-role').val();
+    if(!role) return $('#sig-area').hide();
+    $('#sig-area').show();
+    const canvas = document.getElementById("sig-pad");
+    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    sigPad.clear();
+    const g = userData.cantieri[cIdx].giornali[activeDate] || {};
+    if(g['firma_'+role]) sigPad.fromDataURL(g['firma_'+role]);
+}
+function clearSig() { sigPad.clear(); }
+function saveSignatureNow() {
+    const role = $('#sign-role').val();
+    userData.cantieri[cIdx].giornali[activeDate]['firma_'+role] = sigPad.toDataURL();
+    autoSave(); alert("Firma acquisita con successo!");
+}
+
+// --- EISENHOWER ---
 function addT() {
     const t = $('#t-input').val(); if(!t) return;
     if(!userData.cantieri[cIdx].tasks) userData.cantieri[cIdx].tasks = [];
     userData.cantieri[cIdx].tasks.push({id: Date.now(), text: t, q: $('#t-q').val()});
     $('#t-input').val(''); autoSave(); renderTasks();
 }
-
 function renderTasks() {
-    $('.quadrant').html('');
-    (userData.cantieri[cIdx].tasks || []).forEach(t => {
-        $(`#list-q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}</div>`);
-    });
+    $('.quadrant').empty();
+    (userData.cantieri[cIdx].tasks || []).forEach(t => $(`#list-q${t.q}`).append(`<div class="task-item" onclick="delT(${t.id})">${t.text}</div>`));
 }
+function delT(id) { if(confirm("Task completato?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); autoSave(); renderTasks(); } }
 
-function delT(id) { if(confirm("Segnare come completato ed eliminare?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); autoSave(); renderTasks(); } }
-
-// Gestione Commessa
+// --- MODALE COMMESSA ---
 function openModaleNuovo() { cIdx = -1; tempDitte = []; $('#modalCommessa input').val(''); renderAnag(); $('#modalCommessa').modal('show'); }
 function editCurrentCommessa() {
     const c = userData.cantieri[cIdx];
@@ -415,9 +428,8 @@ function editCurrentCommessa() {
     tempDitte = JSON.parse(JSON.stringify(c.anagraficaDitte || []));
     renderAnag(); $('#modalCommessa').modal('show');
 }
-
-function addDittaAnagrafica() { const n = prompt("Nome Ditta:"); if(n) { tempDitte.push({nome: n.toUpperCase(), operai: []}); renderAnag(); } }
-function addOp(i) { const n = prompt("Nome Operaio:"); if(n) { tempDitte[i].operai.push(n.toUpperCase()); renderAnag(); } }
+function addDittaAnagrafica() { const n = prompt("Nome Impresa:"); if(n) { tempDitte.push({nome: n.toUpperCase(), operai: []}); renderAnag(); } }
+function addOp(i) { const n = prompt("Nome Operatore:"); if(n) { tempDitte[i].operai.push(n.toUpperCase()); renderAnag(); } }
 function renderAnag() {
     let h = ''; tempDitte.forEach((d, i) => {
         h += `<div class="mb-2 p-2 border rounded bg-white"><b>${d.nome}</b> <button class="btn btn-link btn-sm" onclick="addOp(${i})">+ operaio</button><br>`;
@@ -426,7 +438,6 @@ function renderAnag() {
     });
     $('#anagrafica-list').html(h);
 }
-
 function saveCommessaData() {
     const d = {
         nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(),
@@ -443,67 +454,49 @@ async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const c = userData.cantieri[cIdx], g = c.giornali[activeDate] || {};
-    const blue = [0, 86, 179], margin = 20, width = 170;
-
-    // Header Blu
-    doc.setFillColor(...blue); doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255); doc.setFontSize(22); doc.setFont(undefined, 'bold');
-    doc.text("GIORNALE DI CANTIERE", 105, 20, { align: 'center' });
-    doc.setFontSize(10); doc.setFont(undefined, 'normal');
-    doc.text(`Data: ${activeDate.split('-').reverse().join('/')}  |  Cantiere: ${c.nome}`, 105, 30, { align: 'center' });
-
-    // Dati Commessa
-    doc.setTextColor(0); doc.setFontSize(11); doc.setFont(undefined, 'bold');
-    let y = 50;
-    doc.text("INFORMAZIONI GENERALI", margin, y);
-    doc.setDrawColor(...blue); doc.line(margin, y+2, 190, y+2);
     
-    y += 10; doc.setFontSize(9);
-    doc.text("OGGETTO:", margin, y); doc.setFont(undefined, 'normal'); doc.text(doc.splitTextToSize(c.oggetto || "-", 140), 50, y);
-    y += 10; doc.setFont(undefined, 'bold'); doc.text("CIG / CUP:", margin, y); doc.setFont(undefined, 'normal'); doc.text(`${c.cig || '-'} / ${c.cup || '-'}`, 50, y);
-    y += 7; doc.setFont(undefined, 'bold'); doc.text("TECNICI:", margin, y); doc.setFont(undefined, 'normal'); doc.text(`DL: ${c.dl || '-'} | CSE: ${c.cse || '-'} | RUP: ${c.rup || '-'}`, 50, y);
-    y += 7; doc.setFont(undefined, 'bold'); doc.text("METEO:", margin, y); doc.setFont(undefined, 'normal'); doc.text(g.meteo || "-", 50, y);
+    doc.setFillColor(0, 86, 179); doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255); doc.setFontSize(22); doc.text("GIORNALE DI CANTIERE", 105, 20, { align: 'center' });
+    doc.setFontSize(10); doc.text(`VERBALE DEL ${activeDate.split('-').reverse().join('/')}`, 105, 30, { align: 'center' });
 
-    // Lavorazioni
-    y += 15; doc.setFont(undefined, 'bold'); doc.setFontSize(11);
-    doc.text("LAVORAZIONI SVOLTE", margin, y);
-    doc.line(margin, y+2, 190, y+2);
-    y += 10; doc.setFont(undefined, 'normal'); doc.setFontSize(10);
-    const text = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", width);
-    doc.text(text, margin, y);
-    y += (text.length * 5) + 10;
+    doc.setTextColor(0); doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text("1. DATI COMMESSA E CONDIZIONI", 20, 50);
+    doc.setDrawColor(0, 86, 179); doc.line(20, 52, 190, 52);
+    
+    doc.setFontSize(9); doc.setFont(undefined, 'normal');
+    doc.text(`Cantiere: ${c.nome}`, 20, 60);
+    doc.text(`Oggetto: ${c.oggetto || '-'}`, 20, 66);
+    doc.text(`CIG/CUP: ${c.cig || '-'} / ${c.cup || '-'}`, 20, 72);
+    doc.text(`Meteo: ${g.meteo || '-'} | Temperatura: ${g.temp || '-'} °C`, 20, 78);
+    doc.text(`Direttore Lavori: ${c.dl || '-'} | CSE: ${c.cse || '-'}`, 20, 84);
 
-    // Personale
-    if(y > 240) { doc.addPage(); y = 20; }
-    doc.setFont(undefined, 'bold'); doc.text("PERSONALE PRESENTE:", margin, y);
-    doc.setFont(undefined, 'normal'); 
-    const pText = doc.splitTextToSize((g.presenti || []).join(", ") || "Nessuna presenza registrata.", width);
-    doc.text(pText, margin, y+6);
-    y += (pText.length * 6) + 15;
+    doc.setFont(undefined, 'bold'); doc.text("2. DESCRIZIONE DELLE LAVORAZIONI", 20, 100);
+    doc.line(20, 102, 190, 102);
+    doc.setFont(undefined, 'normal');
+    const lav = doc.splitTextToSize(g.lavorazioni || "Nessuna attività registrata.", 170);
+    doc.text(lav, 20, 110);
 
-    // Firme
-    const roles = ['DL', 'CSE', 'IMP', 'RUP'];
-    let fx = margin;
-    roles.forEach(r => {
-        if(g['firma_'+r]) {
-            if(y > 260) { doc.addPage(); y = 20; }
-            doc.setFontSize(8); doc.text("Firma " + r, fx + 15, y, {align:'center'});
-            doc.addImage(g['firma_'+r], 'PNG', fx, y+2, 30, 15);
-            fx += 45;
-        }
-    });
+    let y = 110 + (lav.length * 6);
+    doc.setFont(undefined, 'bold'); doc.text("3. PERSONALE E IMPRESE", 20, y);
+    doc.line(20, y+2, 190, y+2);
+    doc.setFont(undefined, 'normal');
+    const pres = doc.splitTextToSize("Presenti: " + (g.presenti || []).join(", "), 170);
+    doc.text(pres, 20, y+10);
 
-    // Foto
+    y += 40;
+    if(g.firma_DL) doc.addImage(g.firma_DL, 'PNG', 20, y, 40, 20);
+    if(g.firma_IMP) doc.addImage(g.firma_IMP, 'PNG', 140, y, 40, 20);
+    doc.text("Firma D.L.", 30, y+25); doc.text("Firma Impresa", 150, y+25);
+
     if(g.photos) {
-        g.photos.forEach((foto, i) => {
+        g.photos.forEach((p, i) => {
             doc.addPage();
-            doc.setFillColor(...blue); doc.rect(0,0,210,20,'F');
-            doc.setTextColor(255); doc.text("ALLEGATO FOTOGRAFICO " + (i+1), 105, 13, {align:'center'});
-            doc.addImage(foto, 'JPEG', 20, 30, 170, 120);
+            doc.text("ALLEGATO FOTOGRAFICO - FOTO " + (i+1), 20, 20);
+            doc.addImage(p, 'JPEG', 20, 30, 170, 120);
         });
     }
 
-    doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
+    doc.save(`Giornale_${activeDate}_${c.nome}.pdf`);
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
