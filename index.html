@@ -20,7 +20,6 @@
         .card { border-radius: 12px; border: 1px solid #edf2f7; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         section { display: none; padding-top: 20px; } .active-section { display: block; }
         
-        /* CALENDARIO */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: #fff; padding: 10px; border-radius: 15px; }
         .cal-day { min-height: 70px; background: #fff; border: 1px solid #edf2f7; border-radius: 8px; padding: 8px; cursor: pointer; }
         .cal-header { font-weight: 800; text-align: center; color: var(--primary); font-size: 0.7rem; text-transform: uppercase; }
@@ -28,7 +27,6 @@
         .cal-today { background: var(--soft-blue) !important; border: 2px solid #3182ce !important; font-weight: bold; color: #2c5282; }
         .cal-future { background: #ffffff; color: #2d3748; }
 
-        /* TASK MATRIX */
         .quadrant { min-height: 150px; border-radius: 12px; padding: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
         .q-1 { background: #fff5f5; border-top: 4px solid #feb2b2; } 
         .q-2 { background: #fffaf0; border-top: 4px solid #fbd38d; } 
@@ -139,9 +137,9 @@
                         <label class="small fw-bold text-danger">3. GESTIONE PRIVATA (NON NEL PDF)</label>
                         <hr class="mt-1">
                         <label class="small fw-bold text-muted">NOTE PERSONALI / MEMO</label>
-                        <textarea id="g-memo" class="form-control mb-4" rows="3" placeholder="Appunti privati non visibili nel PDF..." onchange="autoSave()"></textarea>
+                        <textarea id="g-memo" class="form-control mb-4" rows="3" placeholder="Appunti privati..." onchange="autoSave()"></textarea>
 
-                        <label class="small fw-bold text-muted">TASK MATRIX (Eisenhower)</label>
+                        <label class="small fw-bold text-muted">TASK MATRIX</label>
                         <div class="input-group input-group-sm mb-3">
                             <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
                             <select id="task-q" class="form-select" style="max-width:85px"><option value="1">Urg</option><option value="2">Imp</option></select>
@@ -217,8 +215,7 @@ function openG(ds) {
     const g = (c.giornali || {})[ds] || {};
     $('#g-meteo').val(g.meteo || 'Soleggiato'); $('#g-temp').val(g.temp || '');
     $('#g-lavorazioni').val(g.lavorazioni || '').prop('readonly', true);
-    $('#btn-lock').text('SBLOCCA');
-    $('#g-memo').val(g.memo || '');
+    $('#btn-lock').text('SBLOCCA'); $('#g-memo').val(g.memo || '');
     $('#sel-firma').val(""); $('#sig-container').hide();
     let sel = $('#sel-ditta').empty().append('<option value="">+ Ditta</option>');
     (c.anagraficaDitte || []).forEach(d => sel.append(`<option value="${d.nome}">${d.nome}</option>`));
@@ -252,7 +249,7 @@ function initSig() {
 function clearSig() { sigPad.clear(); }
 function saveSig() { 
     userData.cantieri[cIdx].giornali[activeDate]['firma_'+$('#sel-firma').val()] = sigPad.toDataURL(); 
-    autoSave(); alert("Firma Acquisita con successo!"); 
+    autoSave(); alert("Firma Acquisita!"); 
 }
 
 function addTask() {
@@ -267,12 +264,7 @@ function renderTasks() {
         $(`#q${t.q}`).append(`<div class="task-item"><span>${t.text}</span><button class="btn-del-task" onclick="confirmDelTask(${t.id})">🗑️</button></div>`);
     });
 }
-function confirmDelTask(id) {
-    if(confirm("Vuoi eliminare questo task?")) {
-        userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id);
-        renderTasks(); autoSave();
-    }
-}
+function confirmDelTask(id) { if(confirm("Eliminare?")) { userData.cantieri[cIdx].tasks = userData.cantieri[cIdx].tasks.filter(x => x.id !== id); renderTasks(); autoSave(); } }
 
 function addDittaG() {
     const n = $('#sel-ditta').val(); if(!n) return;
@@ -325,8 +317,8 @@ function editCurrentCommessa() {
     $('#c-dl').val(c.dl); $('#c-adl').val(c.adl || ""); $('#c-cse').val(c.cse); $('#c-rup').val(c.rup); $('#c-arup').val(c.arup || "");
     tempAna = JSON.parse(JSON.stringify(c.anagraficaDitte || [])); renderAna(); $('#modalC').modal('show');
 }
-function addAnaDitta() { const n = prompt("Nome Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
-function addAnaW(i) { const n = prompt("Nome Operaio:"); if(n) { tempAna[i].operai.push(n.toUpperCase()); renderAna(); } }
+function addAnaDitta() { const n = prompt("Ditta:"); if(n) { tempAna.push({nome:n.toUpperCase(), operai:[]}); renderAna(); } }
+function addAnaW(i) { const n = prompt("Operaio:"); if(n) { tempAna[i].operai.push(n.toUpperCase()); renderAna(); } }
 function renderAna() { let h = ''; tempAna.forEach((d, i) => { h += `<div class="p-2 border rounded mb-2 small bg-light"><b>${d.nome}</b> <button class="btn btn-link btn-sm" onclick="addAnaW(${i})">+ operaio</button><br>`; (d.operai || []).forEach(o => h += `<span class="badge bg-secondary me-1">${o}</span>`); h += '</div>'; }); $('#ana-list').html(h); }
 function saveC() {
     const d = { nome: $('#c-nome').val().toUpperCase(), oggetto: $('#c-oggetto').val(), cig: $('#c-cig').val(), cup: $('#c-cup').val(), dl: $('#c-dl').val(), adl: $('#c-adl').val(), cse: $('#c-cse').val(), rup: $('#c-rup').val(), arup: $('#c-arup').val(), anagraficaDitte: tempAna, giornali: cIdx===-1 ? {} : (userData.cantieri[cIdx].giornali || {}), tasks: cIdx===-1 ? [] : (userData.cantieri[cIdx].tasks || []) };
@@ -334,7 +326,7 @@ function saveC() {
     db.collection('users').doc('archivio_condiviso').set({cantieri: userData.cantieri}).then(() => { $('#modalC').modal('hide'); renderList(); });
 }
 
-// PDF CON TABELLA FIRME PROFESSIONALE
+// PDF AGGIORNATO CON FOTO E FIRME A FINE PAGINA
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -348,7 +340,7 @@ async function generatePDF() {
 
     let y = 50; doc.setTextColor(0);
     
-    // Info
+    // Info Commessa
     doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.text("CANTIERE:", 15, y);
     doc.setFont("helvetica", "normal"); doc.text(c.nome || "-", 45, y); y += 8;
     doc.setFont("helvetica", "bold"); doc.text("OGGETTO:", 15, y);
@@ -369,39 +361,72 @@ async function generatePDF() {
         });
     } else { doc.text("Nessun personale segnalato.", 15, y); y += 10; }
 
-    // Lavori
+    // Lavorazioni
     y += 5; doc.setFont("helvetica", "bold"); doc.rect(15, y, 180, 7, 'F'); doc.text("DESCRIZIONE DELLE LAVORAZIONI", 17, y + 5);
     y += 12; doc.setFont("helvetica", "normal");
     const lavL = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", 180); doc.text(lavL, 15, y);
-    y += (lavL.length * 6) + 20;
+    y += (lavL.length * 6) + 15;
 
-    // Tabella Firme
-    if (y > 180) { doc.addPage(); y = 20; }
-    doc.setFont("helvetica", "bold"); doc.text("TABELLA DELLE FIRME", 15, y); y += 5;
+    // --- SEZIONE FOTO NEL PDF ---
+    if (g.photos && g.photos.length > 0) {
+        y += 5;
+        if (y > 240) { doc.addPage(); y = 20; }
+        doc.setFont("helvetica", "bold"); doc.text("DOCUMENTAZIONE FOTOGRAFICA", 15, y);
+        y += 8;
+        let xPos = 15;
+        g.photos.forEach((p, idx) => {
+            doc.addImage(p, 'JPEG', xPos, y, 85, 60);
+            if (idx % 2 === 0) {
+                xPos = 110;
+            } else {
+                xPos = 15;
+                y += 65;
+                if (y > 230 && idx < g.photos.length - 1) { doc.addPage(); y = 20; }
+            }
+        });
+        if (xPos === 110) y += 70; // Se finisce su colonna sx, aumenta y
+    }
 
+    // --- TABELLA FIRME (FORZATA A FINE PAGINA) ---
     const figure = [
         { label: "DIRETTORE LAVORI", nome: c.dl, key: 'DL' },
         { label: "ASSISTENTE D.L.", nome: c.adl, key: 'ADL' },
         { label: "C.S.E. (Sicurezza)", nome: c.cse, key: 'CSE' },
         { label: "R.U.P.", nome: c.rup, key: 'RUP' },
         { label: "ASSISTENTE R.U.P.", nome: c.arup, key: 'ARUP' },
-        { label: "IMPRESA (Visione)", nome: "Responsabile Cantiere", key: 'IMP' }
+        { label: "IMPRESA (Visione)", nome: "Capocantiere", key: 'IMP' }
     ];
 
-    figure.forEach((f) => {
-        if (y > 265) { doc.addPage(); y = 20; }
-        doc.setDrawColor(180); doc.rect(15, y, 180, 22);
-        doc.line(100, y, 100, y + 22);
+    const boxH = 18; // Altezza ridotta per farle stare tutte in fondo
+    const totalFirmeH = figure.length * boxH;
+    
+    // Se non c'è abbastanza spazio per tutte le firme (circa 110mm), aggiungi pagina
+    if ((297 - y) < totalFirmeH + 20) {
+        doc.addPage();
+        y = 20;
+    }
 
-        doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.text(f.label, 18, y + 8);
-        doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(f.nome || "-", 75), 18, y + 15);
+    // Posizionamento in fondo (o segue contenuto se siamo in una nuova pagina)
+    // Se y è piccolo (nuova pagina), iniziamo da sopra, altrimenti cerchiamo di stare verso il fondo
+    let startYFirme = Math.max(y + 10, 297 - totalFirmeH - 15);
+
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.text("TABELLA DELLE FIRME", 15, startYFirme - 5);
+
+    figure.forEach((f) => {
+        doc.setDrawColor(180);
+        doc.rect(15, startYFirme, 180, boxH);
+        doc.line(100, startYFirme, 100, startYFirme + boxH);
+
+        doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.text(f.label, 18, startYFirme + 6);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text(doc.splitTextToSize(f.nome || "-", 75), 18, startYFirme + 12);
 
         if (g['firma_' + f.key]) {
-            doc.addImage(g['firma_' + f.key], 'PNG', 115, y + 3, 50, 16);
+            doc.addImage(g['firma_' + f.key], 'PNG', 115, startYFirme + 2, 45, boxH - 4);
         } else {
-            doc.setFontSize(7); doc.setTextColor(180); doc.text("Spazio per la firma", 130, y + 12); doc.setTextColor(0);
+            doc.setFontSize(6); doc.setTextColor(180); doc.text("Firma Digitale", 135, startYFirme + 10); doc.setTextColor(0);
         }
-        y += 22;
+        startYFirme += boxH;
     });
 
     doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
