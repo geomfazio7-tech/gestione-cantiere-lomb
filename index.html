@@ -1108,12 +1108,8 @@ function buildWhatsAppMessage() {
   msg += `GIORNALE DI CANTIERE - ${formatDateIT(activeDate)}\n\n`;
 
   if (isWaChecked("commessa")) {
-    msg += `COMMESSA\n`;
-    msg += `Cantiere: ${c.nome || "-"}\n`;
-    msg += `Oggetto: ${c.oggetto || "-"}\n`;
-    msg += `CIG: ${c.cig || "-"}\n`;
-    msg += `CUP: ${c.cup || "-"}\n\n`;
-  }
+  msg += `Cantiere: ${c.nome || "-"}\n\n`;
+}
 
   if (isWaChecked("meteo")) {
     msg += `METEO\n`;
