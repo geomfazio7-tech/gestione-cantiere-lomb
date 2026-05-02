@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CantieriCloud Pro</title>
-  <meta name="app-version" content="v13-firme-ui-personale-giorno">
+  <meta name="app-version" content="v15-firme-dropdown-figure-commessa">
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#111827">
@@ -593,6 +593,23 @@
 
             <textarea id="g-lavorazioni" class="form-control mb-3" rows="5" readonly></textarea>
 
+            <details id="firme-settings-panel" class="wa-settings mb-3 small">
+              <summary>✍️ Firme giornale</summary>
+              <div class="wa-settings-body">
+                <label class="small-label">Firma 1</label>
+                <select id="firma-responsabile" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
+
+                <label class="small-label">Firma 2</label>
+                <select id="firma-dl" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
+
+                <label class="small-label">Firma 3</label>
+                <select id="firma-impresa" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
+
+                <label class="small-label">Firma 4</label>
+                <select id="firma-cse" class="form-select form-select-sm" onchange="autoSave()"></select>
+              </div>
+            </details>
+
             <label class="small-label">Contributi ditte</label>
             <div id="contributi-ditte-box" class="mb-3"></div>
 
@@ -640,15 +657,6 @@
               <div class="col-6"><div class="quadrant q-2" id="q2"></div></div>
             </div>
 
-            <div class="mt-4">
-              <label class="small-label">Firme giornale</label>
-              <div class="bg-white border rounded-4 p-3 small">
-                <input type="text" id="firma-responsabile" class="form-control form-control-sm mb-2" placeholder="Responsabile Sirimed" onchange="autoSave()">
-                <input type="text" id="firma-dl" class="form-control form-control-sm mb-2" placeholder="Direzione Lavori" onchange="autoSave()">
-                <input type="text" id="firma-impresa" class="form-control form-control-sm mb-2" placeholder="Impresa / Ditta presente" onchange="autoSave()">
-                <input type="text" id="firma-cse" class="form-control form-control-sm" placeholder="CSE / Coordinatore" onchange="autoSave()">
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1543,10 +1551,7 @@ async function openG(ds) {
   $("#g-memo").val(g.memo || "");
 
   const firme = g.firme || {};
-  $("#firma-responsabile").val(firme.responsabile || "");
-  $("#firma-dl").val(firme.dl || "");
-  $("#firma-impresa").val(firme.impresa || "");
-  $("#firma-cse").val(firme.cse || "");
+  renderFirmaOptions(c, firme);
 
   const sel = $("#sel-ditta").empty().append('<option value="">+ Ditta presente</option>');
 
@@ -1665,6 +1670,66 @@ function findDittaByIdOrName(value, cantiere = null) {
     normalizeKey(d.nome) === normalizeKey(value)
   );
 }
+
+function getFigureCommessa(c) {
+  const figure = [];
+
+  function add(label, value) {
+    const v = String(value || "").trim();
+    if (!v) return;
+
+    const text = `${label}: ${v}`;
+
+    if (!figure.some(f => normalizeKey(f.value) === normalizeKey(text))) {
+      figure.push({ label: text, value: text });
+    }
+  }
+
+  add("Responsabile Sirimed", currentUser?.email || "");
+  add("Direzione Lavori", c.dl);
+  add("Assistente DL", c.adl);
+  add("CSE", c.cse);
+  add("RUP", c.rup);
+  add("Assistente RUP", c.arup);
+
+  (c.anagraficaDitte || []).forEach(d => {
+    add(TIPO_DITTA_LABELS[d.tipo] || "Ditta", d.nome);
+  });
+
+  return figure;
+}
+
+function renderFirmaOptions(c, firme = {}) {
+  const figure = getFigureCommessa(c);
+  const ids = ["firma-responsabile", "firma-dl", "firma-impresa", "firma-cse"];
+  const values = [
+    firme.responsabile || "",
+    firme.dl || "",
+    firme.impresa || "",
+    firme.cse || ""
+  ];
+
+  ids.forEach((id, index) => {
+    const sel = $("#" + id);
+    const selectedValue = values[index];
+
+    sel.empty();
+    sel.append(`<option value="">Nessuna firma selezionata</option>`);
+
+    figure.forEach(f => {
+      sel.append(`<option value="${esc(f.value)}">${esc(f.label)}</option>`);
+    });
+
+    // Se il valore salvato era stato scritto a mano in una vecchia versione,
+    // lo mantengo aggiungendolo come opzione.
+    if (selectedValue && !figure.some(f => f.value === selectedValue)) {
+      sel.append(`<option value="${esc(selectedValue)}">${esc(selectedValue)}</option>`);
+    }
+
+    sel.val(selectedValue);
+  });
+}
+
 
 function normalizeGiornaleDitteVisibili(g) {
   if (!g.ditteVisibili) g.ditteVisibili = [];
@@ -2949,37 +3014,6 @@ async function generatePDF() {
     });
   }
 
-  const materiali = contributi
-    .filter(ct => (ct.materiali || "").trim())
-    .map(ct => ({
-      ditta: ct.dittaNome || "DITTA ESTERNA",
-      testo: ct.materiali.trim(),
-      priorita: String(ct.materialiPriorita || "2") === "1" ? "URGENTE" : "IMPORTANTE"
-    }));
-
-  if (materiali.length) {
-    checkPage(20);
-    doc.line(15, y, 195, y);
-    y += 8;
-
-    doc.setFont("helvetica", "bold");
-    doc.text("MATERIALI MANCANTI / RICHIESTI", 15, y);
-    y += 8;
-
-    materiali.forEach((m, i) => {
-      checkPage(18);
-
-      doc.setFont("helvetica", "bold");
-      doc.text(`${i + 1}. [${m.priorita}] ${m.ditta}`, 15, y);
-      y += 6;
-
-      doc.setFont("helvetica", "normal");
-      addWrappedText(m.testo, 20, 175, 5);
-      y += 4;
-    });
-  }
-
-
   // SEZIONE FIRME
   checkPage(55);
   doc.line(15, y, 195, y);
@@ -3012,6 +3046,38 @@ async function generatePDF() {
   doc.text(firme.cse || "CSE / Coordinatore", 160, y, { align: "center" });
 
   y += 10;
+
+
+  const materiali = contributi
+    .filter(ct => (ct.materiali || "").trim())
+    .map(ct => ({
+      ditta: ct.dittaNome || "DITTA ESTERNA",
+      testo: ct.materiali.trim(),
+      priorita: String(ct.materialiPriorita || "2") === "1" ? "URGENTE" : "IMPORTANTE"
+    }));
+
+  if (materiali.length) {
+    checkPage(20);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("MATERIALI MANCANTI / RICHIESTI", 15, y);
+    y += 8;
+
+    materiali.forEach((m, i) => {
+      checkPage(18);
+
+      doc.setFont("helvetica", "bold");
+      doc.text(`${i + 1}. [${m.priorita}] ${m.ditta}`, 15, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      addWrappedText(m.testo, 20, 175, 5);
+      y += 4;
+    });
+  }
+
 
   const pc = doc.internal.getNumberOfPages();
 
@@ -3123,4 +3189,3 @@ $(document).ready(() => {
 
 </body>
 </html>
-END
