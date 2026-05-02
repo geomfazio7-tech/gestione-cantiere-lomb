@@ -15,20 +15,18 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
   <style>
     :root {
       --bg: #f4f7fb;
-      --card: #ffffff;
       --dark: #111827;
       --muted: #64748b;
       --line: #e5e7eb;
       --soft: #f8fafc;
-      --blue-soft: #eff6ff;
-      --green-soft: #ecfdf5;
-      --red-soft: #fef2f2;
-      --yellow-soft: #fffbeb;
+      --blue: #eff6ff;
+      --green: #ecfdf5;
+      --red: #fef2f2;
+      --yellow: #fffbeb;
       --shadow: 0 14px 35px rgba(15, 23, 42, .08);
       --radius: 18px;
     }
@@ -40,15 +38,31 @@
         radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 34%),
         radial-gradient(circle at top right, rgba(16,185,129,.12), transparent 28%),
         var(--bg);
-      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: "Segoe UI", system-ui, sans-serif;
       color: var(--dark);
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .screen.active-screen {
+      display: block;
+    }
+
+    .center-screen.active-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
     }
 
     .topbar {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255,255,255,.88);
+      background: rgba(255,255,255,.92);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid rgba(226,232,240,.9);
     }
@@ -65,8 +79,8 @@
     }
 
     .glass, .card {
-      background: rgba(255,255,255,.96);
-      border: 1px solid rgba(226,232,240,.92);
+      background: rgba(255,255,255,.97);
+      border: 1px solid rgba(226,232,240,.95);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
@@ -77,12 +91,14 @@
       padding: 28px;
     }
 
-    .small-label {
-      font-size: .72rem;
-      font-weight: 800;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
+    .section-page {
+      display: none;
+      padding-top: 24px;
+      padding-bottom: 44px;
+    }
+
+    .section-page.active {
+      display: block;
     }
 
     .section-title {
@@ -91,14 +107,12 @@
       margin: 0;
     }
 
-    section {
-      display: none;
-      padding-top: 24px;
-      padding-bottom: 44px;
-    }
-
-    .active-section {
-      display: block;
+    .small-label {
+      font-size: .72rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
     }
 
     .form-control, .form-select {
@@ -139,10 +153,10 @@
 
     .commessa-card {
       cursor: pointer;
-      height: 100%;
       position: relative;
       overflow: hidden;
       transition: .15s ease;
+      height: 100%;
     }
 
     .commessa-card:hover {
@@ -170,7 +184,7 @@
 
     .calendar-grid {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(7, minmax(0,1fr));
       gap: 8px;
     }
 
@@ -204,7 +218,7 @@
     }
 
     .cal-today {
-      background: var(--blue-soft);
+      background: var(--blue);
       border: 2px solid #2563eb;
       color: #1d4ed8;
     }
@@ -239,20 +253,6 @@
       font-size: .78rem;
     }
 
-    .sig-box {
-      border: 2px dashed #cbd5e1;
-      border-radius: 16px;
-      height: 150px;
-      background: #f8fafc;
-      overflow: hidden;
-    }
-
-    #sig-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
     .quadrant {
       min-height: 140px;
       border-radius: 16px;
@@ -261,12 +261,12 @@
     }
 
     .q-1 {
-      background: var(--red-soft);
+      background: var(--red);
       border-top: 4px solid #fca5a5;
     }
 
     .q-2 {
-      background: var(--yellow-soft);
+      background: var(--yellow);
       border-top: 4px solid #fbbf24;
     }
 
@@ -368,7 +368,7 @@
 <div id="save-status">💾 Sincronizzazione...</div>
 
 <!-- LOGIN -->
-<div id="auth-section" class="min-vh-100 d-flex align-items-center justify-content-center p-3">
+<div id="auth-screen" class="screen center-screen active-screen">
   <div class="login-card glass">
     <div class="text-center mb-4">
       <div class="brand fs-3">CANTIERI<span>CLOUD</span></div>
@@ -389,7 +389,7 @@
 
     <div id="login-ditta-box" style="display:none;">
       <label class="small-label">Accesso ditta / subaffidatario</label>
-      <input type="text" id="codice-ditta-login" class="form-control mb-2 text-uppercase" placeholder="Codice ditta, es. BLU01">
+      <input type="text" id="codice-ditta-login" class="form-control mb-2 text-uppercase" placeholder="Codice ditta, es. MATTIA08">
       <input type="password" id="password-ditta-login" class="form-control mb-3" placeholder="Password">
       <button class="btn btn-dark w-100 py-2" onclick="handleDittaLogin()">Entra</button>
       <button id="install-app-btn" class="btn btn-outline-dark w-100 mt-2" style="display:none;">⬇️ Installa sul desktop</button>
@@ -398,8 +398,8 @@
   </div>
 </div>
 
-<!-- PIN SIRIMED -->
-<div id="pin-section" class="min-vh-100 d-flex align-items-center justify-content-center p-3" style="display:none;">
+<!-- PIN RESPONSABILI -->
+<div id="pin-screen" class="screen center-screen">
   <div class="login-card glass text-center">
     <div class="brand fs-4 mb-2">CANTIERI<span>CLOUD</span></div>
     <h5 class="fw-bold mt-3">PIN DI SBLOCCO</h5>
@@ -411,7 +411,7 @@
 </div>
 
 <!-- APP SIRIMED -->
-<div id="main-app" style="display:none;">
+<div id="main-screen" class="screen">
   <nav class="topbar py-3">
     <div class="container d-flex justify-content-between align-items-center">
       <span class="brand fs-4">CANTIERI<span>CLOUD</span></span>
@@ -423,8 +423,7 @@
   </nav>
 
   <div class="container">
-    <!-- LISTA COMMESSE -->
-    <section id="section-list" class="active-section">
+    <section id="section-list" class="section-page active">
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
           <h3 class="section-title">Commesse attive</h3>
@@ -435,8 +434,7 @@
       <div id="cantieri-grid" class="row g-4"></div>
     </section>
 
-    <!-- CALENDARIO -->
-    <section id="section-calendar">
+    <section id="section-calendar" class="section-page">
       <div class="glass p-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
           <button class="btn btn-soft btn-sm" onclick="showSection('section-list')">← Indietro</button>
@@ -462,8 +460,7 @@
       </div>
     </section>
 
-    <!-- GIORNALE -->
-    <section id="section-giornale">
+    <section id="section-giornale" class="section-page">
       <div class="glass p-4">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
           <div>
@@ -474,7 +471,6 @@
         </div>
 
         <div class="row g-4">
-          <!-- COL 1 -->
           <div class="col-lg-4">
             <div class="small-label text-primary">1. Dati giornalieri</div>
             <hr>
@@ -499,9 +495,8 @@
             <div id="photo-box" class="d-flex flex-wrap gap-2"></div>
           </div>
 
-          <!-- COL 2 -->
           <div class="col-lg-4">
-            <div class="small-label text-primary">2. Contenuti, contributi e firme</div>
+            <div class="small-label text-primary">2. Contenuti e contributi</div>
             <hr>
 
             <div class="d-flex justify-content-between mb-2">
@@ -514,31 +509,9 @@
             <label class="small-label">Contributi ditte</label>
             <div id="contributi-ditte-box" class="mb-3"></div>
 
-            <label class="small-label">Firme digitali</label>
-            <select id="sel-firma" class="form-select form-select-sm mb-2" onchange="initSig()">
-              <option value="">Seleziona chi deve firmare...</option>
-              <option value="DL">Dir. Lavori</option>
-              <option value="ADL">Ass. DL</option>
-              <option value="CSE">CSE</option>
-              <option value="RUP">RUP</option>
-              <option value="ARUP">Ass. RUP</option>
-              <option value="IMP">Impresa</option>
-            </select>
-
-            <div id="sig-container" style="display:none" class="mb-3">
-              <div class="sig-box mb-2">
-                <canvas id="sig-canvas"></canvas>
-              </div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-danger w-50" onclick="clearSig()">🗑️ Pulisci</button>
-                <button class="btn btn-sm btn-dark w-50" onclick="saveSig()">✅ Salva</button>
-              </div>
-            </div>
-
             <button class="btn btn-primary w-100 fw-bold py-3 mt-2" onclick="generatePDF()">📄 GENERA GIORNALE PDF</button>
           </div>
 
-          <!-- COL 3 -->
           <div class="col-lg-4">
             <div class="small-label text-danger">3. Privato e condivisione</div>
             <hr>
@@ -612,8 +585,8 @@
   </div>
 </div>
 
-<!-- APP DITTA LIMITATA -->
-<div id="ditta-app" style="display:none;">
+<!-- APP DITTA -->
+<div id="ditta-screen" class="screen">
   <nav class="topbar py-3">
     <div class="container d-flex justify-content-between align-items-center">
       <span class="brand fs-4">CANTIERI<span>DITTA</span></span>
@@ -703,10 +676,6 @@
 </div>
 
 <script>
-/* =========================
-   FIREBASE
-========================= */
-
 const firebaseConfig = {
   apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig",
   authDomain: "gestionecantierilombardia.firebaseapp.com",
@@ -720,26 +689,15 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* =========================
-   VARIABILI
-========================= */
-
 let userData = { cantieri: [] };
 let cIdx = -1;
 let activeDate = "";
-let sigPad = null;
 let currentMonth = new Date();
 let tempAna = [];
 let saveTimer = null;
-
 let currentUser = null;
 let currentUserProfile = null;
-
-let dittaPanelData = {
-  cantiere: null,
-  ditta: null,
-  todayKey: null
-};
+let dittaPanelData = { cantiere: null, ditta: null, todayKey: null };
 
 const TIPO_DITTA_LABELS = {
   appaltatore: "Appaltatore / Affidataria",
@@ -749,9 +707,11 @@ const TIPO_DITTA_LABELS = {
   autonomo: "Lavoratore autonomo"
 };
 
-/* =========================
-   UTILITY
-========================= */
+function showScreen(id) {
+  $(".screen").removeClass("active-screen");
+  $(id).addClass("active-screen");
+  window.scrollTo(0, 0);
+}
 
 function uid() {
   return Date.now() + Math.floor(Math.random() * 100000);
@@ -785,20 +745,20 @@ function safeId(s) {
     .replace(/^_+|_+$/g, "") || "ID";
 }
 
-function openModalC() {
-  bootstrap.Modal.getOrCreateInstance(document.getElementById("modalC")).show();
-}
-
-function closeModalC() {
-  bootstrap.Modal.getInstance(document.getElementById("modalC"))?.hide();
-}
-
 function showSave(t = "💾 Sincronizzazione...") {
   $("#save-status").text(t).fadeIn();
 }
 
 function hideSaveSoon() {
   setTimeout(() => $("#save-status").fadeOut(), 800);
+}
+
+function openModalC() {
+  bootstrap.Modal.getOrCreateInstance(document.getElementById("modalC")).show();
+}
+
+function closeModalC() {
+  bootstrap.Modal.getInstance(document.getElementById("modalC"))?.hide();
 }
 
 function normalizeDitte(ditte) {
@@ -817,12 +777,7 @@ function normalizeDitte(ditte) {
 
     nd.operai = nd.operai.map(o => {
       if (typeof o === "string") {
-        return {
-          id: safeId(o),
-          nome: normalizeKey(o),
-          mansione: "",
-          attivo: true
-        };
+        return { id: safeId(o), nome: normalizeKey(o), mansione: "", attivo: true };
       }
 
       return {
@@ -846,10 +801,6 @@ function ensureCantiereShape(c) {
   return c;
 }
 
-/* =========================
-   LOGIN E PROFILI
-========================= */
-
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
@@ -857,8 +808,7 @@ auth.onAuthStateChanged(user => {
   } else {
     currentUser = null;
     currentUserProfile = null;
-    $("#auth-section").show();
-    $("#pin-section, #main-app, #ditta-app").hide();
+    showScreen("#auth-screen");
   }
 });
 
@@ -924,22 +874,19 @@ async function loadUserProfile(user) {
 
     currentUserProfile = p;
 
-    $("#auth-section, #pin-section, #main-app, #ditta-app").hide();
-
     if (p.ruolo === "admin" || p.ruolo === "responsabile") {
-      $("#pin-section").show();
+      showScreen("#pin-screen");
       return;
     }
 
     if (p.ruolo === "ditta") {
-      $("#ditta-app").show();
+      showScreen("#ditta-screen");
       await loadDittaPanel();
       return;
     }
 
     alert("Ruolo non valido.");
     await auth.signOut();
-
   } catch (e) {
     console.error(e);
     alert("Errore lettura profilo.");
@@ -949,8 +896,7 @@ async function loadUserProfile(user) {
 
 function checkPin() {
   if ($("#pin-input").val() === "9731") {
-    $("#pin-section").hide();
-    $("#main-app").show();
+    showScreen("#main-screen");
     loadDB();
   } else {
     alert("PIN errato");
@@ -960,10 +906,6 @@ function checkPin() {
 function logout() {
   auth.signOut().then(() => location.reload());
 }
-
-/* =========================
-   DATABASE PRINCIPALE
-========================= */
 
 function loadDB() {
   return db.collection("users").doc("archivio_condiviso").get()
@@ -996,10 +938,6 @@ function saveArchivio(callback) {
       showSave("⚠️ Errore salvataggio");
     });
 }
-
-/* =========================
-   LISTA COMMESSE
-========================= */
 
 function renderList() {
   let h = "";
@@ -1047,14 +985,10 @@ function openC(i) {
 }
 
 function showSection(id) {
-  $("section").removeClass("active-section");
-  $("#" + id).addClass("active-section");
+  $(".section-page").removeClass("active");
+  $("#" + id).addClass("active");
   window.scrollTo(0, 0);
 }
-
-/* =========================
-   CALENDARIO
-========================= */
 
 function changeMonth(dir) {
   currentMonth.setMonth(currentMonth.getMonth() + dir);
@@ -1105,10 +1039,6 @@ function renderCal() {
   $("#calendar-days").html(h);
 }
 
-/* =========================
-   GIORNALE SIRIMED
-========================= */
-
 async function openG(ds) {
   activeDate = ds;
 
@@ -1124,8 +1054,6 @@ async function openG(ds) {
   $("#g-lavorazioni").val(g.lavorazioni || "").prop("readonly", true);
   $("#btn-lock").text("SBLOCCA");
   $("#g-memo").val(g.memo || "");
-  $("#sel-firma").val("");
-  $("#sig-container").hide();
 
   const sel = $("#sel-ditta").empty().append('<option value="">+ Ditta presente</option>');
 
@@ -1170,44 +1098,6 @@ function toggleLock() {
     $("#btn-lock").text("SBLOCCA");
     autoSave();
   }
-}
-
-/* =========================
-   FIRME E FOTO
-========================= */
-
-function initSig() {
-  const r = $("#sel-firma").val();
-
-  if (!r) return $("#sig-container").hide();
-
-  $("#sig-container").show();
-
-  const cvs = document.getElementById("sig-canvas");
-
-  setTimeout(() => {
-    cvs.width = cvs.offsetWidth;
-    cvs.height = cvs.offsetHeight;
-    sigPad = new SignaturePad(cvs);
-
-    const data = userData.cantieri[cIdx].giornali[activeDate]["firma_" + r];
-    if (data) sigPad.fromDataURL(data);
-  }, 150);
-}
-
-function clearSig() {
-  if (sigPad) sigPad.clear();
-}
-
-function saveSig() {
-  const ruolo = $("#sel-firma").val();
-
-  if (!ruolo || !sigPad) return alert("Seleziona un firmatario.");
-  if (sigPad.isEmpty()) return alert("Firma vuota.");
-
-  userData.cantieri[cIdx].giornali[activeDate]["firma_" + ruolo] = sigPad.toDataURL();
-  autoSave();
-  alert("Firma salvata.");
 }
 
 function handlePhotos(inpt) {
@@ -1265,10 +1155,6 @@ function delPh(i) {
     autoSave();
   }
 }
-
-/* =========================
-   PRESENZE SIRIMED
-========================= */
 
 function findDittaByIdOrName(value, cantiere = null) {
   const c = cantiere || ensureCantiereShape(userData.cantieri[cIdx]);
@@ -1492,10 +1378,6 @@ function renderPresenze() {
   $("#ditte-presenze").html(h);
 }
 
-/* =========================
-   CONTRIBUTI DITTE
-========================= */
-
 function contributiCollection(cantiere) {
   const id = safeId(cantiere.nome || cantiere.id);
   return db.collection("cantieri").doc(id).collection("contributiDitte");
@@ -1566,10 +1448,6 @@ async function setStatoContributo(id, stato, includi) {
 
   await renderContributiDitte();
 }
-
-/* =========================
-   PANNELLO DITTA
-========================= */
 
 async function loadDittaPanel() {
   await loadDB();
@@ -1718,10 +1596,6 @@ async function saveDittaContribution() {
   alert("Contributo giornaliero salvato.");
 }
 
-/* =========================
-   TASK
-========================= */
-
 function addTask() {
   const t = $("#task-in").val().trim();
   if (!t) return;
@@ -1763,10 +1637,6 @@ function confirmDelTask(id) {
     saveArchivio();
   }
 }
-
-/* =========================
-   ANAGRAFICA COMMESSA
-========================= */
 
 function openModaleNuovo() {
   cIdx = -1;
@@ -1836,8 +1706,6 @@ function addAnaDitta() {
     nome: normalizeKey(nome),
     tipo: tipo,
     parentDittaId: parentDittaId,
-    referente: "",
-    telefono: "",
     stato: "autorizzata",
     attiva: true,
     operai: []
@@ -1854,10 +1722,7 @@ function editAnaDitta(i) {
 
   d.nome = normalizeKey(nome);
 
-  const stato = prompt(
-    "Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata",
-    d.stato || "autorizzata"
-  );
+  const stato = prompt("Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata", d.stato || "autorizzata");
 
   if (stato) d.stato = stato.toLowerCase();
 
@@ -2030,10 +1895,6 @@ function saveC() {
   });
 }
 
-/* =========================
-   WHATSAPP
-========================= */
-
 function isWaChecked(v) {
   return $(`.wa-check[value="${v}"]`).is(":checked");
 }
@@ -2148,7 +2009,7 @@ function shareAccessoDittaWhatsApp() {
     return;
   }
 
-  const codice = prompt("Inserisci codice ditta da condividere, es. BLU01:");
+  const codice = prompt("Inserisci codice ditta da condividere, es. MATTIA08:");
   if (!codice) return;
 
   const link = `${location.origin}${location.pathname}?accesso=ditta&cantiere=${encodeURIComponent(c.nome || "")}&codice=${encodeURIComponent(codice.toUpperCase())}`;
@@ -2166,10 +2027,6 @@ Inserisci la password comunicata da Sirimed.`;
 
   window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
 }
-
-/* =========================
-   PDF
-========================= */
 
 function getPresenzeByDitta(g, ditta) {
   return (g.presenti || [])
@@ -2334,81 +2191,6 @@ async function generatePDF() {
     });
   }
 
-  if (g.photos && g.photos.length) {
-    if (y > 230) {
-      doc.addPage();
-      y = 20;
-    }
-
-    doc.line(15, y, 195, y);
-    y += 8;
-
-    doc.setFont("helvetica", "bold");
-    doc.text("ALLEGATO FOTOGRAFICO", 15, y);
-    y += 8;
-
-    let x = 15;
-
-    g.photos.forEach((p, idx) => {
-      doc.addImage(p, "JPEG", x, y, 85, 60);
-
-      if (idx % 2 === 0) {
-        x = 110;
-      } else {
-        x = 15;
-        y += 65;
-
-        if (y > 230 && idx < g.photos.length - 1) {
-          doc.addPage();
-          y = 20;
-        }
-      }
-    });
-
-    if (x === 110) y += 70;
-  }
-
-  const figure = [
-    ["DIRETTORE LAVORI", c.dl, "DL"],
-    ["ASSISTENTE D.L.", c.adl, "ADL"],
-    ["C.S.E. (Sicurezza)", c.cse, "CSE"],
-    ["R.U.P.", c.rup, "RUP"],
-    ["ASSISTENTE R.U.P.", c.arup, "ARUP"],
-    ["IMPRESA", "Responsabile Cantiere", "IMP"]
-  ];
-
-  const boxH = 18;
-
-  if ((297 - y) < figure.length * boxH + 25) {
-    doc.addPage();
-    y = 20;
-  }
-
-  let sy = Math.max(y + 10, 297 - figure.length * boxH - 15);
-
-  doc.line(15, sy - 5, 195, sy - 5);
-  doc.setFont("helvetica", "bold");
-  doc.text("QUADRO DELLE FIRME", 15, sy - 8);
-
-  figure.forEach(f => {
-    doc.rect(15, sy, 180, boxH);
-    doc.line(100, sy, 100, sy + boxH);
-
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.text(f[0], 18, sy + 6);
-
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text(f[1] || "-", 18, sy + 12);
-
-    if (g["firma_" + f[2]]) {
-      doc.addImage(g["firma_" + f[2]], "PNG", 115, sy + 2, 45, boxH - 4);
-    }
-
-    sy += boxH;
-  });
-
   const pc = doc.internal.getNumberOfPages();
 
   for (let i = 1; i <= pc; i++) {
@@ -2421,10 +2203,6 @@ async function generatePDF() {
 
   doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
 }
-
-/* =========================
-   LINK ACCESSO DITTA + PWA
-========================= */
 
 function readAccessParams() {
   const params = new URLSearchParams(window.location.search);
@@ -2472,4 +2250,4 @@ $(document).ready(readAccessParams);
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-</html>
+                </html>
