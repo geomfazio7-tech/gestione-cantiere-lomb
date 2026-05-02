@@ -32,9 +32,12 @@
       --radius: 24px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-    html, body {
+    html,
+    body {
       width: 100%;
       min-height: 100%;
       overflow-x: hidden;
@@ -44,8 +47,8 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 8% 0%, rgba(37,99,235,.18), transparent 30%),
-        radial-gradient(circle at 92% 4%, rgba(16,185,129,.14), transparent 28%),
+        radial-gradient(circle at 8% 0%, rgba(37, 99, 235, .18), transparent 30%),
+        radial-gradient(circle at 92% 4%, rgba(16, 185, 129, .14), transparent 28%),
         linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
       font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--dark);
@@ -78,9 +81,11 @@
       display: block !important;
     }
 
-    .glass, .card, .login-card {
-      background: rgba(255,255,255,.95);
-      border: 1px solid rgba(226,232,240,.95);
+    .glass,
+    .card,
+    .login-card {
+      background: rgba(255, 255, 255, .95);
+      border: 1px solid rgba(226, 232, 240, .95);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
@@ -128,10 +133,10 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255,255,255,.86);
+      background: rgba(255, 255, 255, .86);
       backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(226,232,240,.9);
-      box-shadow: 0 8px 30px rgba(15,23,42,.05);
+      border-bottom: 1px solid rgba(226, 232, 240, .9);
+      box-shadow: 0 8px 30px rgba(15, 23, 42, .05);
     }
 
     .section-title {
@@ -151,16 +156,18 @@
       margin-bottom: 6px;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
       min-height: 46px;
       border-radius: 15px !important;
       border: 1px solid #dbe3ee !important;
       background: #fff !important;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
       border-color: var(--dark) !important;
-      box-shadow: 0 0 0 .20rem rgba(17,24,39,.10) !important;
+      box-shadow: 0 0 0 .20rem rgba(17, 24, 39, .10) !important;
     }
 
     .btn {
@@ -205,7 +212,7 @@
 
     .commessa-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 26px 70px rgba(15,23,42,.14);
+      box-shadow: 0 26px 70px rgba(15, 23, 42, .14);
     }
 
     .commessa-card::after {
@@ -231,7 +238,7 @@
 
     .calendar-grid {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0,1fr));
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: 8px;
     }
 
@@ -260,8 +267,16 @@
       transform: translateY(-2px);
     }
 
-    .cal-past { background: #f8fafc; color: #94a3b8; }
-    .cal-today { background: var(--blue); border: 2px solid #2563eb; color: #1d4ed8; }
+    .cal-past {
+      background: #f8fafc;
+      color: #94a3b8;
+    }
+
+    .cal-today {
+      background: var(--blue);
+      border: 2px solid #2563eb;
+      color: #1d4ed8;
+    }
 
     .day-meta {
       font-size: .70rem;
@@ -288,9 +303,14 @@
       border-color: var(--dark);
     }
 
-    .ore-input { width: 82px; font-size: .80rem; }
+    .ore-input {
+      width: 82px;
+      font-size: .80rem;
+    }
 
-    .ditta-card, .contributo-card, .operaio-row {
+    .ditta-card,
+    .contributo-card,
+    .operaio-row {
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 18px;
@@ -325,8 +345,15 @@
       border: 1px solid var(--line);
     }
 
-    .q-1 { background: var(--red); border-top: 4px solid #fca5a5; }
-    .q-2 { background: var(--yellow); border-top: 4px solid #fbbf24; }
+    .q-1 {
+      background: var(--red);
+      border-top: 4px solid #fca5a5;
+    }
+
+    .q-2 {
+      background: var(--yellow);
+      border-top: 4px solid #fbbf24;
+    }
 
     .wa-box {
       background: #fff;
@@ -335,7 +362,9 @@
       padding: 13px;
     }
 
-    .opacity-55 { opacity: .55; }
+    .opacity-55 {
+      opacity: .55;
+    }
 
     #pin-input {
       letter-spacing: .35em;
@@ -351,7 +380,7 @@
       background: var(--dark);
       color: #fff;
       border-radius: 999px;
-      box-shadow: 0 18px 45px rgba(15,23,42,.20);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, .20);
       display: none;
       z-index: 9999;
       font-size: .88rem;
@@ -368,11 +397,28 @@
         border-radius: 24px;
       }
 
-      .topbar .brand { font-size: 1.05rem !important; }
-      .calendar-grid { gap: 5px; }
-      .cal-day { min-height: 72px; padding: 7px; font-size: .80rem; }
-      .glass.p-4 { padding: 18px !important; }
-      .container { padding-left: 14px; padding-right: 14px; }
+      .topbar .brand {
+        font-size: 1.05rem !important;
+      }
+
+      .calendar-grid {
+        gap: 5px;
+      }
+
+      .cal-day {
+        min-height: 72px;
+        padding: 7px;
+        font-size: .80rem;
+      }
+
+      .glass.p-4 {
+        padding: 18px !important;
+      }
+
+      .container {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
     }
   </style>
 </head>
@@ -390,8 +436,8 @@
     </div>
 
     <div class="login-tabs mb-4">
-      <button id="tab-sirimed" class="btn active flex-fill" onclick="showSiramedLogin()">Sir i med</button>
-      <button id="tab-ditta" class="btn flex-fill" onclick="showDittaLogin()">Ditta</button>
+      <button id="tab-sirimed" type="button" class="btn active flex-fill" onclick="showSirimedLogin()">Sirimed</button>
+      <button id="tab-ditta" type="button" class="btn flex-fill" onclick="showDittaLogin()">Ditta</button>
     </div>
 
     <div id="login-sirimed-box">
@@ -419,7 +465,6 @@
     </div>
   </div>
 </div>
-
 <!-- PIN RESPONSABILI -->
 <div id="pin-screen" class="screen center-screen">
   <div class="login-card glass text-center">
@@ -451,9 +496,26 @@
   <div class="container">
     <section id="section-list" class="section-page active">
       <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="stat-card"><div class="small-label">Commesse</div><h3 id="stat-cantieri" class="fw-bold m-0">0</h3></div></div>
-        <div class="col-md-4"><div class="stat-card"><div class="small-label">Giornali</div><h3 id="stat-giornali" class="fw-bold m-0">0</h3></div></div>
-        <div class="col-md-4"><div class="stat-card"><div class="small-label">Ditte</div><h3 id="stat-ditte" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="small-label">Commesse</div>
+            <h3 id="stat-cantieri" class="fw-bold m-0">0</h3>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="small-label">Giornali</div>
+            <h3 id="stat-giornali" class="fw-bold m-0">0</h3>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="stat-card">
+            <div class="small-label">Ditte</div>
+            <h3 id="stat-ditte" class="fw-bold m-0">0</h3>
+          </div>
+        </div>
       </div>
 
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -463,6 +525,7 @@
         </div>
         <button class="btn btn-dark btn-sm px-4" onclick="openModaleNuovo()">+ Nuova commessa</button>
       </div>
+
       <div id="cantieri-grid" class="row g-4"></div>
     </section>
 
@@ -501,6 +564,7 @@
           </div>
           <button class="btn-close" onclick="showSection('section-calendar')"></button>
         </div>
+
         <div class="row g-4">
           <div class="col-lg-4">
             <div class="small-label text-primary">1. Dati giornalieri</div>
@@ -615,7 +679,6 @@
     </section>
   </div>
 </div>
-
 <!-- APP DITTA -->
 <div id="ditta-screen" class="screen">
   <nav class="topbar py-3">
@@ -678,16 +741,36 @@
         </div>
 
         <div class="row g-2 mb-3">
-          <div class="col-12"><input type="text" id="c-ente" class="form-control" placeholder="Stazione Appaltante"></div>
-          <div class="col-md-6"><input type="text" id="c-nome" class="form-control" placeholder="Cantiere"></div>
-          <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
-          <div class="col-md-6"><input type="text" id="c-cig" class="form-control" placeholder="CIG"></div>
-          <div class="col-md-6"><input type="text" id="c-cup" class="form-control" placeholder="CUP"></div>
-          <div class="col-md-6"><input type="text" id="c-dl" class="form-control" placeholder="Dir. Lavori"></div>
-          <div class="col-md-6"><input type="text" id="c-adl" class="form-control" placeholder="Ass. DL"></div>
-          <div class="col-md-6"><input type="text" id="c-cse" class="form-control" placeholder="CSE"></div>
-          <div class="col-md-6"><input type="text" id="c-rup" class="form-control" placeholder="RUP"></div>
-          <div class="col-md-6"><input type="text" id="c-arup" class="form-control" placeholder="Ass. RUP"></div>
+          <div class="col-12">
+            <input type="text" id="c-ente" class="form-control" placeholder="Stazione Appaltante">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-nome" class="form-control" placeholder="Cantiere">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-cig" class="form-control" placeholder="CIG">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-cup" class="form-control" placeholder="CUP">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-dl" class="form-control" placeholder="Dir. Lavori">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-adl" class="form-control" placeholder="Ass. DL">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-cse" class="form-control" placeholder="CSE">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-rup" class="form-control" placeholder="RUP">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="c-arup" class="form-control" placeholder="Ass. RUP">
+          </div>
         </div>
 
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
@@ -869,9 +952,7 @@ function openModalC() {
 
 function closeModalC() {
   bootstrap.Modal.getInstance(document.getElementById("modalC"))?.hide();
-}
-
-function normalizeDitte(ditte) {
+}80function normalizeDitte(ditte) {
   return (ditte || []).map(d => {
     const nd = typeof d === "string" ? { nome: d } : { ...d };
 
@@ -911,18 +992,24 @@ function ensureCantiereShape(c) {
   return c;
 }
 
-function showSiramedLogin() {
+function showSirimedLogin() {
   $("#tab-sirimed").addClass("active");
   $("#tab-ditta").removeClass("active");
-  $("#login-sirimed-box").show();
-  $("#login-ditta-box").hide();
+
+  $("#login-sirimed-box").css("display", "block");
+  $("#login-ditta-box").css("display", "none");
+
+  $("#log-email").focus();
 }
 
 function showDittaLogin() {
   $("#tab-ditta").addClass("active");
   $("#tab-sirimed").removeClass("active");
-  $("#login-ditta-box").show();
-  $("#login-sirimed-box").hide();
+
+  $("#login-sirimed-box").css("display", "none");
+  $("#login-ditta-box").css("display", "block");
+
+  $("#codice-ditta-login").focus();
 }
 
 async function handleLogin() {
@@ -1036,7 +1123,17 @@ async function checkPin() {
   markPinUnlocked(currentUser.uid);
   showScreen("#main-screen");
   await loadDB();
-  function loadDB() {
+}
+
+function logout() {
+  clearLoginState();
+  auth.signOut().then(() => {
+    $("#log-pw, #password-ditta-login, #pin-input").val("");
+    showScreen("#auth-screen");
+  });
+}
+
+function loadDB() {
   return db.collection("users").doc("archivio_condiviso").get()
     .then(doc => {
       userData.cantieri = doc.exists ? (doc.data().cantieri || []) : [];
@@ -1204,9 +1301,7 @@ async function openG(ds) {
   renderPhotos();
   renderTasks();
   await renderContributiDitte();
-}
-
-function autoSave() {
+}function autoSave() {
   showSave("💾 Modifiche in corso...");
   clearTimeout(saveTimer);
 
@@ -1590,14 +1685,8 @@ async function setStatoContributo(id, stato, includi) {
 
   await renderContributiDitte();
 }
-}
 
-function logout() {
-  clearLoginState();
-  auth.signOut().then(() => {
-    $("#log-pw, #password-ditta-login, #pin-input").val("");
-    showScreen("#auth-screen");
-  });async function loadDittaPanel() {
+async function loadDittaPanel() {
   await loadDB();
 
   const p = currentUserProfile;
@@ -2051,10 +2140,7 @@ function saveC() {
     if (cIdx !== -1) {
       $("#cal-title").text(d.nome);
     }
-  });
-}
-
-function isWaChecked(v) {
+  });function isWaChecked(v) {
   return $(`.wa-check[value="${v}"]`).is(":checked");
 }
 
@@ -2399,6 +2485,16 @@ $(document).on("click", "#install-app-btn, .install-btn", async () => {
   $("#install-app-btn, .install-btn").hide();
 });
 
+$(document).on("click touchstart", "#tab-ditta", function(e) {
+  e.preventDefault();
+  showDittaLogin();
+});
+
+$(document).on("click touchstart", "#tab-sirimed", function(e) {
+  e.preventDefault();
+  showSirimedLogin();
+});
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
     .catch(err => console.warn("Service worker non registrato:", err));
@@ -2429,3 +2525,4 @@ $(document).ready(() => {
 </body>
 </html>
 }
+  
