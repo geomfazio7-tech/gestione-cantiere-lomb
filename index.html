@@ -32,12 +32,9 @@
       --radius: 24px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
-    html,
-    body {
+    html, body {
       width: 100%;
       min-height: 100%;
       overflow-x: hidden;
@@ -47,8 +44,8 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 8% 0%, rgba(37, 99, 235, .18), transparent 30%),
-        radial-gradient(circle at 92% 4%, rgba(16, 185, 129, .14), transparent 28%),
+        radial-gradient(circle at 8% 0%, rgba(37,99,235,.18), transparent 30%),
+        radial-gradient(circle at 92% 4%, rgba(16,185,129,.14), transparent 28%),
         linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
       font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--dark);
@@ -81,11 +78,9 @@
       display: block !important;
     }
 
-    .glass,
-    .card,
-    .login-card {
-      background: rgba(255, 255, 255, .95);
-      border: 1px solid rgba(226, 232, 240, .95);
+    .glass, .card, .login-card {
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(226,232,240,.95);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
@@ -133,10 +128,10 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255, 255, 255, .86);
+      background: rgba(255,255,255,.86);
       backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(226, 232, 240, .9);
-      box-shadow: 0 8px 30px rgba(15, 23, 42, .05);
+      border-bottom: 1px solid rgba(226,232,240,.9);
+      box-shadow: 0 8px 30px rgba(15,23,42,.05);
     }
 
     .section-title {
@@ -156,18 +151,16 @@
       margin-bottom: 6px;
     }
 
-    .form-control,
-    .form-select {
+    .form-control, .form-select {
       min-height: 46px;
       border-radius: 15px !important;
       border: 1px solid #dbe3ee !important;
       background: #fff !important;
     }
 
-    .form-control:focus,
-    .form-select:focus {
+    .form-control:focus, .form-select:focus {
       border-color: var(--dark) !important;
-      box-shadow: 0 0 0 .20rem rgba(17, 24, 39, .10) !important;
+      box-shadow: 0 0 0 .20rem rgba(17,24,39,.10) !important;
     }
 
     .btn {
@@ -212,7 +205,7 @@
 
     .commessa-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 26px 70px rgba(15, 23, 42, .14);
+      box-shadow: 0 26px 70px rgba(15,23,42,.14);
     }
 
     .commessa-card::after {
@@ -238,7 +231,7 @@
 
     .calendar-grid {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(7, minmax(0,1fr));
       gap: 8px;
     }
 
@@ -267,16 +260,8 @@
       transform: translateY(-2px);
     }
 
-    .cal-past {
-      background: #f8fafc;
-      color: #94a3b8;
-    }
-
-    .cal-today {
-      background: var(--blue);
-      border: 2px solid #2563eb;
-      color: #1d4ed8;
-    }
+    .cal-past { background: #f8fafc; color: #94a3b8; }
+    .cal-today { background: var(--blue); border: 2px solid #2563eb; color: #1d4ed8; }
 
     .day-meta {
       font-size: .70rem;
@@ -303,14 +288,9 @@
       border-color: var(--dark);
     }
 
-    .ore-input {
-      width: 82px;
-      font-size: .80rem;
-    }
+    .ore-input { width: 82px; font-size: .80rem; }
 
-    .ditta-card,
-    .contributo-card,
-    .operaio-row {
+    .ditta-card, .contributo-card, .operaio-row {
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 18px;
@@ -345,15 +325,8 @@
       border: 1px solid var(--line);
     }
 
-    .q-1 {
-      background: var(--red);
-      border-top: 4px solid #fca5a5;
-    }
-
-    .q-2 {
-      background: var(--yellow);
-      border-top: 4px solid #fbbf24;
-    }
+    .q-1 { background: var(--red); border-top: 4px solid #fca5a5; }
+    .q-2 { background: var(--yellow); border-top: 4px solid #fbbf24; }
 
     .wa-box {
       background: #fff;
@@ -362,9 +335,7 @@
       padding: 13px;
     }
 
-    .opacity-55 {
-      opacity: .55;
-    }
+    .opacity-55 { opacity: .55; }
 
     #pin-input {
       letter-spacing: .35em;
@@ -380,7 +351,7 @@
       background: var(--dark);
       color: #fff;
       border-radius: 999px;
-      box-shadow: 0 18px 45px rgba(15, 23, 42, .20);
+      box-shadow: 0 18px 45px rgba(15,23,42,.20);
       display: none;
       z-index: 9999;
       font-size: .88rem;
@@ -397,28 +368,11 @@
         border-radius: 24px;
       }
 
-      .topbar .brand {
-        font-size: 1.05rem !important;
-      }
-
-      .calendar-grid {
-        gap: 5px;
-      }
-
-      .cal-day {
-        min-height: 72px;
-        padding: 7px;
-        font-size: .80rem;
-      }
-
-      .glass.p-4 {
-        padding: 18px !important;
-      }
-
-      .container {
-        padding-left: 14px;
-        padding-right: 14px;
-      }
+      .topbar .brand { font-size: 1.05rem !important; }
+      .calendar-grid { gap: 5px; }
+      .cal-day { min-height: 72px; padding: 7px; font-size: .80rem; }
+      .glass.p-4 { padding: 18px !important; }
+      .container { padding-left: 14px; padding-right: 14px; }
     }
   </style>
 </head>
@@ -426,7 +380,6 @@
 <body>
 
 <div id="save-status">💾 Sincronizzazione...</div>
-
 <!-- LOGIN -->
 <div id="auth-screen" class="screen center-screen active-screen">
   <div class="login-card glass">
@@ -436,8 +389,8 @@
     </div>
 
     <div class="login-tabs mb-4">
-      <button id="tab-sirimed" type="button" class="btn active flex-fill" onclick="showSirimedLogin()">Sirimed</button>
-      <button id="tab-ditta" type="button" class="btn flex-fill" onclick="showDittaLogin()">Ditta</button>
+      <button id="tab-sirimed" type="button" class="btn active flex-fill">Sirimed</button>
+      <button id="tab-ditta" type="button" class="btn flex-fill">Ditta</button>
     </div>
 
     <div id="login-sirimed-box">
@@ -465,6 +418,7 @@
     </div>
   </div>
 </div>
+
 <!-- PIN RESPONSABILI -->
 <div id="pin-screen" class="screen center-screen">
   <div class="login-card glass text-center">
@@ -496,26 +450,9 @@
   <div class="container">
     <section id="section-list" class="section-page active">
       <div class="row g-3 mb-4">
-        <div class="col-md-4">
-          <div class="stat-card">
-            <div class="small-label">Commesse</div>
-            <h3 id="stat-cantieri" class="fw-bold m-0">0</h3>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="stat-card">
-            <div class="small-label">Giornali</div>
-            <h3 id="stat-giornali" class="fw-bold m-0">0</h3>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="stat-card">
-            <div class="small-label">Ditte</div>
-            <h3 id="stat-ditte" class="fw-bold m-0">0</h3>
-          </div>
-        </div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Commesse</div><h3 id="stat-cantieri" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Giornali</div><h3 id="stat-giornali" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Ditte</div><h3 id="stat-ditte" class="fw-bold m-0">0</h3></div></div>
       </div>
 
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -525,7 +462,6 @@
         </div>
         <button class="btn btn-dark btn-sm px-4" onclick="openModaleNuovo()">+ Nuova commessa</button>
       </div>
-
       <div id="cantieri-grid" class="row g-4"></div>
     </section>
 
@@ -538,7 +474,6 @@
             <h4 id="cal-title" class="section-title"></h4>
             <div class="text-muted small">Calendario giornale lavori</div>
           </div>
-
           <div class="d-flex gap-2">
             <button class="btn btn-outline-success btn-sm" onclick="shareAccessoDittaWhatsApp()">📲 Accesso ditta</button>
             <button class="btn btn-outline-dark btn-sm" onclick="editCurrentCommessa()">Impostazioni</button>
@@ -613,52 +548,20 @@
 
             <label class="small-label text-success">Condivisione WhatsApp</label>
             <div class="wa-box mb-3 small">
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="commessa" id="wa-commessa" checked>
-                <label class="form-check-label" for="wa-commessa">Solo nome cantiere</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="meteo" id="wa-meteo" checked>
-                <label class="form-check-label" for="wa-meteo">Meteo e temperatura</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="ditte" id="wa-ditte" checked>
-                <label class="form-check-label" for="wa-ditte">Ditte / subappalti / subaffidi</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="operai" id="wa-operai" checked>
-                <label class="form-check-label" for="wa-operai">Operai presenti</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="ore" id="wa-ore" checked>
-                <label class="form-check-label" for="wa-ore">Ore lavorate</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="lavorazioni" id="wa-lavorazioni" checked>
-                <label class="form-check-label" for="wa-lavorazioni">Lavorazioni Sirimed</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="contributi" id="wa-contributi" checked>
-                <label class="form-check-label" for="wa-contributi">Contributi ditte</label>
-              </div>
-
-              <div class="form-check">
-                <input class="form-check-input wa-check" type="checkbox" value="note" id="wa-note">
-                <label class="form-check-label" for="wa-note">Note private</label>
-              </div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="commessa" id="wa-commessa" checked><label class="form-check-label" for="wa-commessa">Solo nome cantiere</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="meteo" id="wa-meteo" checked><label class="form-check-label" for="wa-meteo">Meteo e temperatura</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ditte" id="wa-ditte" checked><label class="form-check-label" for="wa-ditte">Ditte / subappalti / subaffidi</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="operai" id="wa-operai" checked><label class="form-check-label" for="wa-operai">Operai presenti</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ore" id="wa-ore" checked><label class="form-check-label" for="wa-ore">Ore lavorate</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="lavorazioni" id="wa-lavorazioni" checked><label class="form-check-label" for="wa-lavorazioni">Lavorazioni Sirimed</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="contributi" id="wa-contributi" checked><label class="form-check-label" for="wa-contributi">Contributi ditte</label></div>
+              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="note" id="wa-note"><label class="form-check-label" for="wa-note">Note private</label></div>
 
               <button class="btn btn-success btn-sm w-100 mt-2" onclick="shareWhatsApp()">📲 Condividi su WhatsApp</button>
             </div>
 
             <label class="small-label">Note personali</label>
             <textarea id="g-memo" class="form-control mb-4" rows="3" placeholder="Appunti privati..." onchange="autoSave()"></textarea>
-
             <label class="small-label">Task matrix</label>
             <div class="input-group input-group-sm mb-3">
               <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
@@ -679,6 +582,7 @@
     </section>
   </div>
 </div>
+
 <!-- APP DITTA -->
 <div id="ditta-screen" class="screen">
   <nav class="topbar py-3">
@@ -741,36 +645,16 @@
         </div>
 
         <div class="row g-2 mb-3">
-          <div class="col-12">
-            <input type="text" id="c-ente" class="form-control" placeholder="Stazione Appaltante">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-nome" class="form-control" placeholder="Cantiere">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-cig" class="form-control" placeholder="CIG">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-cup" class="form-control" placeholder="CUP">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-dl" class="form-control" placeholder="Dir. Lavori">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-adl" class="form-control" placeholder="Ass. DL">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-cse" class="form-control" placeholder="CSE">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-rup" class="form-control" placeholder="RUP">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="c-arup" class="form-control" placeholder="Ass. RUP">
-          </div>
+          <div class="col-12"><input type="text" id="c-ente" class="form-control" placeholder="Stazione Appaltante"></div>
+          <div class="col-md-6"><input type="text" id="c-nome" class="form-control" placeholder="Cantiere"></div>
+          <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
+          <div class="col-md-6"><input type="text" id="c-cig" class="form-control" placeholder="CIG"></div>
+          <div class="col-md-6"><input type="text" id="c-cup" class="form-control" placeholder="CUP"></div>
+          <div class="col-md-6"><input type="text" id="c-dl" class="form-control" placeholder="Dir. Lavori"></div>
+          <div class="col-md-6"><input type="text" id="c-adl" class="form-control" placeholder="Ass. DL"></div>
+          <div class="col-md-6"><input type="text" id="c-cse" class="form-control" placeholder="CSE"></div>
+          <div class="col-md-6"><input type="text" id="c-rup" class="form-control" placeholder="RUP"></div>
+          <div class="col-md-6"><input type="text" id="c-arup" class="form-control" placeholder="Ass. RUP"></div>
         </div>
 
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
@@ -788,7 +672,6 @@
     </div>
   </div>
 </div>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig",
@@ -898,9 +781,7 @@ function saveRememberPrefs(type) {
     const email = $("#log-email").val().trim();
     if (remember && email) localStorage.setItem(USER_EMAIL_KEY, email);
     if (!remember) localStorage.removeItem(USER_EMAIL_KEY);
-  }
-
-  if (type === "ditta") {
+  }if (type === "ditta") {
     const code = $("#codice-ditta-login").val().trim().toUpperCase();
     if (remember && code) localStorage.setItem(DITTA_CODE_KEY, code);
     if (!remember) localStorage.removeItem(DITTA_CODE_KEY);
@@ -952,7 +833,9 @@ function openModalC() {
 
 function closeModalC() {
   bootstrap.Modal.getInstance(document.getElementById("modalC"))?.hide();
-}80function normalizeDitte(ditte) {
+}
+
+function normalizeDitte(ditte) {
   return (ditte || []).map(d => {
     const nd = typeof d === "string" ? { nome: d } : { ...d };
 
@@ -993,26 +876,57 @@ function ensureCantiereShape(c) {
 }
 
 function showSirimedLogin() {
-  $("#tab-sirimed").addClass("active");
-  $("#tab-ditta").removeClass("active");
+  const tabSirimed = document.getElementById("tab-sirimed");
+  const tabDitta = document.getElementById("tab-ditta");
+  const boxSirimed = document.getElementById("login-sirimed-box");
+  const boxDitta = document.getElementById("login-ditta-box");
 
-  $("#login-sirimed-box").css("display", "block");
-  $("#login-ditta-box").css("display", "none");
+  if (!tabSirimed || !tabDitta || !boxSirimed || !boxDitta) return;
 
-  $("#log-email").focus();
+  tabSirimed.classList.add("active");
+  tabDitta.classList.remove("active");
+
+  boxSirimed.style.display = "block";
+  boxDitta.style.display = "none";
 }
 
 function showDittaLogin() {
-  $("#tab-ditta").addClass("active");
-  $("#tab-sirimed").removeClass("active");
+  const tabSirimed = document.getElementById("tab-sirimed");
+  const tabDitta = document.getElementById("tab-ditta");
+  const boxSirimed = document.getElementById("login-sirimed-box");
+  const boxDitta = document.getElementById("login-ditta-box");
 
-  $("#login-sirimed-box").css("display", "none");
-  $("#login-ditta-box").css("display", "block");
+  if (!tabSirimed || !tabDitta || !boxSirimed || !boxDitta) return;
 
-  $("#codice-ditta-login").focus();
+  tabDitta.classList.add("active");
+  tabSirimed.classList.remove("active");
+
+  boxSirimed.style.display = "none";
+  boxDitta.style.display = "block";
 }
 
-async function handleLogin() {
+function initLoginTabs() {
+  const tabSirimed = document.getElementById("tab-sirimed");
+  const tabDitta = document.getElementById("tab-ditta");
+
+  if (tabSirimed) {
+    tabSirimed.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showSirimedLogin();
+      return false;
+    };
+  }
+
+  if (tabDitta) {
+    tabDitta.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showDittaLogin();
+      return false;
+    };
+  }
+  }async function handleLogin() {
   const email = $("#log-email").val().trim();
   const pw = $("#log-pw").val();
 
@@ -1170,7 +1084,6 @@ function updateStats() {
   const cantieri = userData.cantieri || [];
   const giornali = cantieri.reduce((s, c) => s + Object.keys(c.giornali || {}).length, 0);
   const ditte = cantieri.reduce((s, c) => s + (c.anagraficaDitte || []).length, 0);
-
   $("#stat-cantieri").text(cantieri.length);
   $("#stat-giornali").text(giornali);
   $("#stat-ditte").text(ditte);
@@ -1178,7 +1091,6 @@ function updateStats() {
 
 function renderList() {
   updateStats();
-
   let h = "";
 
   userData.cantieri.forEach((c, i) => {
@@ -1301,7 +1213,9 @@ async function openG(ds) {
   renderPhotos();
   renderTasks();
   await renderContributiDitte();
-}function autoSave() {
+}
+
+function autoSave() {
   showSave("💾 Modifiche in corso...");
   clearTimeout(saveTimer);
 
@@ -1371,7 +1285,6 @@ function renderPhotos() {
   $("#photo-box").empty();
 
   if (cIdx < 0 || !activeDate) return;
-
   const g = userData.cantieri[cIdx].giornali[activeDate] || {};
 
   (g.photos || []).forEach((p, i) => {
@@ -1396,740 +1309,7 @@ function findDittaByIdOrName(value, cantiere = null) {
     String(d.id) === String(value) ||
     normalizeKey(d.nome) === normalizeKey(value)
   );
-}
-
-function normalizeGiornaleDitteVisibili(g) {
-  if (!g.ditteVisibili) g.ditteVisibili = [];
-
-  g.ditteVisibili = g.ditteVisibili.map(v => {
-    const d = findDittaByIdOrName(v);
-    return d ? d.id : v;
-  });
-}
-
-function addDittaG() {
-  const dittaId = $("#sel-ditta").val();
-
-  if (!dittaId) return;
-
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
-
-  normalizeGiornaleDitteVisibili(g);
-
-  if (!g.ditteVisibili.includes(dittaId)) g.ditteVisibili.push(dittaId);
-
-  $("#sel-ditta").val("");
-  renderPresenze();
-  autoSave();
-}
-
-function removeDittaG(dittaId) {
-  const d = findDittaByIdOrName(dittaId);
-
-  if (!d) return;
-
-  if (confirm(`Rimuovere ${d.nome} dal giornale?`)) {
-    const g = userData.cantieri[cIdx].giornali[activeDate];
-
-    g.ditteVisibili = (g.ditteVisibili || []).filter(x => String(x) !== String(dittaId));
-
-    g.presenti = (g.presenti || []).filter(p => {
-      if (typeof p === "string") return !p.includes(`(${d.nome})`);
-      return String(p.dittaId) !== String(dittaId);
-    });
-
-    renderPresenze();
-    autoSave();
-  }
-}
-
-function isWorkerPresent(g, dittaId, o) {
-  return (g.presenti || []).some(p => {
-    if (typeof p === "string") return false;
-    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(o.id);
-  });
-}
-
-function getPresenza(g, dittaId, operaioId) {
-  return (g.presenti || []).find(p => {
-    if (typeof p === "string") return false;
-    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId);
-  });
-}
-
-function toggleW(dittaId, operaioId) {
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
-
-  if (!g.presenti) g.presenti = [];
-
-  const d = findDittaByIdOrName(dittaId);
-  const o = (d?.operai || []).find(x => String(x.id) === String(operaioId));
-
-  if (!d || !o) return;
-
-  const idx = g.presenti.findIndex(p => {
-    if (typeof p === "string") return false;
-    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId);
-  });
-
-  if (idx >= 0) {
-    g.presenti.splice(idx, 1);
-  } else {
-    g.presenti.push({
-      dittaId: d.id,
-      dittaNome: d.nome,
-      dittaTipo: d.tipo,
-      operaioId: o.id,
-      operaioNome: o.nome,
-      mansione: o.mansione || "",
-      ore: 8
-    });
-  }
-
-  renderPresenze();
-  autoSave();
-}
-
-function updateOreOperaio(dittaId, operaioId, ore) {
-  const g = userData.cantieri[cIdx].giornali[activeDate];
-  const p = getPresenza(g, dittaId, operaioId);
-
-  if (!p) return;
-
-  let val = parseFloat(String(ore).replace(",", "."));
-
-  if (isNaN(val) || val < 0) val = 0;
-
-  p.ore = val;
-  autoSave();
-}
-
-function selectAllWorkers(dittaId) {
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
-  const d = findDittaByIdOrName(dittaId);
-
-  if (!g.presenti) g.presenti = [];
-  if (!d) return;
-
-  d.operai.filter(o => o.attivo !== false).forEach(o => {
-    if (!isWorkerPresent(g, d.id, o)) {
-      g.presenti.push({
-        dittaId: d.id,
-        dittaNome: d.nome,
-        dittaTipo: d.tipo,
-        operaioId: o.id,
-        operaioNome: o.nome,
-        mansione: o.mansione || "",
-        ore: 8
-      });
-    }
-  });
-
-  renderPresenze();
-  autoSave();
-}
-
-function deselectAllWorkers(dittaId) {
-  const g = userData.cantieri[cIdx].giornali[activeDate];
-  const d = findDittaByIdOrName(dittaId);
-
-  if (!d) return;
-
-  g.presenti = (g.presenti || []).filter(p => {
-    if (typeof p === "string") return !p.includes(`(${d.nome})`);
-    return String(p.dittaId) !== String(d.id);
-  });
-
-  renderPresenze();
-  autoSave();
-}
-
-function getTotaleOreDitta(g, dittaId) {
-  return (g.presenti || [])
-    .filter(p => typeof p !== "string" && String(p.dittaId) === String(dittaId))
-    .reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
-}
-
-function renderPresenze() {
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-  const g = c.giornali[activeDate] || {};
-
-  normalizeGiornaleDitteVisibili(g);
-
-  let h = "";
-
-  (g.ditteVisibili || []).forEach(dittaId => {
-    const d = findDittaByIdOrName(dittaId);
-
-    if (!d) return;
-
-    const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
-    const totale = getTotaleOreDitta(g, d.id);
-
-    h += `
-      <div class="bg-white p-2 border rounded mb-2 small">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <b>${esc(d.nome)}</b><br>
-            <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
-            ${parent ? `<span class="badge bg-secondary">collegata a ${esc(parent.nome)}</span>` : ""}
-            <span class="badge bg-info text-dark">Ore: ${totale}</span>
-          </div>
-          <button class="btn btn-sm btn-link text-danger p-0" onclick="removeDittaG('${d.id}')">🗑️</button>
-        </div>
-
-        <div class="d-flex gap-1 mt-2 mb-2">
-          <button class="btn btn-xs btn-outline-secondary" onclick="selectAllWorkers('${d.id}')">Tutti</button>
-          <button class="btn btn-xs btn-outline-secondary" onclick="deselectAllWorkers('${d.id}')">Nessuno</button>
-        </div>
-    `;
-
-    const ops = d.operai.filter(o => o.attivo !== false);
-
-    if (!ops.length) h += `<div class="text-muted">Nessun operaio attivo.</div>`;
-
-    ops.forEach(o => {
-      const sel = isWorkerPresent(g, d.id, o) ? "selected" : "";
-      const p = getPresenza(g, d.id, o.id);
-
-      h += `
-        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-          <span class="worker-chip ${sel}" onclick="toggleW('${d.id}', '${o.id}')">
-            ${esc(o.nome)}${o.mansione ? " - " + esc(o.mansione) : ""}
-          </span>
-
-          ${sel ? `
-            <input type="number" min="0" step="0.5" value="${p?.ore ?? 8}" class="form-control form-control-sm ore-input" onchange="updateOreOperaio('${d.id}', '${o.id}', this.value)">
-            <small class="text-muted">ore</small>
-          ` : ""}
-        </div>
-      `;
-    });
-
-    h += `</div>`;
-  });
-
-  $("#ditte-presenze").html(h);
-}
-
-function contributiCollection(cantiere) {
-  const id = safeId(cantiere.nome || cantiere.id);
-  return db.collection("cantieri").doc(id).collection("contributiDitte");
-}
-
-async function getContributiDitteGiorno(ds) {
-  if (cIdx < 0) return [];
-
-  const c = userData.cantieri[cIdx];
-  const snap = await contributiCollection(c).where("data", "==", ds).get();
-
-  return snap.docs.map(d => d.data());
-}
-
-async function renderContributiDitte() {
-  if (cIdx < 0 || !activeDate) return;
-
-  const contributi = await getContributiDitteGiorno(activeDate);
-
-  let h = "";
-
-  if (!contributi.length) {
-    h = `<div class="text-muted small border rounded p-2 bg-light">Nessun contributo ditta per questa giornata.</div>`;
-  }
-
-  contributi.forEach(ct => {
-    const ore = (ct.presenti || []).reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
-
-    h += `
-      <div class="contributo-card small">
-        <div>
-          <b>${esc(ct.dittaNome)}</b>
-          <span class="badge bg-info text-dark">${ore} ore</span>
-          <span class="badge ${ct.stato === "approvato" ? "bg-success" : ct.stato === "escluso" ? "bg-secondary" : "bg-warning text-dark"}">
-            ${esc(ct.stato || "da_verificare")}
-          </span>
-        </div>
-
-        <div class="mt-2">
-          <b>Meteo:</b> ${esc(ct.meteo || "-")} ${ct.temp ? "- " + esc(ct.temp) + "°C" : ""}<br>
-          <b>Lavorazioni:</b><br>
-          ${esc(ct.lavorazioni || "-")}
-        </div>
-
-        <div class="mt-2">
-          <b>Operai:</b><br>
-          ${(ct.presenti || []).map(p => `- ${esc(p.operaioNome)}${p.mansione ? " - " + esc(p.mansione) : ""} - ${p.ore || 0} ore`).join("<br>") || "-"}
-        </div>
-
-        <div class="d-flex gap-1 mt-2">
-          <button class="btn btn-xs btn-success" onclick="setStatoContributo('${ct.id}', 'approvato', true)">Approva</button>
-          <button class="btn btn-xs btn-outline-secondary" onclick="setStatoContributo('${ct.id}', 'escluso', false)">Escludi PDF</button>
-        </div>
-      </div>
-    `;
-  });
-
-  $("#contributi-ditte-box").html(h);
-}
-
-async function setStatoContributo(id, stato, includi) {
-  const c = userData.cantieri[cIdx];
-
-  await contributiCollection(c).doc(id).update({
-    stato: stato,
-    includiNelPDF: includi
-  });
-
-  await renderContributiDitte();
-}
-
-async function loadDittaPanel() {
-  await loadDB();
-
-  const p = currentUserProfile;
-
-  const cId = normalizeKey((p.cantiereIds || [])[0]);
-  const dId = normalizeKey((p.dittaIds || [])[0]);
-
-  const c = userData.cantieri.find(x =>
-    normalizeKey(x.id) === cId ||
-    normalizeKey(x.nome) === cId
-  );
-
-  if (!c) {
-    alert("Cantiere non trovato per questa ditta.");
-    return;
-  }
-
-  ensureCantiereShape(c);
-
-  const d = findDittaByIdOrName(dId, c);
-
-  if (!d) {
-    alert("Ditta non trovata nella commessa.");
-    return;
-  }
-
-  dittaPanelData = {
-    cantiere: c,
-    ditta: d,
-    todayKey: getTodayKey()
-  };
-
-  $("#ditta-cantiere-title").text(`${c.nome} - ${d.nome}`);
-  $("#ditta-date-label").text("Data: " + formatDateIT(dittaPanelData.todayKey));
-
-  renderDittaOperaiBox();
-  await loadExistingDittaContribution();
-}
-
-function renderDittaOperaiBox() {
-  const d = dittaPanelData.ditta;
-
-  let h = "";
-
-  const ops = (d.operai || []).filter(o => o.attivo !== false);
-
-  if (!ops.length) {
-    h = `<div class="text-muted small border rounded p-2 bg-light">Nessun operaio attivo associato alla ditta.</div>`;
-  }
-
-  ops.forEach(o => {
-    h += `
-      <div class="border rounded p-2 mb-2 bg-white small">
-        <div class="form-check">
-          <input class="form-check-input ditta-operaio-check" type="checkbox" value="${o.id}" id="dit-op-${o.id}">
-          <label class="form-check-label" for="dit-op-${o.id}">
-            <b>${esc(o.nome)}</b>${o.mansione ? " - " + esc(o.mansione) : ""}
-          </label>
-        </div>
-
-        <div class="input-group input-group-sm mt-2">
-          <span class="input-group-text">Ore</span>
-          <input type="number" class="form-control ditta-operaio-ore" data-operaio-id="${o.id}" value="8" min="0" step="0.5">
-        </div>
-      </div>
-    `;
-  });
-
-  $("#ditta-operai-box").html(h);
-}
-
-function getDittaContributionKey() {
-  return `${dittaPanelData.todayKey}_${dittaPanelData.ditta.id}`;
-}
-
-async function loadExistingDittaContribution() {
-  const key = getDittaContributionKey();
-
-  const snap = await contributiCollection(dittaPanelData.cantiere).doc(key).get();
-
-  if (!snap.exists) return;
-
-  const ct = snap.data();
-
-  $("#ditta-meteo").val(ct.meteo || "Soleggiato");
-  $("#ditta-temp").val(ct.temp || "");
-  $("#ditta-lavorazioni").val(ct.lavorazioni || "");
-
-  setTimeout(() => {
-    (ct.presenti || []).forEach(p => {
-      $(`#dit-op-${p.operaioId}`).prop("checked", true);
-      $(`.ditta-operaio-ore[data-operaio-id="${p.operaioId}"]`).val(p.ore || 8);
-    });
-  }, 100);
-}
-
-async function saveDittaContribution() {
-  const { cantiere, ditta, todayKey } = dittaPanelData;
-
-  if (!cantiere || !ditta) {
-    alert("Dati pannello ditta non disponibili.");
-    return;
-  }
-
-  const presenti = [];
-
-  $(".ditta-operaio-check:checked").each(function() {
-    const oid = $(this).val();
-    const o = (ditta.operai || []).find(x => String(x.id) === String(oid));
-
-    if (!o) return;
-
-    let ore = parseFloat($(`.ditta-operaio-ore[data-operaio-id="${oid}"]`).val());
-
-    if (isNaN(ore) || ore < 0) ore = 0;
-
-    presenti.push({
-      operaioId: o.id,
-      operaioNome: o.nome,
-      mansione: o.mansione || "",
-      ore: ore
-    });
-  });
-
-  const key = getDittaContributionKey();
-
-  const data = {
-    id: key,
-    data: todayKey,
-    cantiereId: safeId(cantiere.nome || cantiere.id),
-    dittaId: ditta.id,
-    dittaNome: ditta.nome,
-    meteo: $("#ditta-meteo").val(),
-    temp: $("#ditta-temp").val(),
-    lavorazioni: $("#ditta-lavorazioni").val(),
-    presenti: presenti,
-    stato: "da_verificare",
-    includiNelPDF: true,
-    compilatoDaUid: auth.currentUser.uid,
-    updatedAt: new Date().toISOString()
-  };
-
-  await contributiCollection(cantiere).doc(key).set(data);
-
-  alert("Contributo giornaliero salvato.");
-}
-
-function addTask() {
-  const t = $("#task-in").val().trim();
-
-  if (!t) return;
-
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-
-  c.tasks.push({
-    id: uid(),
-    text: t,
-    q: $("#task-q").val()
-  });
-
-  $("#task-in").val("");
-
-  renderTasks();
-  saveArchivio();
-}
-
-function renderTasks() {
-  $(".quadrant").empty();
-
-  if (cIdx < 0) return;
-
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-
-  (c.tasks || []).forEach(t => {
-    $(`#q${t.q}`).append(`
-      <div class="task-item">
-        <span>${esc(t.text)}</span>
-        <button class="btn-del-task" onclick="confirmDelTask(${t.id})">🗑️</button>
-      </div>
-    `);
-  });
-}
-
-function confirmDelTask(id) {
-  if (confirm("Eliminare?")) {
-    const c = ensureCantiereShape(userData.cantieri[cIdx]);
-    c.tasks = c.tasks.filter(x => x.id !== id);
-    renderTasks();
-    saveArchivio();
-  }
-}
-
-function openModaleNuovo() {
-  cIdx = -1;
-  tempAna = [];
-  $("#modalC input").val("");
-  $("#ana-list").empty();
-  openModalC();
-}
-
-function editCurrentCommessa() {
-  const c = ensureCantiereShape(userData.cantieri[cIdx]);
-
-  $("#c-ente").val(c.ente || "");
-  $("#c-nome").val(c.nome || "");
-  $("#c-oggetto").val(c.oggetto || "");
-  $("#c-cig").val(c.cig || "");
-  $("#c-cup").val(c.cup || "");
-  $("#c-dl").val(c.dl || "");
-  $("#c-adl").val(c.adl || "");
-  $("#c-cse").val(c.cse || "");
-  $("#c-rup").val(c.rup || "");
-  $("#c-arup").val(c.arup || "");
-
-  tempAna = normalizeDitte(JSON.parse(JSON.stringify(c.anagraficaDitte || [])));
-  renderAna();
-  openModalC();
-}
-
-function addAnaDitta() {
-  const nome = prompt("Ragione sociale ditta:");
-
-  if (!nome) return;
-
-  const tipoInput = prompt(
-    "Tipo rapporto:\n" +
-    "1 = Appaltatore / Affidataria\n" +
-    "2 = Subappaltatore\n" +
-    "3 = Subaffidatario\n" +
-    "4 = Fornitore / Nolo / Trasportatore\n" +
-    "5 = Lavoratore autonomo",
-    "1"
-  );
-
-  const tipoMap = {
-    "1": "appaltatore",
-    "2": "subappaltatore",
-    "3": "subaffidatario",
-    "4": "fornitore",
-    "5": "autonomo"
-  };
-
-  const tipo = tipoMap[tipoInput] || "appaltatore";
-
-  let parentDittaId = null;
-
-  if (["subappaltatore", "subaffidatario"].includes(tipo) && tempAna.length > 0) {
-    const elenco = tempAna.map((d, i) => `${i + 1} = ${d.nome}`).join("\n");
-    const scelta = prompt(`Collegata a quale impresa principale?\n${elenco}\nLascia vuoto se non vuoi collegarla.`);
-    const idx = parseInt(scelta, 10) - 1;
-
-    if (!isNaN(idx) && tempAna[idx]) {
-      parentDittaId = tempAna[idx].id;
-    }
-  }
-
-  tempAna.push({
-    id: safeId(nome),
-    nome: normalizeKey(nome),
-    tipo: tipo,
-    parentDittaId: parentDittaId,
-    stato: "autorizzata",
-    attiva: true,
-    operai: []
-  });
-
-  renderAna();
-}
-
-function editAnaDitta(i) {
-  const d = tempAna[i];
-
-  const nome = prompt("Ragione sociale:", d.nome);
-
-  if (!nome) return;
-
-  d.nome = normalizeKey(nome);
-
-  const stato = prompt(
-    "Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata",
-    d.stato || "autorizzata"
-  );
-
-  if (stato) d.stato = stato.toLowerCase();
-
-  renderAna();
-}
-
-function delAnaDitta(i) {
-  if (confirm("Eliminare definitivamente questa ditta?")) {
-    tempAna.splice(i, 1);
-    renderAna();
-  }
-}
-
-function toggleAnaDitta(i) {
-  tempAna[i].attiva = tempAna[i].attiva === false;
-  renderAna();
-}
-
-function addAnaW(i) {
-  const nome = prompt("Nome operaio:");
-
-  if (!nome) return;
-
-  const mansione = prompt("Mansione / qualifica:") || "";
-
-  if (!tempAna[i].operai) tempAna[i].operai = [];
-
-  tempAna[i].operai.push({
-    id: safeId(nome),
-    nome: normalizeKey(nome),
-    mansione: mansione,
-    attivo: true
-  });
-
-  renderAna();
-}
-
-function editAnaW(i, j) {
-  const o = tempAna[i].operai[j];
-
-  const nome = prompt("Nome operaio:", o.nome);
-
-  if (!nome) return;
-
-  const mansione = prompt("Mansione / qualifica:", o.mansione || "") || "";
-
-  o.nome = normalizeKey(nome);
-  o.mansione = mansione;
-
-  renderAna();
-}
-
-function toggleAnaW(i, j) {
-  tempAna[i].operai[j].attivo = !tempAna[i].operai[j].attivo;
-  renderAna();
-}
-
-function delAnaW(i, j) {
-  const o = tempAna[i].operai[j];
-
-  if (confirm(`Eliminare definitivamente ${o.nome}? Meglio disattivarlo se già usato.`)) {
-    tempAna[i].operai.splice(j, 1);
-    renderAna();
-  }
-}
-
-function renderAna() {
-  tempAna = normalizeDitte(tempAna);
-
-  let h = "";
-
-  if (!tempAna.length) {
-    h = `<div class="text-muted small border rounded p-3 bg-light">Nessuna ditta inserita.</div>`;
-  }
-
-  tempAna.forEach((d, i) => {
-    const parent = d.parentDittaId
-      ? tempAna.find(x => String(x.id) === String(d.parentDittaId))
-      : null;
-
-    h += `
-      <div class="ditta-card ${d.attiva === false ? "opacity-55" : ""}">
-        <div class="d-flex justify-content-between align-items-start gap-2">
-          <div>
-            <b>${esc(d.nome)}</b>
-            <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
-            ${parent ? `<span class="badge bg-secondary">collegata a ${esc(parent.nome)}</span>` : ""}
-            <span class="badge ${d.stato === "autorizzata" ? "bg-success" : "bg-warning text-dark"}">${esc(d.stato)}</span>
-          </div>
-
-          <div class="d-flex gap-1 flex-wrap justify-content-end">
-            <button class="btn btn-xs btn-outline-secondary" onclick="editAnaDitta(${i})">✏️ Ditta</button>
-            <button class="btn btn-xs btn-outline-warning" onclick="toggleAnaDitta(${i})">
-              ${d.attiva === false ? "Riattiva" : "Disattiva"}
-            </button>
-            <button class="btn btn-xs btn-outline-danger" onclick="delAnaDitta(${i})">🗑️</button>
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <b class="small">Operai / nominativi</b>
-          <button class="btn btn-xs btn-outline-dark" onclick="addAnaW(${i})">+ Aggiungi operaio</button>
-        </div>
-    `;
-
-    if (!d.operai.length) {
-      h += `<div class="text-muted small mt-2">Nessun operaio inserito.</div>`;
-    }
-
-    d.operai.forEach((o, j) => {
-      h += `
-        <div class="operaio-row d-flex justify-content-between align-items-center ${o.attivo === false ? "opacity-55" : ""}">
-          <div>
-            <b>${esc(o.nome)}</b>
-            ${o.mansione ? `<span class="text-muted"> - ${esc(o.mansione)}</span>` : ""}
-            <span class="badge ${o.attivo !== false ? "bg-success" : "bg-secondary"}">
-              ${o.attivo !== false ? "Attivo" : "Non attivo"}
-            </span>
-          </div>
-
-          <div class="d-flex gap-1">
-            <button class="btn btn-xs btn-outline-secondary" onclick="editAnaW(${i}, ${j})">✏️</button>
-            <button class="btn btn-xs btn-outline-warning" onclick="toggleAnaW(${i}, ${j})">${o.attivo !== false ? "🚫" : "↩️"}</button>
-            <button class="btn btn-xs btn-outline-danger" onclick="delAnaW(${i}, ${j})">🗑️</button>
-          </div>
-        </div>
-      `;
-    });
-
-    h += `</div>`;
-  });
-
-  $("#ana-list").html(h);
-}
-
-function saveC() {
-  const d = {
-    id: cIdx === -1 ? safeId($("#c-nome").val()) : userData.cantieri[cIdx].id,
-    ente: normalizeKey($("#c-ente").val()),
-    nome: normalizeKey($("#c-nome").val()),
-    oggetto: $("#c-oggetto").val(),
-    cig: $("#c-cig").val(),
-    cup: $("#c-cup").val(),
-    dl: $("#c-dl").val(),
-    adl: $("#c-adl").val(),
-    cse: $("#c-cse").val(),
-    rup: $("#c-rup").val(),
-    arup: $("#c-arup").val(),
-    anagraficaDitte: normalizeDitte(tempAna),
-    giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}),
-    tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || [])
-  };
-
-  if (!d.nome) {
-    alert("Inserisci il nome della commessa.");
-    return;
-  }
-
-  if (cIdx === -1) {
-    userData.cantieri.push(d);
-  } else {
+  }} else {
     userData.cantieri[cIdx] = d;
   }
 
@@ -2140,7 +1320,10 @@ function saveC() {
     if (cIdx !== -1) {
       $("#cal-title").text(d.nome);
     }
-  });function isWaChecked(v) {
+  });
+}
+
+function isWaChecked(v) {
   return $(`.wa-check[value="${v}"]`).is(":checked");
 }
 
@@ -2167,7 +1350,6 @@ async function buildWhatsAppMessage() {
 
     (g.ditteVisibili || []).forEach(dittaId => {
       const d = findDittaByIdOrName(dittaId);
-
       if (!d) return;
 
       const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
@@ -2256,7 +1438,6 @@ function shareAccessoDittaWhatsApp() {
   }
 
   const codice = prompt("Inserisci codice ditta da condividere, es. MATTIA08:");
-
   if (!codice) return;
 
   const link = `${location.origin}${location.pathname}?accesso=ditta&cantiere=${encodeURIComponent(c.nome || "")}&codice=${encodeURIComponent(codice.toUpperCase())}`;
@@ -2344,7 +1525,6 @@ async function generatePDF() {
 
   (g.ditteVisibili || []).forEach(did => {
     const d = findDittaByIdOrName(did);
-
     if (!d) return;
 
     const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
@@ -2485,16 +1665,6 @@ $(document).on("click", "#install-app-btn, .install-btn", async () => {
   $("#install-app-btn, .install-btn").hide();
 });
 
-$(document).on("click touchstart", "#tab-ditta", function(e) {
-  e.preventDefault();
-  showDittaLogin();
-});
-
-$(document).on("click touchstart", "#tab-sirimed", function(e) {
-  e.preventDefault();
-  showSirimedLogin();
-});
-
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
     .catch(err => console.warn("Service worker non registrato:", err));
@@ -2514,9 +1684,11 @@ auth.onAuthStateChanged(user => {
 $(document).ready(() => {
   $(".screen").removeClass("active-screen").hide();
   $(".section-page").removeClass("active").hide();
+
+  initLoginTabs();
   restoreRememberPrefs();
-  readAccessParams();
   showScreen("#auth-screen");
+  readAccessParams();
 });
 </script>
 
@@ -2524,5 +1696,3 @@ $(document).ready(() => {
 
 </body>
 </html>
-}
-  
