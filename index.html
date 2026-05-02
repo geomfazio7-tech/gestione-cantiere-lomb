@@ -51,6 +51,7 @@
       color: var(--dark);
     }
 
+    /* FIX PRINCIPALE: una sola schermata visibile */
     .screen {
       display: none !important;
       width: 100%;
@@ -380,6 +381,7 @@
 <body>
 
 <div id="save-status">💾 Sincronizzazione...</div>
+
 <!-- LOGIN -->
 <div id="auth-screen" class="screen center-screen active-screen">
   <div class="login-card glass">
@@ -389,7 +391,7 @@
     </div>
 
     <div class="login-tabs mb-4">
-      <button id="tab-sirimed" type="button" class="btn active flex-fill">Sirimed</button>
+      <button id="tab-sirimed" class="btn active flex-fill" onclick="showSiramedLogin()">Sir i med</button>
       <button id="tab-ditta" type="button" class="btn flex-fill">Ditta</button>
     </div>
 
@@ -474,6 +476,7 @@
             <h4 id="cal-title" class="section-title"></h4>
             <div class="text-muted small">Calendario giornale lavori</div>
           </div>
+
           <div class="d-flex gap-2">
             <button class="btn btn-outline-success btn-sm" onclick="shareAccessoDittaWhatsApp()">📲 Accesso ditta</button>
             <button class="btn btn-outline-dark btn-sm" onclick="editCurrentCommessa()">Impostazioni</button>
@@ -562,6 +565,7 @@
 
             <label class="small-label">Note personali</label>
             <textarea id="g-memo" class="form-control mb-4" rows="3" placeholder="Appunti privati..." onchange="autoSave()"></textarea>
+
             <label class="small-label">Task matrix</label>
             <div class="input-group input-group-sm mb-3">
               <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
@@ -672,6 +676,7 @@
     </div>
   </div>
 </div>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig",
@@ -781,7 +786,9 @@ function saveRememberPrefs(type) {
     const email = $("#log-email").val().trim();
     if (remember && email) localStorage.setItem(USER_EMAIL_KEY, email);
     if (!remember) localStorage.removeItem(USER_EMAIL_KEY);
-  }if (type === "ditta") {
+  }
+
+  if (type === "ditta") {
     const code = $("#codice-ditta-login").val().trim().toUpperCase();
     if (remember && code) localStorage.setItem(DITTA_CODE_KEY, code);
     if (!remember) localStorage.removeItem(DITTA_CODE_KEY);
@@ -926,7 +933,9 @@ function initLoginTabs() {
       return false;
     };
   }
-  }async function handleLogin() {
+}
+
+async function handleLogin() {
   const email = $("#log-email").val().trim();
   const pw = $("#log-pw").val();
 
@@ -1309,7 +1318,724 @@ function findDittaByIdOrName(value, cantiere = null) {
     String(d.id) === String(value) ||
     normalizeKey(d.nome) === normalizeKey(value)
   );
-  }} else {
+}
+
+function normalizeGiornaleDitteVisibili(g) {
+  if (!g.ditteVisibili) g.ditteVisibili = [];
+
+  g.ditteVisibili = g.ditteVisibili.map(v => {
+    const d = findDittaByIdOrName(v);
+    return d ? d.id : v;
+  });
+}
+
+function addDittaG() {
+  const dittaId = $("#sel-ditta").val();
+  if (!dittaId) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+
+  normalizeGiornaleDitteVisibili(g);
+
+  if (!g.ditteVisibili.includes(dittaId)) g.ditteVisibili.push(dittaId);
+
+  $("#sel-ditta").val("");
+  renderPresenze();
+  autoSave();
+}
+
+function removeDittaG(dittaId) {
+  const d = findDittaByIdOrName(dittaId);
+  if (!d) return;
+
+  if (confirm(`Rimuovere ${d.nome} dal giornale?`)) {
+    const g = userData.cantieri[cIdx].giornali[activeDate];
+
+    g.ditteVisibili = (g.ditteVisibili || []).filter(x => String(x) !== String(dittaId));
+
+    g.presenti = (g.presenti || []).filter(p => {
+      if (typeof p === "string") return !p.includes(`(${d.nome})`);
+      return String(p.dittaId) !== String(dittaId);
+    });
+
+    renderPresenze();
+    autoSave();
+  }
+}
+
+function isWorkerPresent(g, dittaId, o) {
+  return (g.presenti || []).some(p => {
+    if (typeof p === "string") return false;
+    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(o.id);
+  });
+}
+
+function getPresenza(g, dittaId, operaioId) {
+  return (g.presenti || []).find(p => {
+    if (typeof p === "string") return false;
+    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId);
+  });
+}
+
+function toggleW(dittaId, operaioId) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+
+  if (!g.presenti) g.presenti = [];
+
+  const d = findDittaByIdOrName(dittaId);
+  const o = (d?.operai || []).find(x => String(x.id) === String(operaioId));
+
+  if (!d || !o) return;
+
+  const idx = g.presenti.findIndex(p => {
+    if (typeof p === "string") return false;
+    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId);
+  });
+
+  if (idx >= 0) {
+    g.presenti.splice(idx, 1);
+  } else {
+    g.presenti.push({
+      dittaId: d.id,
+      dittaNome: d.nome,
+      dittaTipo: d.tipo,
+      operaioId: o.id,
+      operaioNome: o.nome,
+      mansione: o.mansione || "",
+      ore: 8
+    });
+  }
+
+  renderPresenze();
+  autoSave();
+}
+
+function updateOreOperaio(dittaId, operaioId, ore) {
+  const g = userData.cantieri[cIdx].giornali[activeDate];
+  const p = getPresenza(g, dittaId, operaioId);
+
+  if (!p) return;
+
+  let val = parseFloat(String(ore).replace(",", "."));
+  if (isNaN(val) || val < 0) val = 0;
+
+  p.ore = val;
+  autoSave();
+}
+
+function selectAllWorkers(dittaId) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+  const d = findDittaByIdOrName(dittaId);
+
+  if (!g.presenti) g.presenti = [];
+  if (!d) return;
+
+  d.operai.filter(o => o.attivo !== false).forEach(o => {
+    if (!isWorkerPresent(g, d.id, o)) {
+      g.presenti.push({
+        dittaId: d.id,
+        dittaNome: d.nome,
+        dittaTipo: d.tipo,
+        operaioId: o.id,
+        operaioNome: o.nome,
+        mansione: o.mansione || "",
+        ore: 8
+      });
+    }
+  });
+
+  renderPresenze();
+  autoSave();
+}
+
+function deselectAllWorkers(dittaId) {
+  const g = userData.cantieri[cIdx].giornali[activeDate];
+  const d = findDittaByIdOrName(dittaId);
+
+  if (!d) return;
+
+  g.presenti = (g.presenti || []).filter(p => {
+    if (typeof p === "string") return !p.includes(`(${d.nome})`);
+    return String(p.dittaId) !== String(d.id);
+  });
+
+  renderPresenze();
+  autoSave();
+}
+
+function getTotaleOreDitta(g, dittaId) {
+  return (g.presenti || [])
+    .filter(p => typeof p !== "string" && String(p.dittaId) === String(dittaId))
+    .reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
+}
+
+function renderPresenze() {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || {};
+
+  normalizeGiornaleDitteVisibili(g);
+
+  let h = "";
+
+  (g.ditteVisibili || []).forEach(dittaId => {
+    const d = findDittaByIdOrName(dittaId);
+    if (!d) return;
+
+    const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+    const totale = getTotaleOreDitta(g, d.id);
+
+    h += `
+      <div class="bg-white p-2 border rounded mb-2 small">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <b>${esc(d.nome)}</b><br>
+            <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
+            ${parent ? `<span class="badge bg-secondary">collegata a ${esc(parent.nome)}</span>` : ""}
+            <span class="badge bg-info text-dark">Ore: ${totale}</span>
+          </div>
+          <button class="btn btn-sm btn-link text-danger p-0" onclick="removeDittaG('${d.id}')">🗑️</button>
+        </div>
+
+        <div class="d-flex gap-1 mt-2 mb-2">
+          <button class="btn btn-xs btn-outline-secondary" onclick="selectAllWorkers('${d.id}')">Tutti</button>
+          <button class="btn btn-xs btn-outline-secondary" onclick="deselectAllWorkers('${d.id}')">Nessuno</button>
+        </div>
+    `;
+
+    const ops = d.operai.filter(o => o.attivo !== false);
+
+    if (!ops.length) h += `<div class="text-muted">Nessun operaio attivo.</div>`;
+
+    ops.forEach(o => {
+      const sel = isWorkerPresent(g, d.id, o) ? "selected" : "";
+      const p = getPresenza(g, d.id, o.id);
+
+      h += `
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span class="worker-chip ${sel}" onclick="toggleW('${d.id}', '${o.id}')">
+            ${esc(o.nome)}${o.mansione ? " - " + esc(o.mansione) : ""}
+          </span>
+
+          ${sel ? `
+            <input type="number" min="0" step="0.5" value="${p?.ore ?? 8}" class="form-control form-control-sm ore-input" onchange="updateOreOperaio('${d.id}', '${o.id}', this.value)">
+            <small class="text-muted">ore</small>
+          ` : ""}
+        </div>
+      `;
+    });
+
+    h += `</div>`;
+  });
+
+  $("#ditte-presenze").html(h);
+}
+
+function contributiCollection(cantiere) {
+  const id = safeId(cantiere.nome || cantiere.id);
+  return db.collection("cantieri").doc(id).collection("contributiDitte");
+}
+
+async function getContributiDitteGiorno(ds) {
+  if (cIdx < 0) return [];
+  const c = userData.cantieri[cIdx];
+  const snap = await contributiCollection(c).where("data", "==", ds).get();
+  return snap.docs.map(d => d.data());
+}
+
+async function renderContributiDitte() {
+  if (cIdx < 0 || !activeDate) return;
+
+  const contributi = await getContributiDitteGiorno(activeDate);
+
+  let h = "";
+
+  if (!contributi.length) {
+    h = `<div class="text-muted small border rounded p-2 bg-light">Nessun contributo ditta per questa giornata.</div>`;
+  }
+
+  contributi.forEach(ct => {
+    const ore = (ct.presenti || []).reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
+
+    h += `
+      <div class="contributo-card small">
+        <div>
+          <b>${esc(ct.dittaNome)}</b>
+          <span class="badge bg-info text-dark">${ore} ore</span>
+          <span class="badge ${ct.stato === "approvato" ? "bg-success" : ct.stato === "escluso" ? "bg-secondary" : "bg-warning text-dark"}">
+            ${esc(ct.stato || "da_verificare")}
+          </span>
+        </div>
+
+        <div class="mt-2">
+          <b>Meteo:</b> ${esc(ct.meteo || "-")} ${ct.temp ? "- " + esc(ct.temp) + "°C" : ""}<br>
+          <b>Lavorazioni:</b><br>
+          ${esc(ct.lavorazioni || "-")}
+        </div>
+
+        <div class="mt-2">
+          <b>Operai:</b><br>
+          ${(ct.presenti || []).map(p => `- ${esc(p.operaioNome)}${p.mansione ? " - " + esc(p.mansione) : ""} - ${p.ore || 0} ore`).join("<br>") || "-"}
+        </div>
+
+        <div class="d-flex gap-1 mt-2">
+          <button class="btn btn-xs btn-success" onclick="setStatoContributo('${ct.id}', 'approvato', true)">Approva</button>
+          <button class="btn btn-xs btn-outline-secondary" onclick="setStatoContributo('${ct.id}', 'escluso', false)">Escludi PDF</button>
+        </div>
+      </div>
+    `;
+  });
+
+  $("#contributi-ditte-box").html(h);
+}
+
+async function setStatoContributo(id, stato, includi) {
+  const c = userData.cantieri[cIdx];
+
+  await contributiCollection(c).doc(id).update({
+    stato: stato,
+    includiNelPDF: includi
+  });
+
+  await renderContributiDitte();
+}
+
+async function loadDittaPanel() {
+  await loadDB();
+
+  const p = currentUserProfile;
+
+  const cId = normalizeKey((p.cantiereIds || [])[0]);
+  const dId = normalizeKey((p.dittaIds || [])[0]);
+
+  const c = userData.cantieri.find(x =>
+    normalizeKey(x.id) === cId ||
+    normalizeKey(x.nome) === cId
+  );
+
+  if (!c) {
+    alert("Cantiere non trovato per questa ditta.");
+    return;
+  }
+
+  ensureCantiereShape(c);
+
+  const d = findDittaByIdOrName(dId, c);
+
+  if (!d) {
+    alert("Ditta non trovata nella commessa.");
+    return;
+  }
+
+  dittaPanelData = {
+    cantiere: c,
+    ditta: d,
+    todayKey: getTodayKey()
+  };
+
+  $("#ditta-cantiere-title").text(`${c.nome} - ${d.nome}`);
+  $("#ditta-date-label").text("Data: " + formatDateIT(dittaPanelData.todayKey));
+
+  renderDittaOperaiBox();
+  await loadExistingDittaContribution();
+}
+
+function renderDittaOperaiBox() {
+  const d = dittaPanelData.ditta;
+
+  let h = "";
+
+  const ops = (d.operai || []).filter(o => o.attivo !== false);
+
+  if (!ops.length) {
+    h = `<div class="text-muted small border rounded p-2 bg-light">Nessun operaio attivo associato alla ditta.</div>`;
+  }
+
+  ops.forEach(o => {
+    h += `
+      <div class="border rounded p-2 mb-2 bg-white small">
+        <div class="form-check">
+          <input class="form-check-input ditta-operaio-check" type="checkbox" value="${o.id}" id="dit-op-${o.id}">
+          <label class="form-check-label" for="dit-op-${o.id}">
+            <b>${esc(o.nome)}</b>${o.mansione ? " - " + esc(o.mansione) : ""}
+          </label>
+        </div>
+
+        <div class="input-group input-group-sm mt-2">
+          <span class="input-group-text">Ore</span>
+          <input type="number" class="form-control ditta-operaio-ore" data-operaio-id="${o.id}" value="8" min="0" step="0.5">
+        </div>
+      </div>
+    `;
+  });
+
+  $("#ditta-operai-box").html(h);
+}
+
+function getDittaContributionKey() {
+  return `${dittaPanelData.todayKey}_${dittaPanelData.ditta.id}`;
+}
+
+async function loadExistingDittaContribution() {
+  const key = getDittaContributionKey();
+
+  const snap = await contributiCollection(dittaPanelData.cantiere).doc(key).get();
+
+  if (!snap.exists) return;
+
+  const ct = snap.data();
+
+  $("#ditta-meteo").val(ct.meteo || "Soleggiato");
+  $("#ditta-temp").val(ct.temp || "");
+  $("#ditta-lavorazioni").val(ct.lavorazioni || "");
+
+  setTimeout(() => {
+    (ct.presenti || []).forEach(p => {
+      $(`#dit-op-${p.operaioId}`).prop("checked", true);
+      $(`.ditta-operaio-ore[data-operaio-id="${p.operaioId}"]`).val(p.ore || 8);
+    });
+  }, 100);
+}
+
+async function saveDittaContribution() {
+  const { cantiere, ditta, todayKey } = dittaPanelData;
+
+  if (!cantiere || !ditta) {
+    alert("Dati pannello ditta non disponibili.");
+    return;
+  }
+
+  const presenti = [];
+
+  $(".ditta-operaio-check:checked").each(function() {
+    const oid = $(this).val();
+    const o = (ditta.operai || []).find(x => String(x.id) === String(oid));
+
+    if (!o) return;
+
+    let ore = parseFloat($(`.ditta-operaio-ore[data-operaio-id="${oid}"]`).val());
+    if (isNaN(ore) || ore < 0) ore = 0;
+
+    presenti.push({
+      operaioId: o.id,
+      operaioNome: o.nome,
+      mansione: o.mansione || "",
+      ore: ore
+    });
+  });
+
+  const key = getDittaContributionKey();
+
+  const data = {
+    id: key,
+    data: todayKey,
+    cantiereId: safeId(cantiere.nome || cantiere.id),
+    dittaId: ditta.id,
+    dittaNome: ditta.nome,
+    meteo: $("#ditta-meteo").val(),
+    temp: $("#ditta-temp").val(),
+    lavorazioni: $("#ditta-lavorazioni").val(),
+    presenti: presenti,
+    stato: "da_verificare",
+    includiNelPDF: true,
+    compilatoDaUid: auth.currentUser.uid,
+    updatedAt: new Date().toISOString()
+  };
+
+  await contributiCollection(cantiere).doc(key).set(data);
+
+  alert("Contributo giornaliero salvato.");
+}
+
+function addTask() {
+  const t = $("#task-in").val().trim();
+  if (!t) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  c.tasks.push({
+    id: uid(),
+    text: t,
+    q: $("#task-q").val()
+  });
+
+  $("#task-in").val("");
+
+  renderTasks();
+  saveArchivio();
+}
+
+function renderTasks() {
+  $(".quadrant").empty();
+
+  if (cIdx < 0) return;
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  (c.tasks || []).forEach(t => {
+    $(`#q${t.q}`).append(`
+      <div class="task-item">
+        <span>${esc(t.text)}</span>
+        <button class="btn-del-task" onclick="confirmDelTask(${t.id})">🗑️</button>
+      </div>
+    `);
+  });
+}
+
+function confirmDelTask(id) {
+  if (confirm("Eliminare?")) {
+    const c = ensureCantiereShape(userData.cantieri[cIdx]);
+    c.tasks = c.tasks.filter(x => x.id !== id);
+    renderTasks();
+    saveArchivio();
+  }
+}
+
+function openModaleNuovo() {
+  cIdx = -1;
+  tempAna = [];
+  $("#modalC input").val("");
+  $("#ana-list").empty();
+  openModalC();
+}
+
+function editCurrentCommessa() {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  $("#c-ente").val(c.ente || "");
+  $("#c-nome").val(c.nome || "");
+  $("#c-oggetto").val(c.oggetto || "");
+  $("#c-cig").val(c.cig || "");
+  $("#c-cup").val(c.cup || "");
+  $("#c-dl").val(c.dl || "");
+  $("#c-adl").val(c.adl || "");
+  $("#c-cse").val(c.cse || "");
+  $("#c-rup").val(c.rup || "");
+  $("#c-arup").val(c.arup || "");
+
+  tempAna = normalizeDitte(JSON.parse(JSON.stringify(c.anagraficaDitte || [])));
+  renderAna();
+  openModalC();
+}
+
+function addAnaDitta() {
+  const nome = prompt("Ragione sociale ditta:");
+  if (!nome) return;
+
+  const tipoInput = prompt(
+    "Tipo rapporto:\n" +
+    "1 = Appaltatore / Affidataria\n" +
+    "2 = Subappaltatore\n" +
+    "3 = Subaffidatario\n" +
+    "4 = Fornitore / Nolo / Trasportatore\n" +
+    "5 = Lavoratore autonomo",
+    "1"
+  );
+
+  const tipoMap = {
+    "1": "appaltatore",
+    "2": "subappaltatore",
+    "3": "subaffidatario",
+    "4": "fornitore",
+    "5": "autonomo"
+  };
+
+  const tipo = tipoMap[tipoInput] || "appaltatore";
+
+  let parentDittaId = null;
+
+  if (["subappaltatore", "subaffidatario"].includes(tipo) && tempAna.length > 0) {
+    const elenco = tempAna.map((d, i) => `${i + 1} = ${d.nome}`).join("\n");
+    const scelta = prompt(`Collegata a quale impresa principale?\n${elenco}\nLascia vuoto se non vuoi collegarla.`);
+    const idx = parseInt(scelta, 10) - 1;
+
+    if (!isNaN(idx) && tempAna[idx]) {
+      parentDittaId = tempAna[idx].id;
+    }
+  }
+
+  tempAna.push({
+    id: safeId(nome),
+    nome: normalizeKey(nome),
+    tipo: tipo,
+    parentDittaId: parentDittaId,
+    stato: "autorizzata",
+    attiva: true,
+    operai: []
+  });
+
+  renderAna();
+}
+
+function editAnaDitta(i) {
+  const d = tempAna[i];
+
+  const nome = prompt("Ragione sociale:", d.nome);
+  if (!nome) return;
+
+  d.nome = normalizeKey(nome);
+
+  const stato = prompt("Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata", d.stato || "autorizzata");
+
+  if (stato) d.stato = stato.toLowerCase();
+
+  renderAna();
+}
+
+function delAnaDitta(i) {
+  if (confirm("Eliminare definitivamente questa ditta?")) {
+    tempAna.splice(i, 1);
+    renderAna();
+  }
+}
+
+function toggleAnaDitta(i) {
+  tempAna[i].attiva = tempAna[i].attiva === false;
+  renderAna();
+}
+
+function addAnaW(i) {
+  const nome = prompt("Nome operaio:");
+  if (!nome) return;
+
+  const mansione = prompt("Mansione / qualifica:") || "";
+
+  if (!tempAna[i].operai) tempAna[i].operai = [];
+
+  tempAna[i].operai.push({
+    id: safeId(nome),
+    nome: normalizeKey(nome),
+    mansione: mansione,
+    attivo: true
+  });
+
+  renderAna();
+}
+
+function editAnaW(i, j) {
+  const o = tempAna[i].operai[j];
+
+  const nome = prompt("Nome operaio:", o.nome);
+  if (!nome) return;
+
+  const mansione = prompt("Mansione / qualifica:", o.mansione || "") || "";
+
+  o.nome = normalizeKey(nome);
+  o.mansione = mansione;
+
+  renderAna();
+}
+
+function toggleAnaW(i, j) {
+  tempAna[i].operai[j].attivo = !tempAna[i].operai[j].attivo;
+  renderAna();
+}
+
+function delAnaW(i, j) {
+  const o = tempAna[i].operai[j];
+
+  if (confirm(`Eliminare definitivamente ${o.nome}? Meglio disattivarlo se già usato.`)) {
+    tempAna[i].operai.splice(j, 1);
+    renderAna();
+  }
+}
+
+function renderAna() {
+  tempAna = normalizeDitte(tempAna);
+
+  let h = "";
+
+  if (!tempAna.length) {
+    h = `<div class="text-muted small border rounded p-3 bg-light">Nessuna ditta inserita.</div>`;
+  }
+
+  tempAna.forEach((d, i) => {
+    const parent = d.parentDittaId
+      ? tempAna.find(x => String(x.id) === String(d.parentDittaId))
+      : null;
+
+    h += `
+      <div class="ditta-card ${d.attiva === false ? "opacity-55" : ""}">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <b>${esc(d.nome)}</b>
+            <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
+            ${parent ? `<span class="badge bg-secondary">collegata a ${esc(parent.nome)}</span>` : ""}
+            <span class="badge ${d.stato === "autorizzata" ? "bg-success" : "bg-warning text-dark"}">${esc(d.stato)}</span>
+          </div>
+
+          <div class="d-flex gap-1 flex-wrap justify-content-end">
+            <button class="btn btn-xs btn-outline-secondary" onclick="editAnaDitta(${i})">✏️ Ditta</button>
+            <button class="btn btn-xs btn-outline-warning" onclick="toggleAnaDitta(${i})">
+              ${d.attiva === false ? "Riattiva" : "Disattiva"}
+            </button>
+            <button class="btn btn-xs btn-outline-danger" onclick="delAnaDitta(${i})">🗑️</button>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <b class="small">Operai / nominativi</b>
+          <button class="btn btn-xs btn-outline-dark" onclick="addAnaW(${i})">+ Aggiungi operaio</button>
+        </div>
+    `;
+
+    if (!d.operai.length) {
+      h += `<div class="text-muted small mt-2">Nessun operaio inserito.</div>`;
+    }
+
+    d.operai.forEach((o, j) => {
+      h += `
+        <div class="operaio-row d-flex justify-content-between align-items-center ${o.attivo === false ? "opacity-55" : ""}">
+          <div>
+            <b>${esc(o.nome)}</b>
+            ${o.mansione ? `<span class="text-muted"> - ${esc(o.mansione)}</span>` : ""}
+            <span class="badge ${o.attivo !== false ? "bg-success" : "bg-secondary"}">
+              ${o.attivo !== false ? "Attivo" : "Non attivo"}
+            </span>
+          </div>
+
+          <div class="d-flex gap-1">
+            <button class="btn btn-xs btn-outline-secondary" onclick="editAnaW(${i}, ${j})">✏️</button>
+            <button class="btn btn-xs btn-outline-warning" onclick="toggleAnaW(${i}, ${j})">${o.attivo !== false ? "🚫" : "↩️"}</button>
+            <button class="btn btn-xs btn-outline-danger" onclick="delAnaW(${i}, ${j})">🗑️</button>
+          </div>
+        </div>
+      `;
+    });
+
+    h += `</div>`;
+  });
+
+  $("#ana-list").html(h);
+}
+
+function saveC() {
+  const d = {
+    id: cIdx === -1 ? safeId($("#c-nome").val()) : userData.cantieri[cIdx].id,
+    ente: normalizeKey($("#c-ente").val()),
+    nome: normalizeKey($("#c-nome").val()),
+    oggetto: $("#c-oggetto").val(),
+    cig: $("#c-cig").val(),
+    cup: $("#c-cup").val(),
+    dl: $("#c-dl").val(),
+    adl: $("#c-adl").val(),
+    cse: $("#c-cse").val(),
+    rup: $("#c-rup").val(),
+    arup: $("#c-arup").val(),
+    anagraficaDitte: normalizeDitte(tempAna),
+    giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}),
+    tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || [])
+  };
+
+  if (!d.nome) {
+    alert("Inserisci il nome della commessa.");
+    return;
+  }
+
+  if (cIdx === -1) {
+    userData.cantieri.push(d);
+  } else {
     userData.cantieri[cIdx] = d;
   }
 
