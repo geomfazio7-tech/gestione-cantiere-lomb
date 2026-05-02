@@ -1,42 +1,35 @@
-const CACHE_NAME = "cantiericloud-v2";
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(reg => {
+      reg.update();
 
-const FILES_TO_CACHE = [
-  "./manifest.json"
-];
+      setInterval(() => {
+        reg.update();
+      }, 60 * 60 * 1000);
 
-self.addEventListener("install", event => {
-  self.skipWaiting();
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
 
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
-  );
-});
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
-  );
-});
+        if (!newWorker) return;
 
-self.addEventListener("fetch", event => {
-  const requestUrl = new URL(event.request.url);
-
-  if (requestUrl.pathname.endsWith("/") || requestUrl.pathname.endsWith("/index.html")) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match("./index.html"))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
     })
-  );
-});
+    .catch(err => console.warn("Service worker non registrato:", err));
+
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+}
