@@ -930,6 +930,10 @@ function canSeeCantiere(c) {
 
   if (!allowed.length) return false;
 
+  // Permette a un responsabile secondario di vedere tutte le commesse
+  // senza dargli i permessi dell'admin principale.
+  if (allowed.includes("*")) return true;
+
   const id = normalizeKey(c.id || "");
   const nome = normalizeKey(c.nome || "");
 
