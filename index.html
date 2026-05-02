@@ -12,9 +12,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     :root {
@@ -27,59 +27,59 @@
       --green: #ecfdf5;
       --red: #fef2f2;
       --yellow: #fffbeb;
-      --shadow: 0 14px 35px rgba(15, 23, 42, .08);
-      --radius: 18px;
+      --shadow: 0 22px 70px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 32px rgba(15, 23, 42, .07);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at top left, rgba(59,130,246,.14), transparent 34%),
-        radial-gradient(circle at top right, rgba(16,185,129,.12), transparent 28%),
-        var(--bg);
-      font-family: "Segoe UI", system-ui, sans-serif;
+        radial-gradient(circle at 8% 0%, rgba(37,99,235,.18), transparent 30%),
+        radial-gradient(circle at 92% 4%, rgba(16,185,129,.14), transparent 28%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--dark);
     }
 
     .screen {
-      display: none;
-      min-height: 100vh;
+      display: none !important;
+      width: 100%;
+      min-height: 100dvh;
     }
 
     .screen.active-screen {
-      display: block;
+      display: block !important;
     }
 
     .center-screen.active-screen {
-      display: flex;
+      display: flex !important;
       align-items: center;
       justify-content: center;
-      padding: 18px;
+      padding: 22px;
     }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(255,255,255,.92);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(226,232,240,.9);
+    .section-page {
+      display: none !important;
+      padding-top: 26px;
+      padding-bottom: 48px;
     }
 
-    .brand {
-      font-weight: 900;
-      letter-spacing: -.04em;
-      color: var(--dark);
+    .section-page.active {
+      display: block !important;
     }
 
-    .brand span {
-      font-weight: 300;
-      color: var(--muted);
-    }
-
-    .glass, .card {
-      background: rgba(255,255,255,.97);
+    .glass, .card, .login-card {
+      background: rgba(255,255,255,.95);
       border: 1px solid rgba(226,232,240,.95);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -87,47 +87,91 @@
 
     .login-card {
       width: 100%;
-      max-width: 430px;
-      padding: 28px;
+      max-width: 440px;
+      padding: 30px;
     }
 
-    .section-page {
-      display: none;
-      padding-top: 24px;
-      padding-bottom: 44px;
+    .brand {
+      font-weight: 950;
+      letter-spacing: -.055em;
+      color: var(--dark);
+      line-height: 1;
     }
 
-    .section-page.active {
-      display: block;
+    .brand span {
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    .login-tabs {
+      display: flex;
+      gap: 6px;
+      background: #eef2f7;
+      padding: 6px;
+      border-radius: 999px;
+    }
+
+    .login-tabs .btn {
+      border: 0 !important;
+      border-radius: 999px !important;
+      box-shadow: none !important;
+      font-weight: 800;
+      color: #334155;
+    }
+
+    .login-tabs .btn.active {
+      background: var(--dark) !important;
+      color: #fff !important;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226,232,240,.9);
+      box-shadow: 0 8px 30px rgba(15,23,42,.05);
     }
 
     .section-title {
-      font-weight: 900;
-      letter-spacing: -.04em;
+      font-weight: 950;
+      letter-spacing: -.045em;
       margin: 0;
+      font-size: clamp(1.35rem, 2vw, 2rem);
     }
 
     .small-label {
+      display: block;
       font-size: .72rem;
-      font-weight: 800;
+      font-weight: 900;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .07em;
+      margin-bottom: 6px;
     }
 
     .form-control, .form-select {
-      border-radius: 13px;
-      border-color: #dbe3ee;
+      min-height: 46px;
+      border-radius: 15px !important;
+      border: 1px solid #dbe3ee !important;
+      background: #fff !important;
     }
 
     .form-control:focus, .form-select:focus {
-      border-color: var(--dark);
-      box-shadow: 0 0 0 .18rem rgba(17,24,39,.12);
+      border-color: var(--dark) !important;
+      box-shadow: 0 0 0 .20rem rgba(17,24,39,.10) !important;
+    }
+
+    .btn {
+      border-radius: 14px !important;
+      font-weight: 800;
     }
 
     .btn-dark {
-      background: var(--dark);
-      border-color: var(--dark);
+      background: linear-gradient(135deg, #111827, #334155) !important;
+      border: 0 !important;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
     }
 
     .btn-soft {
@@ -139,47 +183,50 @@
     .btn-xs {
       font-size: .68rem;
       padding: 3px 8px;
-      border-radius: 999px;
+      border-radius: 999px !important;
     }
 
-    .login-tabs .btn {
-      border-radius: 999px;
-    }
-
-    .login-tabs .active {
-      background: var(--dark);
-      color: #fff;
+    .stat-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
     }
 
     .commessa-card {
       cursor: pointer;
       position: relative;
       overflow: hidden;
-      transition: .15s ease;
+      min-height: 170px;
+      transition: .18s ease;
       height: 100%;
     }
 
     .commessa-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 18px 40px rgba(15,23,42,.13);
+      transform: translateY(-4px);
+      box-shadow: 0 26px 70px rgba(15,23,42,.14);
     }
 
     .commessa-card::after {
       content: "";
       position: absolute;
-      inset: auto 0 0 0;
-      height: 4px;
-      background: linear-gradient(90deg, #111827, #64748b);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #111827, #2563eb, #10b981);
     }
 
     .btn-del-cantiere {
       position: absolute;
-      top: 10px;
-      right: 14px;
+      top: 12px;
+      right: 16px;
       z-index: 5;
       color: #ef4444;
       border: 0;
       background: transparent;
+      font-size: 1rem;
     }
 
     .calendar-grid {
@@ -192,36 +239,29 @@
       font-size: .72rem;
       color: var(--muted);
       text-align: center;
-      font-weight: 900;
+      font-weight: 950;
       text-transform: uppercase;
     }
 
     .cal-day {
-      min-height: 88px;
+      min-height: 90px;
       border: 1px solid var(--line);
-      border-radius: 15px;
+      border-radius: 18px;
       background: #fff;
-      padding: 9px;
+      padding: 10px;
       cursor: pointer;
       transition: .12s ease;
       font-size: .86rem;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
     }
 
     .cal-day:hover {
       border-color: #94a3b8;
-      transform: translateY(-1px);
+      transform: translateY(-2px);
     }
 
-    .cal-past {
-      background: #f8fafc;
-      color: #94a3b8;
-    }
-
-    .cal-today {
-      background: var(--blue);
-      border: 2px solid #2563eb;
-      color: #1d4ed8;
-    }
+    .cal-past { background: #f8fafc; color: #94a3b8; }
+    .cal-today { background: var(--blue); border: 2px solid #2563eb; color: #1d4ed8; }
 
     .day-meta {
       font-size: .70rem;
@@ -232,9 +272,9 @@
     .worker-chip {
       display: inline-flex;
       align-items: center;
-      padding: 5px 10px;
+      padding: 6px 11px;
       border-radius: 999px;
-      font-size: .75rem;
+      font-size: .76rem;
       border: 1px solid var(--line);
       margin: 3px 2px;
       cursor: pointer;
@@ -244,39 +284,27 @@
 
     .worker-chip.selected {
       background: var(--dark);
-      color: white;
+      color: #fff;
       border-color: var(--dark);
     }
 
-    .ore-input {
-      width: 78px;
-      font-size: .78rem;
-    }
+    .ore-input { width: 82px; font-size: .80rem; }
 
-    .quadrant {
-      min-height: 140px;
-      border-radius: 16px;
-      padding: 10px;
+    .ditta-card, .contributo-card, .operaio-row {
+      background: #fff;
       border: 1px solid var(--line);
-    }
-
-    .q-1 {
-      background: var(--red);
-      border-top: 4px solid #fca5a5;
-    }
-
-    .q-2 {
-      background: var(--yellow);
-      border-top: 4px solid #fbbf24;
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
     .task-item {
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 7px 9px;
-      margin-bottom: 7px;
-      font-size: .80rem;
+      border-radius: 14px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: .82rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -290,75 +318,61 @@
       padding: 0;
     }
 
+    .quadrant {
+      min-height: 140px;
+      border-radius: 18px;
+      padding: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .q-1 { background: var(--red); border-top: 4px solid #fca5a5; }
+    .q-2 { background: var(--yellow); border-top: 4px solid #fbbf24; }
+
     .wa-box {
       background: #fff;
       border: 1px solid #bbf7d0;
-      border-radius: 16px;
-      padding: 12px;
+      border-radius: 18px;
+      padding: 13px;
     }
 
-    .ditta-card {
-      background: #f8fafc;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
+    .opacity-55 { opacity: .55; }
 
-    .operaio-row {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 9px;
-      margin-top: 6px;
-    }
-
-    .contributo-card {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    .opacity-55 {
-      opacity: .55;
+    #pin-input {
+      letter-spacing: .35em;
+      font-weight: 950;
     }
 
     #save-status {
       position: fixed;
-      bottom: 18px;
+      bottom: 22px;
       left: 50%;
       transform: translateX(-50%);
       padding: 10px 18px;
       background: var(--dark);
       color: #fff;
       border-radius: 999px;
-      box-shadow: var(--shadow);
+      box-shadow: 0 18px 45px rgba(15,23,42,.20);
       display: none;
       z-index: 9999;
       font-size: .88rem;
     }
 
     @media(max-width: 768px) {
-      .calendar-grid {
-        gap: 4px;
-      }
-
-      .cal-day {
-        min-height: 68px;
-        padding: 6px;
-        font-size: .80rem;
-      }
-
-      .container {
-        padding-left: 14px;
-        padding-right: 14px;
+      .center-screen.active-screen {
+        align-items: flex-start;
+        padding-top: 42px;
       }
 
       .login-card {
-        padding: 22px;
+        padding: 24px;
+        border-radius: 24px;
       }
+
+      .topbar .brand { font-size: 1.05rem !important; }
+      .calendar-grid { gap: 5px; }
+      .cal-day { min-height: 72px; padding: 7px; font-size: .80rem; }
+      .glass.p-4 { padding: 18px !important; }
+      .container { padding-left: 14px; padding-right: 14px; }
     }
   </style>
 </head>
@@ -372,18 +386,22 @@
   <div class="login-card glass">
     <div class="text-center mb-4">
       <div class="brand fs-3">CANTIERI<span>CLOUD</span></div>
-      <div class="text-muted small mt-1">Giornale lavori, ditte e presenze</div>
+      <div class="text-muted small mt-2">Giornale lavori, ditte e presenze</div>
     </div>
 
-    <div class="login-tabs d-flex gap-2 mb-4">
-      <button id="tab-sirimed" class="btn btn-soft active flex-fill" onclick="showSiramedLogin()">Sir i med</button>
-      <button id="tab-ditta" class="btn btn-soft flex-fill" onclick="showDittaLogin()">Ditta</button>
+    <div class="login-tabs mb-4">
+      <button id="tab-sirimed" class="btn active flex-fill" onclick="showSiramedLogin()">Sir i med</button>
+      <button id="tab-ditta" class="btn flex-fill" onclick="showDittaLogin()">Ditta</button>
     </div>
 
     <div id="login-sirimed-box">
       <label class="small-label">Accesso responsabili</label>
-      <input type="email" id="log-email" class="form-control mb-2" placeholder="Email Sirimed">
-      <input type="password" id="log-pw" class="form-control mb-3" placeholder="Password">
+      <input type="email" id="log-email" class="form-control mb-2" placeholder="Email Sirimed" autocomplete="email">
+      <input type="password" id="log-pw" class="form-control mb-3" placeholder="Password" autocomplete="current-password">
+      <div class="form-check mb-3 text-start">
+        <input class="form-check-input" type="checkbox" id="remember-login">
+        <label class="form-check-label small" for="remember-login">Ricordami su questo dispositivo</label>
+      </div>
       <button class="btn btn-dark w-100 py-2" onclick="handleLogin()">Accedi</button>
     </div>
 
@@ -391,9 +409,13 @@
       <label class="small-label">Accesso ditta / subaffidatario</label>
       <input type="text" id="codice-ditta-login" class="form-control mb-2 text-uppercase" placeholder="Codice ditta, es. MATTIA08">
       <input type="password" id="password-ditta-login" class="form-control mb-3" placeholder="Password">
+      <div class="form-check mb-3 text-start">
+        <input class="form-check-input" type="checkbox" id="remember-ditta-login">
+        <label class="form-check-label small" for="remember-ditta-login">Ricordami su questo dispositivo</label>
+      </div>
       <button class="btn btn-dark w-100 py-2" onclick="handleDittaLogin()">Entra</button>
-      <button id="install-app-btn" class="btn btn-outline-dark w-100 mt-2" style="display:none;">⬇️ Installa sul desktop</button>
-      <div class="text-muted small text-center mt-2">Su iPhone: Safari → Condividi → Aggiungi alla schermata Home.</div>
+      <button id="install-app-btn" class="btn btn-outline-dark w-100 mt-2" style="display:none;">⬇️ Installa app</button>
+      <div class="text-muted small text-center mt-3">Su iPhone: Safari → Condividi → Aggiungi alla schermata Home.</div>
     </div>
   </div>
 </div>
@@ -402,9 +424,13 @@
 <div id="pin-screen" class="screen center-screen">
   <div class="login-card glass text-center">
     <div class="brand fs-4 mb-2">CANTIERI<span>CLOUD</span></div>
-    <h5 class="fw-bold mt-3">PIN DI SBLOCCO</h5>
+    <h5 class="fw-bold mt-4">PIN DI SBLOCCO</h5>
     <p class="text-muted small">Accesso responsabili Sirimed</p>
-    <input type="password" id="pin-input" class="form-control text-center fs-1 mb-3" maxlength="4" placeholder="••••">
+    <input type="password" id="pin-input" class="form-control text-center fs-1 mb-3" maxlength="4" placeholder="••••" inputmode="numeric">
+    <div class="form-check mb-3 text-start">
+      <input class="form-check-input" type="checkbox" id="remember-pin">
+      <label class="form-check-label small" for="remember-pin">Non chiedere più il PIN su questo dispositivo</label>
+    </div>
     <button class="btn btn-dark w-100 py-2" onclick="checkPin()">Sblocca</button>
     <button class="btn btn-link mt-2" onclick="logout()">Esci</button>
   </div>
@@ -424,6 +450,12 @@
 
   <div class="container">
     <section id="section-list" class="section-page active">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Commesse</div><h3 id="stat-cantieri" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Giornali</div><h3 id="stat-giornali" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Ditte</div><h3 id="stat-ditte" class="fw-bold m-0">0</h3></div></div>
+      </div>
+
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
           <h3 class="section-title">Commesse attive</h3>
@@ -469,7 +501,6 @@
           </div>
           <button class="btn-close" onclick="showSection('section-calendar')"></button>
         </div>
-
         <div class="row g-4">
           <div class="col-lg-4">
             <div class="small-label text-primary">1. Dati giornalieri</div>
@@ -636,7 +667,7 @@
 <!-- MODALE COMMESSA -->
 <div class="modal fade" id="modalC" tabindex="-1">
   <div class="modal-dialog modal-xl">
-    <div class="modal-content border-0" style="border-radius:22px;overflow:hidden;">
+    <div class="modal-content border-0" style="border-radius:24px;overflow:hidden;">
       <div class="modal-body p-4">
         <div class="d-flex justify-content-between align-items-start mb-3">
           <div>
@@ -698,6 +729,13 @@ let saveTimer = null;
 let currentUser = null;
 let currentUserProfile = null;
 let dittaPanelData = { cantiere: null, ditta: null, todayKey: null };
+let deferredInstallPrompt = null;
+
+const REMEMBER_LOGIN_KEY = "cc_remember_login";
+const PIN_UNLOCK_LOCAL_KEY = "cc_pin_unlocked_uid";
+const PIN_UNLOCK_SESSION_KEY = "cc_pin_unlocked_session_uid";
+const USER_EMAIL_KEY = "cc_saved_email";
+const DITTA_CODE_KEY = "cc_saved_ditta_code";
 
 const TIPO_DITTA_LABELS = {
   appaltatore: "Appaltatore / Affidataria",
@@ -708,8 +746,28 @@ const TIPO_DITTA_LABELS = {
 };
 
 function showScreen(id) {
-  $(".screen").removeClass("active-screen");
-  $(id).addClass("active-screen");
+  const target = typeof id === "string" ? id : "#auth-screen";
+
+  $(".screen")
+    .removeClass("active-screen")
+    .attr("aria-hidden", "true")
+    .hide();
+
+  $(target)
+    .addClass("active-screen")
+    .attr("aria-hidden", "false")
+    .show();
+
+  if (target === "#main-screen") {
+    showSection("section-list");
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function showSection(id) {
+  $(".section-page").removeClass("active").hide();
+  $("#" + id).addClass("active").show();
   window.scrollTo(0, 0);
 }
 
@@ -743,6 +801,58 @@ function safeId(s) {
   return normalizeKey(s)
     .replace(/[^A-Z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "") || "ID";
+}
+
+function wantsRememberLogin() {
+  return $("#remember-login").is(":checked") || $("#remember-ditta-login").is(":checked");
+}
+
+function saveRememberPrefs(type) {
+  const remember = wantsRememberLogin();
+  localStorage.setItem(REMEMBER_LOGIN_KEY, remember ? "1" : "0");
+
+  if (type === "sirimed") {
+    const email = $("#log-email").val().trim();
+    if (remember && email) localStorage.setItem(USER_EMAIL_KEY, email);
+    if (!remember) localStorage.removeItem(USER_EMAIL_KEY);
+  }
+
+  if (type === "ditta") {
+    const code = $("#codice-ditta-login").val().trim().toUpperCase();
+    if (remember && code) localStorage.setItem(DITTA_CODE_KEY, code);
+    if (!remember) localStorage.removeItem(DITTA_CODE_KEY);
+  }
+}
+
+function restoreRememberPrefs() {
+  const remember = localStorage.getItem(REMEMBER_LOGIN_KEY) === "1";
+  $("#remember-login, #remember-ditta-login, #remember-pin").prop("checked", remember);
+
+  const email = localStorage.getItem(USER_EMAIL_KEY);
+  if (email) $("#log-email").val(email);
+
+  const code = localStorage.getItem(DITTA_CODE_KEY);
+  if (code) $("#codice-ditta-login").val(code);
+}
+
+function markPinUnlocked(uid) {
+  sessionStorage.setItem(PIN_UNLOCK_SESSION_KEY, uid);
+
+  if ($("#remember-pin").is(":checked") || wantsRememberLogin()) {
+    localStorage.setItem(PIN_UNLOCK_LOCAL_KEY, uid);
+  } else {
+    localStorage.removeItem(PIN_UNLOCK_LOCAL_KEY);
+  }
+}
+
+function isPinUnlocked(uid) {
+  return sessionStorage.getItem(PIN_UNLOCK_SESSION_KEY) === uid ||
+         localStorage.getItem(PIN_UNLOCK_LOCAL_KEY) === uid;
+}
+
+function clearLoginState() {
+  sessionStorage.removeItem(PIN_UNLOCK_SESSION_KEY);
+  localStorage.removeItem(PIN_UNLOCK_LOCAL_KEY);
 }
 
 function showSave(t = "💾 Sincronizzazione...") {
@@ -801,17 +911,6 @@ function ensureCantiereShape(c) {
   return c;
 }
 
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    loadUserProfile(user);
-  } else {
-    currentUser = null;
-    currentUserProfile = null;
-    showScreen("#auth-screen");
-  }
-});
-
 function showSiramedLogin() {
   $("#tab-sirimed").addClass("active");
   $("#tab-ditta").removeClass("active");
@@ -826,7 +925,7 @@ function showDittaLogin() {
   $("#login-sirimed-box").hide();
 }
 
-function handleLogin() {
+async function handleLogin() {
   const email = $("#log-email").val().trim();
   const pw = $("#log-pw").val();
 
@@ -835,11 +934,21 @@ function handleLogin() {
     return;
   }
 
-  auth.signInWithEmailAndPassword(email, pw)
-    .catch(e => alert("Errore accesso: " + e.message));
+  try {
+    saveRememberPrefs("sirimed");
+
+    const persistence = wantsRememberLogin()
+      ? firebase.auth.Auth.Persistence.LOCAL
+      : firebase.auth.Auth.Persistence.SESSION;
+
+    await auth.setPersistence(persistence);
+    await auth.signInWithEmailAndPassword(email, pw);
+  } catch (e) {
+    alert("Errore accesso: " + e.message);
+  }
 }
 
-function handleDittaLogin() {
+async function handleDittaLogin() {
   const codice = $("#codice-ditta-login").val().trim().toLowerCase();
   const pw = $("#password-ditta-login").val();
 
@@ -848,10 +957,20 @@ function handleDittaLogin() {
     return;
   }
 
-  const emailTecnica = `${codice}@sirimed.local`;
+  try {
+    saveRememberPrefs("ditta");
 
-  auth.signInWithEmailAndPassword(emailTecnica, pw)
-    .catch(() => alert("Codice ditta o password non validi."));
+    const persistence = wantsRememberLogin()
+      ? firebase.auth.Auth.Persistence.LOCAL
+      : firebase.auth.Auth.Persistence.SESSION;
+
+    await auth.setPersistence(persistence);
+
+    const emailTecnica = `${codice}@sirimed.local`;
+    await auth.signInWithEmailAndPassword(emailTecnica, pw);
+  } catch (e) {
+    alert("Codice ditta o password non validi.");
+  }
 }
 
 async function loadUserProfile(user) {
@@ -875,7 +994,13 @@ async function loadUserProfile(user) {
     currentUserProfile = p;
 
     if (p.ruolo === "admin" || p.ruolo === "responsabile") {
-      showScreen("#pin-screen");
+      if (isPinUnlocked(user.uid)) {
+        showScreen("#main-screen");
+        await loadDB();
+      } else {
+        $("#pin-input").val("");
+        showScreen("#pin-screen");
+      }
       return;
     }
 
@@ -894,20 +1019,24 @@ async function loadUserProfile(user) {
   }
 }
 
-function checkPin() {
-  if ($("#pin-input").val() === "9731") {
-    showScreen("#main-screen");
-    loadDB();
-  } else {
+async function checkPin() {
+  const pin = $("#pin-input").val().trim();
+
+  if (pin !== "9731") {
     alert("PIN errato");
+    return;
   }
-}
 
-function logout() {
-  auth.signOut().then(() => location.reload());
-}
+  if (!currentUser) {
+    alert("Sessione scaduta. Effettua di nuovo il login.");
+    showScreen("#auth-screen");
+    return;
+  }
 
-function loadDB() {
+  markPinUnlocked(currentUser.uid);
+  showScreen("#main-screen");
+  await loadDB();
+  function loadDB() {
   return db.collection("users").doc("archivio_condiviso").get()
     .then(doc => {
       userData.cantieri = doc.exists ? (doc.data().cantieri || []) : [];
@@ -936,10 +1065,23 @@ function saveArchivio(callback) {
     .catch(e => {
       console.error(e);
       showSave("⚠️ Errore salvataggio");
+      hideSaveSoon();
     });
 }
 
+function updateStats() {
+  const cantieri = userData.cantieri || [];
+  const giornali = cantieri.reduce((s, c) => s + Object.keys(c.giornali || {}).length, 0);
+  const ditte = cantieri.reduce((s, c) => s + (c.anagraficaDitte || []).length, 0);
+
+  $("#stat-cantieri").text(cantieri.length);
+  $("#stat-giornali").text(giornali);
+  $("#stat-ditte").text(ditte);
+}
+
 function renderList() {
+  updateStats();
+
   let h = "";
 
   userData.cantieri.forEach((c, i) => {
@@ -982,12 +1124,6 @@ function openC(i) {
   $("#cal-title").text(userData.cantieri[i].nome);
   showSection("section-calendar");
   renderCal();
-}
-
-function showSection(id) {
-  $(".section-page").removeClass("active");
-  $("#" + id).addClass("active");
-  window.scrollTo(0, 0);
 }
 
 function changeMonth(dir) {
@@ -1139,6 +1275,8 @@ function handlePhotos(inpt) {
 function renderPhotos() {
   $("#photo-box").empty();
 
+  if (cIdx < 0 || !activeDate) return;
+
   const g = userData.cantieri[cIdx].giornali[activeDate] || {};
 
   (g.photos || []).forEach((p, i) => {
@@ -1176,6 +1314,7 @@ function normalizeGiornaleDitteVisibili(g) {
 
 function addDittaG() {
   const dittaId = $("#sel-ditta").val();
+
   if (!dittaId) return;
 
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
@@ -1192,6 +1331,7 @@ function addDittaG() {
 
 function removeDittaG(dittaId) {
   const d = findDittaByIdOrName(dittaId);
+
   if (!d) return;
 
   if (confirm(`Rimuovere ${d.nome} dal giornale?`)) {
@@ -1264,6 +1404,7 @@ function updateOreOperaio(dittaId, operaioId, ore) {
   if (!p) return;
 
   let val = parseFloat(String(ore).replace(",", "."));
+
   if (isNaN(val) || val < 0) val = 0;
 
   p.ore = val;
@@ -1327,6 +1468,7 @@ function renderPresenze() {
 
   (g.ditteVisibili || []).forEach(dittaId => {
     const d = findDittaByIdOrName(dittaId);
+
     if (!d) return;
 
     const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
@@ -1448,8 +1590,14 @@ async function setStatoContributo(id, stato, includi) {
 
   await renderContributiDitte();
 }
+}
 
-async function loadDittaPanel() {
+function logout() {
+  clearLoginState();
+  auth.signOut().then(() => {
+    $("#log-pw, #password-ditta-login, #pin-input").val("");
+    showScreen("#auth-screen");
+  });async function loadDittaPanel() {
   await loadDB();
 
   const p = currentUserProfile;
@@ -1563,6 +1711,7 @@ async function saveDittaContribution() {
     if (!o) return;
 
     let ore = parseFloat($(`.ditta-operaio-ore[data-operaio-id="${oid}"]`).val());
+
     if (isNaN(ore) || ore < 0) ore = 0;
 
     presenti.push({
@@ -1598,6 +1747,7 @@ async function saveDittaContribution() {
 
 function addTask() {
   const t = $("#task-in").val().trim();
+
   if (!t) return;
 
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
@@ -1616,6 +1766,8 @@ function addTask() {
 
 function renderTasks() {
   $(".quadrant").empty();
+
+  if (cIdx < 0) return;
 
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
 
@@ -1667,6 +1819,7 @@ function editCurrentCommessa() {
 
 function addAnaDitta() {
   const nome = prompt("Ragione sociale ditta:");
+
   if (!nome) return;
 
   const tipoInput = prompt(
@@ -1718,11 +1871,15 @@ function editAnaDitta(i) {
   const d = tempAna[i];
 
   const nome = prompt("Ragione sociale:", d.nome);
+
   if (!nome) return;
 
   d.nome = normalizeKey(nome);
 
-  const stato = prompt("Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata", d.stato || "autorizzata");
+  const stato = prompt(
+    "Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata",
+    d.stato || "autorizzata"
+  );
 
   if (stato) d.stato = stato.toLowerCase();
 
@@ -1743,6 +1900,7 @@ function toggleAnaDitta(i) {
 
 function addAnaW(i) {
   const nome = prompt("Nome operaio:");
+
   if (!nome) return;
 
   const mansione = prompt("Mansione / qualifica:") || "";
@@ -1763,6 +1921,7 @@ function editAnaW(i, j) {
   const o = tempAna[i].operai[j];
 
   const nome = prompt("Nome operaio:", o.nome);
+
   if (!nome) return;
 
   const mansione = prompt("Mansione / qualifica:", o.mansione || "") || "";
@@ -1803,7 +1962,7 @@ function renderAna() {
 
     h += `
       <div class="ditta-card ${d.attiva === false ? "opacity-55" : ""}">
-        <div class="d-flex justify-content-between align-items-start">
+        <div class="d-flex justify-content-between align-items-start gap-2">
           <div>
             <b>${esc(d.nome)}</b>
             <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
@@ -1922,6 +2081,7 @@ async function buildWhatsAppMessage() {
 
     (g.ditteVisibili || []).forEach(dittaId => {
       const d = findDittaByIdOrName(dittaId);
+
       if (!d) return;
 
       const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
@@ -2010,6 +2170,7 @@ function shareAccessoDittaWhatsApp() {
   }
 
   const codice = prompt("Inserisci codice ditta da condividere, es. MATTIA08:");
+
   if (!codice) return;
 
   const link = `${location.origin}${location.pathname}?accesso=ditta&cantiere=${encodeURIComponent(c.nome || "")}&codice=${encodeURIComponent(codice.toUpperCase())}`;
@@ -2097,6 +2258,7 @@ async function generatePDF() {
 
   (g.ditteVisibili || []).forEach(did => {
     const d = findDittaByIdOrName(did);
+
     if (!d) return;
 
     const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
@@ -2201,7 +2363,7 @@ async function generatePDF() {
     doc.text(`Pagina ${i} di ${pc}`, 195, 287, { align: "right" });
   }
 
-  doc.save(`Giornale_${c.nome}_${activeDate}.pdf`);
+  doc.save(`Giornale_${safeId(c.nome)}_${activeDate}.pdf`);
 }
 
 function readAccessParams() {
@@ -2217,8 +2379,6 @@ function readAccessParams() {
     }
   }
 }
-
-let deferredInstallPrompt = null;
 
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
@@ -2244,10 +2404,28 @@ if ("serviceWorker" in navigator) {
     .catch(err => console.warn("Service worker non registrato:", err));
 }
 
-$(document).ready(readAccessParams);
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    loadUserProfile(user);
+  } else {
+    currentUser = null;
+    currentUserProfile = null;
+    showScreen("#auth-screen");
+  }
+});
+
+$(document).ready(() => {
+  $(".screen").removeClass("active-screen").hide();
+  $(".section-page").removeClass("active").hide();
+  restoreRememberPrefs();
+  readAccessParams();
+  showScreen("#auth-screen");
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-                </html>
+</html>
+}
