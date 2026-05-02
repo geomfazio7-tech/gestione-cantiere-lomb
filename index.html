@@ -2409,9 +2409,93 @@ function isWaChecked(v) {
   return $(`.wa-check[value="${v}"]`).is(":checked");
 }
 
+
+function normalizePersonaKey(nome, mansione = "") {
+  return normalizeKey(`${nome || ""}_${mansione || ""}`);
+}
+
+function formatPersonaLine(p, includeOre = true) {
+  const ore = parseFloat(p.ore) || 0;
+  const nome = p.operaioNome || p.nome || "-";
+  const mansione = p.mansione ? " - " + p.mansione : "";
+  const oreTxt = includeOre && ore > 0 ? ` - ${ore} ore` : "";
+  return `- ${nome}${mansione}${oreTxt}`;
+}
+
+function mergePresenzeManualiEContributi(g, contributi = []) {
+  const gruppi = new Map();
+
+  function ensureGruppo(dittaId, dittaNome, tipo = "") {
+    const key = normalizeKey(dittaId || dittaNome || "DITTA");
+    if (!gruppi.has(key)) {
+      gruppi.set(key, {
+        dittaId: dittaId || key,
+        dittaNome: dittaNome || key,
+        tipo: tipo || "",
+        persone: new Map()
+      });
+    }
+
+    return gruppi.get(key);
+  }
+
+  (g.presenti || [])
+    .filter(p => typeof p !== "string")
+    .forEach(p => {
+      const gruppo = ensureGruppo(p.dittaId, p.dittaNome, p.dittaTipo);
+      const personaKey = normalizePersonaKey(p.operaioNome, p.mansione);
+      gruppo.persone.set(personaKey, {
+        operaioNome: p.operaioNome,
+        mansione: p.mansione || "",
+        ore: parseFloat(p.ore) || 0,
+        fonte: "manuale"
+      });
+    });
+
+  (contributi || [])
+    .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso")
+    .forEach(ct => {
+      const gruppo = ensureGruppo(ct.dittaId, ct.dittaNome, "ditta");
+
+      (ct.presenti || []).forEach(p => {
+        const personaKey = normalizePersonaKey(p.operaioNome, p.mansione);
+        const ore = parseFloat(p.ore) || 0;
+
+        if (gruppo.persone.has(personaKey)) {
+          const existing = gruppo.persone.get(personaKey);
+
+          // Se il nome è uguale, non duplico. Uso il valore più aggiornato/utile:
+          // se la ditta ha indicato ore > 0, uso quelle; altrimenti mantengo quelle manuali.
+          if (ore > 0) existing.ore = ore;
+          existing.fonte = "manuale+ditta";
+        } else {
+          gruppo.persone.set(personaKey, {
+            operaioNome: p.operaioNome,
+            mansione: p.mansione || "",
+            ore: ore,
+            fonte: "ditta"
+          });
+        }
+      });
+    });
+
+  return Array.from(gruppi.values()).map(g => ({
+    ...g,
+    persone: Array.from(g.persone.values())
+  }));
+}
+
+function totaleOrePersone(persone = []) {
+  return persone.reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
+}
+
 async function buildWhatsAppMessage() {
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
   const g = c.giornali[activeDate] || {};
+  const contributiGiorno = await getContributiDitteGiorno(activeDate);
+  const contributiValidi = contributiGiorno.filter(ct =>
+    ct.includiNelPDF !== false && ct.stato !== "escluso"
+  );
 
   let msg = `GIORNALE DI CANTIERE - ${formatDateIT(activeDate)}\n\n`;
 
@@ -2428,34 +2512,30 @@ async function buildWhatsAppMessage() {
   if (isWaChecked("ditte") || isWaChecked("operai") || isWaChecked("ore")) {
     msg += `DITTE E PERSONALE\n`;
 
-    normalizeGiornaleDitteVisibili(g);
+    const gruppi = mergePresenzeManualiEContributi(g, contributiValidi);
 
-    (g.ditteVisibili || []).forEach(dittaId => {
-      const d = findDittaByIdOrName(dittaId);
+    gruppi.forEach(gr => {
+      const d = findDittaByIdOrName(gr.dittaId) || findDittaByIdOrName(gr.dittaNome);
+      const parent = d?.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+      const totale = totaleOrePersone(gr.persone);
 
-      if (!d) return;
-
-      const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
-      const totale = getTotaleOreDitta(g, d.id);
-
-      msg += `\n${d.nome}\n`;
+      msg += `\n${gr.dittaNome}\n`;
 
       if (isWaChecked("ditte")) {
-        msg += `Tipo: ${TIPO_DITTA_LABELS[d.tipo] || d.tipo}\n`;
+        const tipo = d ? (TIPO_DITTA_LABELS[d.tipo] || d.tipo) : "Ditta esterna";
+        msg += `Tipo: ${tipo}\n`;
         if (parent) msg += `Collegata a: ${parent.nome}\n`;
       }
 
-      if (isWaChecked("ore")) {
+      if (isWaChecked("ore") && totale > 0) {
         msg += `Totale ore ditta: ${totale}\n`;
       }
 
-      const presenti = (g.presenti || []).filter(p =>
-        typeof p !== "string" && String(p.dittaId) === String(d.id)
-      );
-
-      presenti.forEach(p => {
-        msg += `- ${p.operaioNome}${p.mansione ? " - " + p.mansione : ""}${isWaChecked("ore") ? ` - ${p.ore ?? 0} ore` : ""}\n`;
-      });
+      if (isWaChecked("operai")) {
+        gr.persone.forEach(p => {
+          msg += `${formatPersonaLine(p, isWaChecked("ore"))}\n`;
+        });
+      }
     });
 
     msg += `\n`;
@@ -2472,18 +2552,14 @@ async function buildWhatsAppMessage() {
     }
 
     if (isWaChecked("contributi")) {
-      const contributi = await getContributiDitteGiorno(activeDate);
-
-      contributi
-        .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso")
-        .forEach(ct => {
-          if ((ct.lavorazioni || "").trim()) {
-            lavorazioni.push({
-              fonte: ct.dittaNome || "DITTA ESTERNA",
-              testo: ct.lavorazioni.trim()
-            });
-          }
-        });
+      contributiValidi.forEach(ct => {
+        if ((ct.lavorazioni || "").trim()) {
+          lavorazioni.push({
+            fonte: ct.dittaNome || "DITTA ESTERNA",
+            testo: ct.lavorazioni.trim()
+          });
+        }
+      });
     }
 
     if (lavorazioni.length) {
@@ -2497,11 +2573,9 @@ async function buildWhatsAppMessage() {
     }
   }
 
-
   if (isWaChecked("materiali")) {
-    const contributiMateriali = await getContributiDitteGiorno(activeDate);
-    const materiali = contributiMateriali
-      .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso" && (ct.materiali || "").trim())
+    const materiali = contributiValidi
+      .filter(ct => (ct.materiali || "").trim())
       .map(ct => ({
         ditta: ct.dittaNome || "DITTA ESTERNA",
         testo: ct.materiali.trim(),
@@ -2577,6 +2651,8 @@ async function generatePDF() {
 
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
   const g = c.giornali[activeDate] || {};
+  const contributi = (await getContributiDitteGiorno(activeDate))
+    .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso");
 
   let y = 50;
 
@@ -2643,26 +2719,30 @@ async function generatePDF() {
   doc.text("DITTE E PERSONALE PRESENTE", 15, y);
   y += 8;
 
-  normalizeGiornaleDitteVisibili(g);
+  const gruppi = mergePresenzeManualiEContributi(g, contributi);
 
-  (g.ditteVisibili || []).forEach(did => {
-    const d = findDittaByIdOrName(did);
-    if (!d) return;
+  if (!gruppi.length) {
+    doc.setFont("helvetica", "normal");
+    doc.text("Nessun personale indicato.", 15, y);
+    y += 8;
+  }
 
-    const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
-    const operai = getPresenzeByDitta(g, d);
-    const totale = getTotaleOreDitta(g, d.id);
+  gruppi.forEach(gr => {
+    const d = findDittaByIdOrName(gr.dittaId) || findDittaByIdOrName(gr.dittaNome);
+    const parent = d?.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+    const totale = totaleOrePersone(gr.persone);
 
     checkPage(22);
 
     doc.setFont("helvetica", "bold");
-    doc.text(d.nome + ":", 15, y);
+    doc.text(gr.dittaNome + ":", 15, y);
 
     doc.setFont("helvetica", "normal");
-    const tipo = `${TIPO_DITTA_LABELS[d.tipo] || d.tipo}${parent ? " - collegata a " + parent.nome : ""} - Totale ore: ${totale}`;
+    const tipo = `${d ? (TIPO_DITTA_LABELS[d.tipo] || d.tipo) : "Ditta esterna"}${parent ? " - collegata a " + parent.nome : ""}${totale > 0 ? " - Totale ore: " + totale : ""}`;
     doc.text(doc.splitTextToSize(tipo, 135), 55, y);
     y += 6;
 
+    const operai = gr.persone.map(p => formatPersonaLine(p, true));
     const lines = doc.splitTextToSize(operai.join(", ") || "Nessun operaio selezionato", 140);
     doc.text(lines, 55, y);
     y += (lines.length * 5) + 5;
@@ -2673,9 +2753,6 @@ async function generatePDF() {
 
   doc.line(15, y, 195, y);
   y += 8;
-
-  const contributi = (await getContributiDitteGiorno(activeDate))
-    .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso");
 
   const lavorazioni = [];
 
@@ -2717,39 +2794,6 @@ async function generatePDF() {
       y += 4;
     });
   }
-
-  if (contributi.length) {
-    checkPage(20);
-    doc.line(15, y, 195, y);
-    y += 8;
-
-    doc.setFont("helvetica", "bold");
-    doc.text("PERSONALE DITTE ESTERNE", 15, y);
-    y += 8;
-
-    contributi.forEach(ct => {
-      const ore = (ct.presenti || []).reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
-
-      checkPage(25);
-
-      doc.setFont("helvetica", "bold");
-      doc.text(ct.dittaNome || "-", 15, y);
-      y += 6;
-
-      doc.setFont("helvetica", "normal");
-      doc.text(`Meteo: ${ct.meteo || "-"} ${ct.temp ? "- " + ct.temp + "°C" : ""} | Ore totali: ${ore}`, 15, y);
-      y += 6;
-
-      const ops = (ct.presenti || [])
-        .map(p => `- ${p.operaioNome}${p.mansione ? " - " + p.mansione : ""} - ${p.ore || 0} ore`)
-        .join("\n") || "Nessun operaio indicato.";
-
-      let opLines = doc.splitTextToSize(ops, 180);
-      doc.text(opLines, 15, y);
-      y += (opLines.length * 5) + 8;
-    });
-  }
-
 
   const materiali = contributi
     .filter(ct => (ct.materiali || "").trim())
