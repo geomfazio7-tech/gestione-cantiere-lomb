@@ -336,6 +336,59 @@
       padding: 13px;
     }
 
+    .wa-settings {
+      border: 1px solid #bbf7d0;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .wa-settings summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 900;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .wa-settings summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .wa-settings summary::after {
+      content: "⌄";
+      font-size: 1.2rem;
+      transition: .15s ease;
+    }
+
+    .wa-settings[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .wa-settings-body {
+      padding: 0 14px 14px 14px;
+    }
+
+    .wa-preference-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .wa-preference-grid .form-check {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 8px 10px 8px 36px;
+      margin: 0;
+    }
+
+
     .opacity-55 { opacity: .55; }
 
     #pin-input {
@@ -391,7 +444,7 @@
     </div>
 
     <div class="login-tabs mb-4">
-      <button id="tab-sirimed" class="btn active flex-fill" onclick="showSiramedLogin()">Sir i med</button>
+      <button id="tab-sirimed" class="btn active flex-fill" onclick="showSiramedLogin()">Sirimed</button>
       <button id="tab-ditta" type="button" class="btn flex-fill">Ditta</button>
     </div>
 
@@ -462,7 +515,7 @@
           <h3 class="section-title">Commesse attive</h3>
           <div class="text-muted small">Archivio generale Sirimed</div>
         </div>
-        <button class="btn btn-dark btn-sm px-4" onclick="openModaleNuovo()">+ Nuova commessa</button>
+        <button id="btn-nuova-commessa" class="btn btn-dark btn-sm px-4" onclick="openModaleNuovo()">+ Nuova commessa</button>
       </div>
       <div id="cantieri-grid" class="row g-4"></div>
     </section>
@@ -533,7 +586,7 @@
             <hr>
 
             <div class="d-flex justify-content-between mb-2">
-              <label class="small-label">Lavorazioni Sirimed</label>
+              <label class="small-label">Lavorazioni del giorno</label>
               <button id="btn-lock" class="btn btn-xs btn-outline-dark" onclick="toggleLock()">SBLOCCA</button>
             </div>
 
@@ -550,18 +603,23 @@
             <hr>
 
             <label class="small-label text-success">Condivisione WhatsApp</label>
-            <div class="wa-box mb-3 small">
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="commessa" id="wa-commessa" checked><label class="form-check-label" for="wa-commessa">Solo nome cantiere</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="meteo" id="wa-meteo" checked><label class="form-check-label" for="wa-meteo">Meteo e temperatura</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ditte" id="wa-ditte" checked><label class="form-check-label" for="wa-ditte">Ditte / subappalti / subaffidi</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="operai" id="wa-operai" checked><label class="form-check-label" for="wa-operai">Operai presenti</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ore" id="wa-ore" checked><label class="form-check-label" for="wa-ore">Ore lavorate</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="lavorazioni" id="wa-lavorazioni" checked><label class="form-check-label" for="wa-lavorazioni">Lavorazioni Sirimed</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="contributi" id="wa-contributi" checked><label class="form-check-label" for="wa-contributi">Contributi ditte</label></div>
-              <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="note" id="wa-note"><label class="form-check-label" for="wa-note">Note private</label></div>
-
-              <button class="btn btn-success btn-sm w-100 mt-2" onclick="shareWhatsApp()">📲 Condividi su WhatsApp</button>
-            </div>
+            <details id="wa-settings-panel" class="wa-settings mb-3 small">
+              <summary>📲 Preferenze invio WhatsApp</summary>
+              <div class="wa-settings-body">
+                <div class="wa-preference-grid">
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="commessa" id="wa-commessa"><label class="form-check-label" for="wa-commessa">Solo nome cantiere</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="meteo" id="wa-meteo"><label class="form-check-label" for="wa-meteo">Meteo e temperatura</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ditte" id="wa-ditte"><label class="form-check-label" for="wa-ditte">Ditte / subappalti / subaffidi</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="operai" id="wa-operai"><label class="form-check-label" for="wa-operai">Operai presenti</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ore" id="wa-ore"><label class="form-check-label" for="wa-ore">Ore lavorate</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="lavorazioni" id="wa-lavorazioni"><label class="form-check-label" for="wa-lavorazioni">Lavorazioni del giorno</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="contributi" id="wa-contributi"><label class="form-check-label" for="wa-contributi">Contributi ditte</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="materiali" id="wa-materiali"><label class="form-check-label" for="wa-materiali">Materiali mancanti</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="note" id="wa-note"><label class="form-check-label" for="wa-note">Note private</label></div>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-success btn-sm w-100 mb-3" onclick="shareWhatsApp()">📲 Condividi su WhatsApp</button>
 
             <label class="small-label">Note personali</label>
             <textarea id="g-memo" class="form-control mb-4" rows="3" placeholder="Appunti privati..." onchange="autoSave()"></textarea>
@@ -626,6 +684,17 @@
 
       <label class="small-label">Lavorazioni della tua ditta</label>
       <textarea id="ditta-lavorazioni" class="form-control mb-3" rows="5" placeholder="Descrivi le lavorazioni svolte oggi..."></textarea>
+
+      <label class="small-label">Materiale mancante / richiesto</label>
+      <textarea id="ditta-materiali" class="form-control mb-2" rows="3" placeholder="Es. tubazioni, raccordi, DPI, attrezzature mancanti..."></textarea>
+
+      <div class="input-group mb-3">
+        <span class="input-group-text">Priorità</span>
+        <select id="ditta-materiali-priorita" class="form-select">
+          <option value="2">Importante</option>
+          <option value="1">Urgente</option>
+        </select>
+      </div>
 
       <label class="small-label">Operai presenti e ore</label>
       <div id="ditta-operai-box" class="mb-3"></div>
@@ -692,6 +761,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let userData = { cantieri: [] };
+let allCantieri = [];
 let cIdx = -1;
 let activeDate = "";
 let currentMonth = new Date();
@@ -716,6 +786,169 @@ const TIPO_DITTA_LABELS = {
   autonomo: "Lavoratore autonomo"
 };
 
+
+const APP_NAV_STATE_KEY = "cc_current_view";
+const WA_PREFS_KEY = "cc_wa_preferences";
+let internalNavigation = false;
+
+function setAppView(view, push = true) {
+  sessionStorage.setItem(APP_NAV_STATE_KEY, JSON.stringify(view));
+
+  if (push && !internalNavigation) {
+    history.pushState({ ccView: view }, "", location.href);
+  }
+}
+
+function restoreAppViewFromState(view) {
+  if (!view || !view.screen) return false;
+
+  internalNavigation = true;
+
+  try {
+    if (view.screen === "list") {
+      showScreen("#main-screen");
+      showSection("section-list", false);
+      return true;
+    }
+
+    if (view.screen === "calendar" && typeof view.cIdx === "number" && userData.cantieri[view.cIdx]) {
+      cIdx = view.cIdx;
+      $("#cal-title").text(userData.cantieri[cIdx].nome || "");
+      showScreen("#main-screen");
+      showSection("section-calendar", false);
+      renderCal();
+      return true;
+    }
+
+    if (view.screen === "giornale" && typeof view.cIdx === "number" && view.activeDate && userData.cantieri[view.cIdx]) {
+      cIdx = view.cIdx;
+      $("#cal-title").text(userData.cantieri[cIdx].nome || "");
+      showScreen("#main-screen");
+      openG(view.activeDate);
+      return true;
+    }
+
+    if (view.screen === "auth") {
+      showScreen("#auth-screen");
+      return true;
+    }
+  } finally {
+    internalNavigation = false;
+  }
+
+  return false;
+}
+
+function initBackNavigation() {
+  history.replaceState({ ccView: { screen: "auth" } }, "", location.href);
+
+  window.addEventListener("popstate", function(e) {
+    const view = e.state && e.state.ccView;
+
+    if (view) {
+      restoreAppViewFromState(view);
+      return;
+    }
+
+    if ($("#section-giornale").hasClass("active")) {
+      showSection("section-calendar");
+      history.pushState({ ccView: { screen: "calendar", cIdx } }, "", location.href);
+      return;
+    }
+
+    if ($("#section-calendar").hasClass("active")) {
+      showSection("section-list");
+      history.pushState({ ccView: { screen: "list" } }, "", location.href);
+      return;
+    }
+  });
+}
+
+function loadWhatsAppPreferences() {
+  const defaults = {
+    commessa: true,
+    meteo: true,
+    ditte: true,
+    operai: true,
+    ore: true,
+    lavorazioni: true,
+    contributi: true,
+    materiali: true,
+    note: false
+  };
+
+  let prefs = defaults;
+
+  try {
+    prefs = { ...defaults, ...JSON.parse(localStorage.getItem(WA_PREFS_KEY) || "{}") };
+  } catch (e) {
+    prefs = defaults;
+  }
+
+  $(".wa-check").each(function() {
+    const key = $(this).val();
+    $(this).prop("checked", !!prefs[key]);
+  });
+}
+
+function saveWhatsAppPreferences() {
+  const prefs = {};
+
+  $(".wa-check").each(function() {
+    prefs[$(this).val()] = $(this).is(":checked");
+  });
+
+  localStorage.setItem(WA_PREFS_KEY, JSON.stringify(prefs));
+}
+
+
+
+function isMainAdmin() {
+  const email = (currentUser?.email || "").toLowerCase();
+  const ruolo = currentUserProfile?.ruolo || "";
+
+  return ruolo === "admin" || email === "geom.fazio7@gmail.com";
+}
+
+function isSecondaryAdmin() {
+  const email = (currentUser?.email || "").toLowerCase();
+  return currentUserProfile?.ruolo === "responsabile" && email.endsWith("@sirimed.it");
+}
+
+function canCreateDeleteCantieri() {
+  return isMainAdmin();
+}
+
+function getAllowedCantiereIds() {
+  return (currentUserProfile?.cantiereIds || []).map(x => normalizeKey(x));
+}
+
+function canSeeCantiere(c) {
+  if (isMainAdmin()) return true;
+
+  const allowed = getAllowedCantiereIds();
+
+  if (!allowed.length) return false;
+
+  const id = normalizeKey(c.id || "");
+  const nome = normalizeKey(c.nome || "");
+
+  return allowed.includes(id) || allowed.includes(nome);
+}
+
+function applyVisibilityToCantieri(cantieri) {
+  const normalized = (cantieri || []).map(ensureCantiereShape);
+
+  if (isMainAdmin()) return normalized;
+
+  return normalized.filter(canSeeCantiere);
+}
+
+function updateAdminUi() {
+  $("#btn-nuova-commessa").toggle(canCreateDeleteCantieri());
+}
+
+
 function showScreen(id) {
   const target = typeof id === "string" ? id : "#auth-screen";
 
@@ -730,15 +963,33 @@ function showScreen(id) {
     .show();
 
   if (target === "#main-screen") {
-    showSection("section-list");
+    showSection("section-list", false);
+    setAppView({ screen: "list" });
+  }
+
+  if (target === "#auth-screen") {
+    setAppView({ screen: "auth" });
   }
 
   window.scrollTo(0, 0);
 }
 
-function showSection(id) {
+function showSection(id, push = true) {
   $(".section-page").removeClass("active").hide();
   $("#" + id).addClass("active").show();
+
+  if (id === "section-list") {
+    setAppView({ screen: "list" }, push);
+  }
+
+  if (id === "section-calendar") {
+    setAppView({ screen: "calendar", cIdx }, push);
+  }
+
+  if (id === "section-giornale") {
+    setAppView({ screen: "giornale", cIdx, activeDate }, push);
+  }
+
   window.scrollTo(0, 0);
 }
 
@@ -976,7 +1227,7 @@ async function handleDittaLogin() {
 
     await auth.setPersistence(persistence);
 
-    const emailTecnica = `${codice}@sirimed.local`;
+    const emailTecnica = `${codice}@ditta.it`;
     await auth.signInWithEmailAndPassword(emailTecnica, pw);
   } catch (e) {
     alert("Codice ditta o password non validi.");
@@ -1059,9 +1310,14 @@ function logout() {
 function loadDB() {
   return db.collection("users").doc("archivio_condiviso").get()
     .then(doc => {
-      userData.cantieri = doc.exists ? (doc.data().cantieri || []) : [];
-      userData.cantieri = userData.cantieri.map(ensureCantiereShape);
+      allCantieri = doc.exists ? (doc.data().cantieri || []) : [];
+      allCantieri = allCantieri.map(ensureCantiereShape);
+
+      userData.cantieri = applyVisibilityToCantieri(allCantieri);
+
       renderList();
+      updateAdminUi();
+
       return userData;
     })
     .catch(e => {
@@ -1075,12 +1331,47 @@ function saveArchivio(callback) {
 
   userData.cantieri = userData.cantieri.map(ensureCantiereShape);
 
-  db.collection("users").doc("archivio_condiviso")
-    .set({ cantieri: userData.cantieri })
-    .then(() => {
-      showSave("✅ Salvato");
-      hideSaveSoon();
-      if (callback) callback();
+  const ref = db.collection("users").doc("archivio_condiviso");
+
+  const doSave = (cantieriDaSalvare) => {
+    return ref.set({ cantieri: cantieriDaSalvare.map(ensureCantiereShape) })
+      .then(() => {
+        allCantieri = cantieriDaSalvare.map(ensureCantiereShape);
+        userData.cantieri = applyVisibilityToCantieri(allCantieri);
+
+        showSave("✅ Salvato");
+        hideSaveSoon();
+
+        if (callback) callback();
+      });
+  };
+
+  if (isMainAdmin()) {
+    doSave(userData.cantieri)
+      .catch(e => {
+        console.error(e);
+        showSave("⚠️ Errore salvataggio");
+        hideSaveSoon();
+      });
+    return;
+  }
+
+  ref.get()
+    .then(doc => {
+      const archivioCompleto = doc.exists ? (doc.data().cantieri || []).map(ensureCantiereShape) : [];
+      const visibiliMap = new Map(userData.cantieri.map(c => [normalizeKey(c.id || c.nome), ensureCantiereShape(c)]));
+
+      const merged = archivioCompleto.map(c => {
+        const keyId = normalizeKey(c.id || "");
+        const keyNome = normalizeKey(c.nome || "");
+
+        if (visibiliMap.has(keyId)) return visibiliMap.get(keyId);
+        if (visibiliMap.has(keyNome)) return visibiliMap.get(keyNome);
+
+        return c;
+      });
+
+      return doSave(merged);
     })
     .catch(e => {
       console.error(e);
@@ -1100,6 +1391,7 @@ function updateStats() {
 
 function renderList() {
   updateStats();
+  updateAdminUi();
   let h = "";
 
   userData.cantieri.forEach((c, i) => {
@@ -1115,13 +1407,16 @@ function renderList() {
             <span class="badge bg-secondary">${Object.keys(c.giornali || {}).length} giornali</span>
           </div>
         </div>
-        <button class="btn-del-cantiere" onclick="deleteCommessa(event, ${i})">🗑️</button>
+        ${canCreateDeleteCantieri() ? `<button class="btn-del-cantiere" onclick="deleteCommessa(event, ${i})">🗑️</button>` : ""}
       </div>
     `;
   });
 
   if (!h) {
-    h = `<div class="col-12"><div class="glass p-4 text-center text-muted">Nessuna commessa presente.</div></div>`;
+    const msg = isMainAdmin()
+      ? "Nessuna commessa presente."
+      : "Nessuna commessa assegnata a questo account.";
+    h = `<div class="col-12"><div class="glass p-4 text-center text-muted">${msg}</div></div>`;
   }
 
   $("#cantieri-grid").html(h);
@@ -1129,6 +1424,11 @@ function renderList() {
 
 function deleteCommessa(e, i) {
   e.stopPropagation();
+
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può eliminare le commesse.");
+    return;
+  }
 
   if (confirm(`Eliminare DEFINITIVAMENTE la commessa "${userData.cantieri[i].nome}"?`)) {
     userData.cantieri.splice(i, 1);
@@ -1218,6 +1518,7 @@ async function openG(ds) {
     });
 
   showSection("section-giornale");
+  loadWhatsAppPreferences();
   renderPresenze();
   renderPhotos();
   renderTasks();
@@ -1580,9 +1881,22 @@ async function renderContributiDitte() {
           ${(ct.presenti || []).map(p => `- ${esc(p.operaioNome)}${p.mansione ? " - " + esc(p.mansione) : ""} - ${p.ore || 0} ore`).join("<br>") || "-"}
         </div>
 
-        <div class="d-flex gap-1 mt-2">
+        ${ct.materiali ? `
+          <div class="mt-2 p-2 rounded bg-light border">
+            <b>Materiale mancante / richiesto:</b><br>
+            ${esc(ct.materiali)}
+            <div class="mt-1">
+              <span class="badge ${String(ct.materialiPriorita || "2") === "1" ? "bg-danger" : "bg-warning text-dark"}">
+                ${String(ct.materialiPriorita || "2") === "1" ? "Urgente" : "Importante"}
+              </span>
+            </div>
+          </div>
+        ` : ""}
+
+        <div class="d-flex gap-1 mt-2 flex-wrap">
           <button class="btn btn-xs btn-success" onclick="setStatoContributo('${ct.id}', 'approvato', true)">Approva</button>
           <button class="btn btn-xs btn-outline-secondary" onclick="setStatoContributo('${ct.id}', 'escluso', false)">Escludi PDF</button>
+          ${ct.materiali ? `<button class="btn btn-xs btn-outline-dark" onclick="addMaterialiToTask('${ct.id}')">+ Task materiali</button>` : ""}
         </div>
       </div>
     `;
@@ -1600,6 +1914,39 @@ async function setStatoContributo(id, stato, includi) {
   });
 
   await renderContributiDitte();
+}
+
+async function addMaterialiToTask(id) {
+  if (cIdx < 0) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const snap = await contributiCollection(c).doc(id).get();
+
+  if (!snap.exists) {
+    alert("Contributo non trovato.");
+    return;
+  }
+
+  const ct = snap.data();
+
+  if (!ct.materiali) {
+    alert("Nessun materiale indicato.");
+    return;
+  }
+
+  const q = String(ct.materialiPriorita || "2") === "1" ? "1" : "2";
+  const label = q === "1" ? "URGENTE" : "IMPORTANTE";
+
+  c.tasks.push({
+    id: uid(),
+    text: `[${label}] Materiale ${ct.dittaNome || "ditta"} - ${ct.materiali}`,
+    q: q
+  });
+
+  saveArchivio(() => {
+    renderTasks();
+    alert("Materiale aggiunto alla Task Matrix.");
+  });
 }
 
 async function loadDittaPanel() {
@@ -1690,6 +2037,8 @@ async function loadExistingDittaContribution() {
   $("#ditta-meteo").val(ct.meteo || "Soleggiato");
   $("#ditta-temp").val(ct.temp || "");
   $("#ditta-lavorazioni").val(ct.lavorazioni || "");
+  $("#ditta-materiali").val(ct.materiali || "");
+  $("#ditta-materiali-priorita").val(String(ct.materialiPriorita || "2"));
 
   setTimeout(() => {
     (ct.presenti || []).forEach(p => {
@@ -1737,6 +2086,8 @@ async function saveDittaContribution() {
     meteo: $("#ditta-meteo").val(),
     temp: $("#ditta-temp").val(),
     lavorazioni: $("#ditta-lavorazioni").val(),
+    materiali: $("#ditta-materiali").val(),
+    materialiPriorita: $("#ditta-materiali-priorita").val(),
     presenti: presenti,
     stato: "da_verificare",
     includiNelPDF: true,
@@ -1793,6 +2144,11 @@ function confirmDelTask(id) {
 }
 
 function openModaleNuovo() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può creare nuove commesse.");
+    return;
+  }
+
   cIdx = -1;
   tempAna = [];
   $("#modalC input").val("");
@@ -2076,6 +2432,7 @@ async function buildWhatsAppMessage() {
 
     (g.ditteVisibili || []).forEach(dittaId => {
       const d = findDittaByIdOrName(dittaId);
+
       if (!d) return;
 
       const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
@@ -2104,32 +2461,58 @@ async function buildWhatsAppMessage() {
     msg += `\n`;
   }
 
-  if (isWaChecked("lavorazioni")) {
-    msg += `LAVORAZIONI SIRIMED\n`;
-    msg += `${g.lavorazioni || "Nessuna lavorazione inserita."}\n\n`;
+  if (isWaChecked("lavorazioni") || isWaChecked("contributi")) {
+    const lavorazioni = [];
+
+    if (isWaChecked("lavorazioni") && (g.lavorazioni || "").trim()) {
+      lavorazioni.push({
+        fonte: "SIRIMED",
+        testo: g.lavorazioni.trim()
+      });
+    }
+
+    if (isWaChecked("contributi")) {
+      const contributi = await getContributiDitteGiorno(activeDate);
+
+      contributi
+        .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso")
+        .forEach(ct => {
+          if ((ct.lavorazioni || "").trim()) {
+            lavorazioni.push({
+              fonte: ct.dittaNome || "DITTA ESTERNA",
+              testo: ct.lavorazioni.trim()
+            });
+          }
+        });
+    }
+
+    if (lavorazioni.length) {
+      msg += `LAVORAZIONI DEL GIORNO\n`;
+
+      lavorazioni.forEach((l, i) => {
+        msg += `${i + 1}. ${l.fonte}: ${l.testo}\n`;
+      });
+
+      msg += `\n`;
+    }
   }
 
-  if (isWaChecked("contributi")) {
-    const contributi = await getContributiDitteGiorno(activeDate);
 
-    const filtrati = contributi.filter(ct =>
-      ct.includiNelPDF !== false && ct.stato !== "escluso"
-    );
+  if (isWaChecked("materiali")) {
+    const contributiMateriali = await getContributiDitteGiorno(activeDate);
+    const materiali = contributiMateriali
+      .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso" && (ct.materiali || "").trim())
+      .map(ct => ({
+        ditta: ct.dittaNome || "DITTA ESTERNA",
+        testo: ct.materiali.trim(),
+        priorita: String(ct.materialiPriorita || "2") === "1" ? "URGENTE" : "IMPORTANTE"
+      }));
 
-    if (filtrati.length) {
-      msg += `CONTRIBUTI DITTE\n`;
+    if (materiali.length) {
+      msg += `MATERIALI MANCANTI / RICHIESTI\n`;
 
-      filtrati.forEach(ct => {
-        const ore = (ct.presenti || []).reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
-
-        msg += `\n${ct.dittaNome}\n`;
-        msg += `Ore totali: ${ore}\n`;
-
-        (ct.presenti || []).forEach(p => {
-          msg += `- ${p.operaioNome}${p.mansione ? " - " + p.mansione : ""} - ${p.ore || 0} ore\n`;
-        });
-
-        msg += `Lavorazioni: ${ct.lavorazioni || "-"}\n`;
+      materiali.forEach((m, i) => {
+        msg += `${i + 1}. [${m.priorita}] ${m.ditta}: ${m.testo}\n`;
       });
 
       msg += `\n`;
@@ -2143,8 +2526,8 @@ async function buildWhatsAppMessage() {
 
   return msg.trim();
 }
-
 async function shareWhatsApp() {
+  saveWhatsAppPreferences();
   const msg = await buildWhatsAppMessage();
 
   if (!msg) {
@@ -2196,6 +2579,19 @@ async function generatePDF() {
   const g = c.giornali[activeDate] || {};
 
   let y = 50;
+
+  function checkPage(extra = 15) {
+    if (y + extra > 280) {
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  function addWrappedText(text, x, width, lineHeight = 5) {
+    const lines = doc.splitTextToSize(text || "-", width);
+    doc.text(lines, x, y);
+    y += (lines.length * lineHeight);
+  }
 
   doc.setFillColor(17, 24, 39);
   doc.rect(0, 0, 210, 40, "F");
@@ -2257,10 +2653,7 @@ async function generatePDF() {
     const operai = getPresenzeByDitta(g, d);
     const totale = getTotaleOreDitta(g, d.id);
 
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
+    checkPage(22);
 
     doc.setFont("helvetica", "bold");
     doc.text(d.nome + ":", 15, y);
@@ -2276,47 +2669,68 @@ async function generatePDF() {
   });
 
   y += 5;
-
-  if (y > 270) {
-    doc.addPage();
-    y = 20;
-  }
+  checkPage(18);
 
   doc.line(15, y, 195, y);
   y += 8;
 
-  doc.setFont("helvetica", "bold");
-  doc.text("LAVORAZIONI SIRIMED", 15, y);
-  y += 8;
-
-  doc.setFont("helvetica", "normal");
-  let lav = doc.splitTextToSize(g.lavorazioni || "Nessuna lavorazione inserita.", 180);
-  doc.text(lav, 15, y);
-  y += (lav.length * 6) + 12;
-
   const contributi = (await getContributiDitteGiorno(activeDate))
     .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso");
 
-  if (contributi.length) {
-    if (y > 250) {
-      doc.addPage();
-      y = 20;
-    }
+  const lavorazioni = [];
 
+  if ((g.lavorazioni || "").trim()) {
+    lavorazioni.push({
+      fonte: "SIRIMED",
+      testo: g.lavorazioni.trim()
+    });
+  }
+
+  contributi.forEach(ct => {
+    if ((ct.lavorazioni || "").trim()) {
+      lavorazioni.push({
+        fonte: ct.dittaNome || "DITTA ESTERNA",
+        testo: ct.lavorazioni.trim()
+      });
+    }
+  });
+
+  doc.setFont("helvetica", "bold");
+  doc.text("LAVORAZIONI DEL GIORNO", 15, y);
+  y += 8;
+
+  doc.setFont("helvetica", "normal");
+
+  if (!lavorazioni.length) {
+    doc.text("Nessuna lavorazione inserita.", 15, y);
+    y += 8;
+  } else {
+    lavorazioni.forEach((l, i) => {
+      checkPage(18);
+
+      doc.setFont("helvetica", "bold");
+      doc.text(`${i + 1}. ${l.fonte}`, 15, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      addWrappedText(l.testo, 20, 175, 5);
+      y += 4;
+    });
+  }
+
+  if (contributi.length) {
+    checkPage(20);
     doc.line(15, y, 195, y);
     y += 8;
 
     doc.setFont("helvetica", "bold");
-    doc.text("CONTRIBUTI DITTE", 15, y);
+    doc.text("PERSONALE DITTE ESTERNE", 15, y);
     y += 8;
 
     contributi.forEach(ct => {
       const ore = (ct.presenti || []).reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
 
-      if (y > 260) {
-        doc.addPage();
-        y = 20;
-      }
+      checkPage(25);
 
       doc.setFont("helvetica", "bold");
       doc.text(ct.dittaNome || "-", 15, y);
@@ -2332,16 +2746,38 @@ async function generatePDF() {
 
       let opLines = doc.splitTextToSize(ops, 180);
       doc.text(opLines, 15, y);
-      y += (opLines.length * 5) + 4;
+      y += (opLines.length * 5) + 8;
+    });
+  }
+
+
+  const materiali = contributi
+    .filter(ct => (ct.materiali || "").trim())
+    .map(ct => ({
+      ditta: ct.dittaNome || "DITTA ESTERNA",
+      testo: ct.materiali.trim(),
+      priorita: String(ct.materialiPriorita || "2") === "1" ? "URGENTE" : "IMPORTANTE"
+    }));
+
+  if (materiali.length) {
+    checkPage(20);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("MATERIALI MANCANTI / RICHIESTI", 15, y);
+    y += 8;
+
+    materiali.forEach((m, i) => {
+      checkPage(18);
 
       doc.setFont("helvetica", "bold");
-      doc.text("Lavorazioni:", 15, y);
+      doc.text(`${i + 1}. [${m.priorita}] ${m.ditta}`, 15, y);
       y += 6;
 
       doc.setFont("helvetica", "normal");
-      let ll = doc.splitTextToSize(ct.lavorazioni || "-", 180);
-      doc.text(ll, 15, y);
-      y += (ll.length * 5) + 8;
+      addWrappedText(m.testo, 20, 175, 5);
+      y += 4;
     });
   }
 
@@ -2357,7 +2793,6 @@ async function generatePDF() {
 
   doc.save(`Giornale_${safeId(c.nome)}_${activeDate}.pdf`);
 }
-
 function readAccessParams() {
   const params = new URLSearchParams(window.location.search);
 
@@ -2393,7 +2828,38 @@ $(document).on("click", "#install-app-btn, .install-btn", async () => {
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
+    .then(reg => {
+      reg.update();
+
+      setInterval(() => {
+        reg.update();
+      }, 60 * 60 * 1000);
+
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+    })
     .catch(err => console.warn("Service worker non registrato:", err));
+
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
 }
 
 auth.onAuthStateChanged(user => {
@@ -2412,7 +2878,10 @@ $(document).ready(() => {
   $(".section-page").removeClass("active").hide();
 
   initLoginTabs();
+  initBackNavigation();
   restoreRememberPrefs();
+  loadWhatsAppPreferences();
+  $(document).on("change", ".wa-check", saveWhatsAppPreferences);
   showScreen("#auth-screen");
   readAccessParams();
 });
