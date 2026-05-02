@@ -1,35 +1,75 @@
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(reg => {
-      reg.update();
+const CACHE_VERSION = "cantiericloud-v13-torrisi-fix";
 
-      setInterval(() => {
-        reg.update();
-      }, 60 * 60 * 1000);
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.json"
+];
 
-      if (reg.waiting) {
-        reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      }
+self.addEventListener("install", event => {
+  self.skipWaiting();
 
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-
-        if (!newWorker) return;
-
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            newWorker.postMessage({ type: "SKIP_WAITING" });
-          }
-        });
-      });
+  event.waitUntil(
+    caches.open(CACHE_VERSION).then(cache => {
+      return cache.addAll(APP_SHELL).catch(() => null);
     })
-    .catch(err => console.warn("Service worker non registrato:", err));
+  );
+});
 
-  let refreshing = false;
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => {
+        return Promise.all(
+          keys
+            .filter(key => key !== CACHE_VERSION)
+            .map(key => caches.delete(key))
+        );
+      })
+      .then(() => self.clients.claim())
+  );
+});
 
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
-}
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener("fetch", event => {
+  const request = event.request;
+
+  if (request.method !== "GET") return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request, { cache: "no-store" })
+        .then(response => {
+          const copy = response.clone();
+
+          caches.open(CACHE_VERSION).then(cache => {
+            cache.put("./index.html", copy);
+          });
+
+          return response;
+        })
+        .catch(() => caches.match("./index.html"))
+    );
+
+    return;
+  }
+
+  event.respondWith(
+    fetch(request)
+      .then(response => {
+        const copy = response.clone();
+
+        caches.open(CACHE_VERSION).then(cache => {
+          cache.put(request, copy);
+        });
+
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
+});
