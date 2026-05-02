@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CantieriCloud Pro</title>
+  <meta name="app-version" content="v11-whatsapp-default-pdf-list">
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#111827">
@@ -867,13 +868,13 @@ function initBackNavigation() {
 function loadWhatsAppPreferences() {
   const defaults = {
     commessa: true,
-    meteo: true,
-    ditte: true,
+    meteo: false,
+    ditte: false,
     operai: true,
     ore: true,
-    lavorazioni: true,
-    contributi: true,
-    materiali: true,
+    lavorazioni: false,
+    contributi: false,
+    materiali: false,
     note: false
   };
 
@@ -2446,10 +2447,10 @@ function normalizePersonaKey(nome, mansione = "") {
   return normalizeKey(`${nome || ""}_${mansione || ""}`);
 }
 
-function formatPersonaLine(p, includeOre = true) {
+function formatPersonaLine(p, includeOre = true, includeMansione = true) {
   const ore = parseFloat(p.ore) || 0;
   const nome = p.operaioNome || p.nome || "-";
-  const mansione = p.mansione ? " - " + p.mansione : "";
+  const mansione = includeMansione && p.mansione ? " - " + p.mansione : "";
   const oreTxt = includeOre && ore > 0 ? ` - ${ore} ore` : "";
   return `- ${nome}${mansione}${oreTxt}`;
 }
@@ -2542,35 +2543,45 @@ async function buildWhatsAppMessage() {
   }
 
   if (isWaChecked("ditte") || isWaChecked("operai") || isWaChecked("ore")) {
-    msg += `DITTE E PERSONALE\n`;
-
     const gruppi = mergePresenzeManualiEContributi(g, contributiValidi);
 
-    gruppi.forEach(gr => {
-      const d = findDittaByIdOrName(gr.dittaId) || findDittaByIdOrName(gr.dittaNome);
-      const parent = d?.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
-      const totale = totaleOrePersone(gr.persone);
+    if (isWaChecked("ditte")) {
+      msg += `DITTE E PERSONALE\n`;
 
-      msg += `\n${gr.dittaNome}\n`;
+      gruppi.forEach(gr => {
+        const d = findDittaByIdOrName(gr.dittaId) || findDittaByIdOrName(gr.dittaNome);
+        const parent = d?.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+        const totale = totaleOrePersone(gr.persone);
 
-      if (isWaChecked("ditte")) {
+        msg += `\n${gr.dittaNome}\n`;
+
         const tipo = d ? (TIPO_DITTA_LABELS[d.tipo] || d.tipo) : "Ditta esterna";
         msg += `Tipo: ${tipo}\n`;
         if (parent) msg += `Collegata a: ${parent.nome}\n`;
-      }
 
-      if (isWaChecked("ore") && totale > 0) {
-        msg += `Totale ore ditta: ${totale}\n`;
-      }
+        if (isWaChecked("ore") && totale > 0) {
+          msg += `Totale ore ditta: ${totale}\n`;
+        }
 
-      if (isWaChecked("operai")) {
+        if (isWaChecked("operai")) {
+          gr.persone.forEach(p => {
+            msg += `${formatPersonaLine(p, isWaChecked("ore"), false)}\n`;
+          });
+        }
+      });
+
+      msg += `\n`;
+    } else if (isWaChecked("operai")) {
+      msg += `PRESENTI\n`;
+
+      gruppi.forEach(gr => {
         gr.persone.forEach(p => {
-          msg += `${formatPersonaLine(p, isWaChecked("ore"))}\n`;
+          msg += `${formatPersonaLine(p, isWaChecked("ore"), false)}\n`;
         });
-      }
-    });
+      });
 
-    msg += `\n`;
+      msg += `\n`;
+    }
   }
 
   if (isWaChecked("lavorazioni") || isWaChecked("contributi")) {
@@ -2779,10 +2790,21 @@ async function generatePDF() {
     doc.text(doc.splitTextToSize(tipo, 135), 55, y);
     y += 6;
 
-    const operai = gr.persone.map(p => formatPersonaLine(p, true));
-    const lines = doc.splitTextToSize(operai.join(", ") || "Nessun operaio selezionato", 140);
-    doc.text(lines, 55, y);
-    y += (lines.length * 5) + 5;
+    const operai = gr.persone.map(p => formatPersonaLine(p, true, true));
+
+    if (!operai.length) {
+      doc.text("Nessun operaio selezionato", 55, y);
+      y += 5;
+    } else {
+      operai.forEach(line => {
+        checkPage(8);
+        const lines = doc.splitTextToSize(line, 140);
+        doc.text(lines, 55, y);
+        y += (lines.length * 5);
+      });
+    }
+
+    y += 5;
   });
 
   y += 5;
