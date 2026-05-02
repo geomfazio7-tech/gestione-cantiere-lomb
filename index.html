@@ -531,8 +531,8 @@
           </div>
 
           <div class="d-flex gap-2">
-            <button class="btn btn-outline-success btn-sm" onclick="shareAccessoDittaWhatsApp()">📲 Accesso ditta</button>
-            <button class="btn btn-outline-dark btn-sm" onclick="editCurrentCommessa()">Impostazioni</button>
+            <button id="btn-accesso-ditta" class="btn btn-outline-success btn-sm" onclick="shareAccessoDittaWhatsApp()">📲 Accesso ditta</button>
+            <button id="btn-impostazioni-commessa" class="btn btn-outline-dark btn-sm" onclick="editCurrentCommessa()">Impostazioni</button>
           </div>
         </div>
 
@@ -920,7 +920,19 @@ function canCreateDeleteCantieri() {
 }
 
 function getAllowedCantiereIds() {
-  return (currentUserProfile?.cantiereIds || []).map(x => normalizeKey(x));
+  const raw = currentUserProfile?.cantiereIds;
+
+  // Accetta sia array corretto ["*"] sia, per sicurezza, stringa "*"
+  // così se in Firestore è stato inserito per errore come stringa funziona comunque.
+  if (Array.isArray(raw)) {
+    return raw.map(x => normalizeKey(String(x).trim()));
+  }
+
+  if (typeof raw === "string") {
+    return [normalizeKey(raw.trim())];
+  }
+
+  return [];
 }
 
 function canSeeCantiere(c) {
@@ -949,7 +961,11 @@ function applyVisibilityToCantieri(cantieri) {
 }
 
 function updateAdminUi() {
-  $("#btn-nuova-commessa").toggle(canCreateDeleteCantieri());
+  const isMain = canCreateDeleteCantieri();
+
+  $("#btn-nuova-commessa").toggle(isMain);
+  $("#btn-accesso-ditta").toggle(isMain);
+  $("#btn-impostazioni-commessa").toggle(isMain);
 }
 
 
@@ -1318,6 +1334,8 @@ function loadDB() {
       allCantieri = allCantieri.map(ensureCantiereShape);
 
       userData.cantieri = applyVisibilityToCantieri(allCantieri);
+
+      console.log("Cantieri totali:", allCantieri.length, "Cantieri visibili:", userData.cantieri.length, "Profilo:", currentUserProfile);
 
       renderList();
       updateAdminUi();
@@ -2161,6 +2179,11 @@ function openModaleNuovo() {
 }
 
 function editCurrentCommessa() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può modificare le impostazioni della commessa.");
+    return;
+  }
+
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
 
   $("#c-ente").val(c.ente || "");
@@ -2371,6 +2394,11 @@ function renderAna() {
 }
 
 function saveC() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può salvare o modificare le commesse.");
+    return;
+  }
+
   const d = {
     id: cIdx === -1 ? safeId($("#c-nome").val()) : userData.cantieri[cIdx].id,
     ente: normalizeKey($("#c-ente").val()),
@@ -2617,6 +2645,11 @@ async function shareWhatsApp() {
 }
 
 function shareAccessoDittaWhatsApp() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può generare accessi per le ditte.");
+    return;
+  }
+
   const c = userData.cantieri[cIdx];
 
   if (!c) {
