@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CantieriCloud Pro</title>
-  <meta name="app-version" content="v11-whatsapp-default-pdf-list">
+  <meta name="app-version" content="v13-firme-ui-personale-giorno">
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#111827">
@@ -638,6 +638,16 @@
             <div class="row g-2">
               <div class="col-6"><div class="quadrant q-1" id="q1"></div></div>
               <div class="col-6"><div class="quadrant q-2" id="q2"></div></div>
+            </div>
+
+            <div class="mt-4">
+              <label class="small-label">Firme giornale</label>
+              <div class="bg-white border rounded-4 p-3 small">
+                <input type="text" id="firma-responsabile" class="form-control form-control-sm mb-2" placeholder="Responsabile Sirimed" onchange="autoSave()">
+                <input type="text" id="firma-dl" class="form-control form-control-sm mb-2" placeholder="Direzione Lavori" onchange="autoSave()">
+                <input type="text" id="firma-impresa" class="form-control form-control-sm mb-2" placeholder="Impresa / Ditta presente" onchange="autoSave()">
+                <input type="text" id="firma-cse" class="form-control form-control-sm" placeholder="CSE / Coordinatore" onchange="autoSave()">
+              </div>
             </div>
           </div>
         </div>
@@ -1532,6 +1542,12 @@ async function openG(ds) {
   $("#btn-lock").text("SBLOCCA");
   $("#g-memo").val(g.memo || "");
 
+  const firme = g.firme || {};
+  $("#firma-responsabile").val(firme.responsabile || "");
+  $("#firma-dl").val(firme.dl || "");
+  $("#firma-impresa").val(firme.impresa || "");
+  $("#firma-cse").val(firme.cse || "");
+
   const sel = $("#sel-ditta").empty().append('<option value="">+ Ditta presente</option>');
 
   c.anagraficaDitte
@@ -1560,6 +1576,12 @@ function autoSave() {
     g.temp = $("#g-temp").val();
     g.lavorazioni = $("#g-lavorazioni").val();
     g.memo = $("#g-memo").val();
+    g.firme = {
+      responsabile: $("#firma-responsabile").val(),
+      dl: $("#firma-dl").val(),
+      impresa: $("#firma-impresa").val(),
+      cse: $("#firma-cse").val()
+    };
 
     saveArchivio(() => renderCal());
   }, 700);
@@ -1796,6 +1818,59 @@ function getTotaleOreDitta(g, dittaId) {
     .reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
 }
 
+function addOperaioGiornaliero(dittaId) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+  const d = findDittaByIdOrName(dittaId);
+
+  if (!d) return;
+
+  const nome = prompt("Nome e cognome del personale da aggiungere per questa giornata:");
+  if (!nome) return;
+
+  const mansione = prompt("Mansione / qualifica:", "") || "";
+  let ore = prompt("Ore lavorate:", "8");
+  ore = parseFloat(String(ore || "0").replace(",", "."));
+  if (isNaN(ore) || ore < 0) ore = 0;
+
+  if (!g.presenti) g.presenti = [];
+
+  const manualId = "MANUALE_" + uid();
+
+  g.presenti.push({
+    dittaId: d.id,
+    dittaNome: d.nome,
+    dittaTipo: d.tipo,
+    operaioId: manualId,
+    operaioNome: normalizeKey(nome),
+    mansione: mansione,
+    ore: ore,
+    manualeGiornaliero: true
+  });
+
+  if (!g.ditteVisibili) g.ditteVisibili = [];
+  if (!g.ditteVisibili.includes(d.id)) g.ditteVisibili.push(d.id);
+
+  renderPresenze();
+  autoSave();
+}
+
+function removePresenzaGiornaliera(dittaId, operaioId) {
+  const g = userData.cantieri[cIdx].giornali[activeDate];
+
+  if (!g || !g.presenti) return;
+
+  if (!confirm("Rimuovere questa presenza dalla giornata?")) return;
+
+  g.presenti = g.presenti.filter(p => {
+    if (typeof p === "string") return true;
+    return !(String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId));
+  });
+
+  renderPresenze();
+  autoSave();
+}
+
 function renderPresenze() {
   const c = ensureCantiereShape(userData.cantieri[cIdx]);
   const g = c.giornali[activeDate] || {};
@@ -1826,6 +1901,7 @@ function renderPresenze() {
         <div class="d-flex gap-1 mt-2 mb-2">
           <button class="btn btn-xs btn-outline-secondary" onclick="selectAllWorkers('${d.id}')">Tutti</button>
           <button class="btn btn-xs btn-outline-secondary" onclick="deselectAllWorkers('${d.id}')">Nessuno</button>
+          <button class="btn btn-xs btn-outline-dark" onclick="addOperaioGiornaliero('${d.id}')">+ Personale</button>
         </div>
     `;
 
@@ -1847,6 +1923,25 @@ function renderPresenze() {
             <input type="number" min="0" step="0.5" value="${p?.ore ?? 8}" class="form-control form-control-sm ore-input" onchange="updateOreOperaio('${d.id}', '${o.id}', this.value)">
             <small class="text-muted">ore</small>
           ` : ""}
+        </div>
+      `;
+    });
+
+    const manuali = (g.presenti || []).filter(p =>
+      typeof p !== "string" &&
+      String(p.dittaId) === String(d.id) &&
+      p.manualeGiornaliero === true
+    );
+
+    manuali.forEach(p => {
+      h += `
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span class="worker-chip selected">
+            ${esc(p.operaioNome)}${p.mansione ? " - " + esc(p.mansione) : ""}
+          </span>
+          <input type="number" min="0" step="0.5" value="${p.ore ?? 0}" class="form-control form-control-sm ore-input" onchange="updateOreOperaio('${d.id}', '${p.operaioId}', this.value)">
+          <small class="text-muted">ore</small>
+          <button class="btn btn-xs btn-outline-danger" onclick="removePresenzaGiornaliera('${d.id}', '${p.operaioId}')">Rimuovi</button>
         </div>
       `;
     });
@@ -2883,6 +2978,40 @@ async function generatePDF() {
       y += 4;
     });
   }
+
+
+  // SEZIONE FIRME
+  checkPage(55);
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  const firme = g.firme || {};
+
+  doc.setFont("helvetica", "bold");
+  doc.text("FIRME", 15, y);
+  y += 14;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  const firmaY1 = y;
+  doc.line(15, firmaY1, 85, firmaY1);
+  doc.line(125, firmaY1, 195, firmaY1);
+
+  y += 5;
+  doc.text(firme.responsabile || "Responsabile Sirimed", 50, y, { align: "center" });
+  doc.text(firme.dl || "Direzione Lavori", 160, y, { align: "center" });
+
+  y += 22;
+  const firmaY2 = y;
+  doc.line(15, firmaY2, 85, firmaY2);
+  doc.line(125, firmaY2, 195, firmaY2);
+
+  y += 5;
+  doc.text(firme.impresa || "Impresa / Ditta presente", 50, y, { align: "center" });
+  doc.text(firme.cse || "CSE / Coordinatore", 160, y, { align: "center" });
+
+  y += 10;
 
   const pc = doc.internal.getNumberOfPages();
 
