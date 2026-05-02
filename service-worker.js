@@ -1,75 +1,3125 @@
-const CACHE_VERSION = "cantiericloud-v14-whatsapp-pdf-list";
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CantieriCloud Pro</title>
+  <meta name="app-version" content="v13-firme-ui-personale-giorno">
 
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.json"
-];
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#111827">
 
-self.addEventListener("install", event => {
-  self.skipWaiting();
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  event.waitUntil(
-    caches.open(CACHE_VERSION).then(cache => {
-      return cache.addAll(APP_SHELL).catch(() => null);
-    })
-  );
-});
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => {
-        return Promise.all(
-          keys
-            .filter(key => key !== CACHE_VERSION)
-            .map(key => caches.delete(key))
-        );
-      })
-      .then(() => self.clients.claim())
-  );
-});
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --dark: #111827;
+      --muted: #64748b;
+      --line: #e5e7eb;
+      --soft: #f8fafc;
+      --blue: #eff6ff;
+      --green: #ecfdf5;
+      --red: #fef2f2;
+      --yellow: #fffbeb;
+      --shadow: 0 22px 70px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 32px rgba(15, 23, 42, .07);
+      --radius: 24px;
+    }
 
-self.addEventListener("message", event => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(37,99,235,.18), transparent 30%),
+        radial-gradient(circle at 92% 4%, rgba(16,185,129,.14), transparent 28%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--dark);
+    }
+
+    /* FIX PRINCIPALE: una sola schermata visibile */
+    .screen {
+      display: none !important;
+      width: 100%;
+      min-height: 100dvh;
+    }
+
+    .screen.active-screen {
+      display: block !important;
+    }
+
+    .center-screen.active-screen {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+    }
+
+    .section-page {
+      display: none !important;
+      padding-top: 26px;
+      padding-bottom: 48px;
+    }
+
+    .section-page.active {
+      display: block !important;
+    }
+
+    .glass, .card, .login-card {
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(226,232,240,.95);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      padding: 30px;
+    }
+
+    .brand {
+      font-weight: 950;
+      letter-spacing: -.055em;
+      color: var(--dark);
+      line-height: 1;
+    }
+
+    .brand span {
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    .login-tabs {
+      display: flex;
+      gap: 6px;
+      background: #eef2f7;
+      padding: 6px;
+      border-radius: 999px;
+    }
+
+    .login-tabs .btn {
+      border: 0 !important;
+      border-radius: 999px !important;
+      box-shadow: none !important;
+      font-weight: 800;
+      color: #334155;
+    }
+
+    .login-tabs .btn.active {
+      background: var(--dark) !important;
+      color: #fff !important;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226,232,240,.9);
+      box-shadow: 0 8px 30px rgba(15,23,42,.05);
+    }
+
+    .section-title {
+      font-weight: 950;
+      letter-spacing: -.045em;
+      margin: 0;
+      font-size: clamp(1.35rem, 2vw, 2rem);
+    }
+
+    .small-label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 900;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+      min-height: 46px;
+      border-radius: 15px !important;
+      border: 1px solid #dbe3ee !important;
+      background: #fff !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--dark) !important;
+      box-shadow: 0 0 0 .20rem rgba(17,24,39,.10) !important;
+    }
+
+    .btn {
+      border-radius: 14px !important;
+      font-weight: 800;
+    }
+
+    .btn-dark {
+      background: linear-gradient(135deg, #111827, #334155) !important;
+      border: 0 !important;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
+    }
+
+    .btn-soft {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--dark);
+    }
+
+    .btn-xs {
+      font-size: .68rem;
+      padding: 3px 8px;
+      border-radius: 999px !important;
+    }
+
+    .stat-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .commessa-card {
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 170px;
+      transition: .18s ease;
+      height: 100%;
+    }
+
+    .commessa-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 26px 70px rgba(15,23,42,.14);
+    }
+
+    .commessa-card::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #111827, #2563eb, #10b981);
+    }
+
+    .btn-del-cantiere {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      z-index: 5;
+      color: #ef4444;
+      border: 0;
+      background: transparent;
+      font-size: 1rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0,1fr));
+      gap: 8px;
+    }
+
+    .cal-header {
+      font-size: .72rem;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .cal-day {
+      min-height: 90px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      padding: 10px;
+      cursor: pointer;
+      transition: .12s ease;
+      font-size: .86rem;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
+    }
+
+    .cal-day:hover {
+      border-color: #94a3b8;
+      transform: translateY(-2px);
+    }
+
+    .cal-past { background: #f8fafc; color: #94a3b8; }
+    .cal-today { background: var(--blue); border: 2px solid #2563eb; color: #1d4ed8; }
+
+    .day-meta {
+      font-size: .70rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .worker-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: .76rem;
+      border: 1px solid var(--line);
+      margin: 3px 2px;
+      cursor: pointer;
+      background: #fff;
+      user-select: none;
+    }
+
+    .worker-chip.selected {
+      background: var(--dark);
+      color: #fff;
+      border-color: var(--dark);
+    }
+
+    .ore-input { width: 82px; font-size: .80rem; }
+
+    .ditta-card, .contributo-card, .operaio-row {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .task-item {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: .82rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .btn-del-task {
+      border: 0;
+      color: #ef4444;
+      background: transparent;
+      padding: 0;
+    }
+
+    .quadrant {
+      min-height: 140px;
+      border-radius: 18px;
+      padding: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .q-1 { background: var(--red); border-top: 4px solid #fca5a5; }
+    .q-2 { background: var(--yellow); border-top: 4px solid #fbbf24; }
+
+    .wa-box {
+      background: #fff;
+      border: 1px solid #bbf7d0;
+      border-radius: 18px;
+      padding: 13px;
+    }
+
+    .wa-settings {
+      border: 1px solid #bbf7d0;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .wa-settings summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 900;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .wa-settings summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .wa-settings summary::after {
+      content: "⌄";
+      font-size: 1.2rem;
+      transition: .15s ease;
+    }
+
+    .wa-settings[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .wa-settings-body {
+      padding: 0 14px 14px 14px;
+    }
+
+    .wa-preference-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .wa-preference-grid .form-check {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 8px 10px 8px 36px;
+      margin: 0;
+    }
+
+
+    .opacity-55 { opacity: .55; }
+
+    #pin-input {
+      letter-spacing: .35em;
+      font-weight: 950;
+    }
+
+    #save-status {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 18px;
+      background: var(--dark);
+      color: #fff;
+      border-radius: 999px;
+      box-shadow: 0 18px 45px rgba(15,23,42,.20);
+      display: none;
+      z-index: 9999;
+      font-size: .88rem;
+    }
+
+    @media(max-width: 768px) {
+      .center-screen.active-screen {
+        align-items: flex-start;
+        padding-top: 42px;
+      }
+
+      .login-card {
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .topbar .brand { font-size: 1.05rem !important; }
+      .calendar-grid { gap: 5px; }
+      .cal-day { min-height: 72px; padding: 7px; font-size: .80rem; }
+      .glass.p-4 { padding: 18px !important; }
+      .container { padding-left: 14px; padding-right: 14px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="save-status">💾 Sincronizzazione...</div>
+
+<!-- LOGIN -->
+<div id="auth-screen" class="screen center-screen active-screen">
+  <div class="login-card glass">
+    <div class="text-center mb-4">
+      <div class="brand fs-3">CANTIERI<span>CLOUD</span></div>
+      <div class="text-muted small mt-2">Giornale lavori, ditte e presenze</div>
+    </div>
+
+    <div class="login-tabs mb-4">
+      <button id="tab-sirimed" class="btn active flex-fill" onclick="showSiramedLogin()">Sirimed</button>
+      <button id="tab-ditta" type="button" class="btn flex-fill">Ditta</button>
+    </div>
+
+    <div id="login-sirimed-box">
+      <label class="small-label">Accesso responsabili</label>
+      <input type="email" id="log-email" class="form-control mb-2" placeholder="Email Sirimed" autocomplete="email">
+      <input type="password" id="log-pw" class="form-control mb-3" placeholder="Password" autocomplete="current-password">
+      <div class="form-check mb-3 text-start">
+        <input class="form-check-input" type="checkbox" id="remember-login">
+        <label class="form-check-label small" for="remember-login">Ricordami su questo dispositivo</label>
+      </div>
+      <button class="btn btn-dark w-100 py-2" onclick="handleLogin()">Accedi</button>
+    </div>
+
+    <div id="login-ditta-box" style="display:none;">
+      <label class="small-label">Accesso ditta / subaffidatario</label>
+      <input type="text" id="codice-ditta-login" class="form-control mb-2 text-uppercase" placeholder="Codice ditta, es. MATTIA08">
+      <input type="password" id="password-ditta-login" class="form-control mb-3" placeholder="Password">
+      <div class="form-check mb-3 text-start">
+        <input class="form-check-input" type="checkbox" id="remember-ditta-login">
+        <label class="form-check-label small" for="remember-ditta-login">Ricordami su questo dispositivo</label>
+      </div>
+      <button class="btn btn-dark w-100 py-2" onclick="handleDittaLogin()">Entra</button>
+      <button id="install-app-btn" class="btn btn-outline-dark w-100 mt-2" style="display:none;">⬇️ Installa app</button>
+      <div class="text-muted small text-center mt-3">Su iPhone: Safari → Condividi → Aggiungi alla schermata Home.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN RESPONSABILI -->
+<div id="pin-screen" class="screen center-screen">
+  <div class="login-card glass text-center">
+    <div class="brand fs-4 mb-2">CANTIERI<span>CLOUD</span></div>
+    <h5 class="fw-bold mt-4">PIN DI SBLOCCO</h5>
+    <p class="text-muted small">Accesso responsabili Sirimed</p>
+    <input type="password" id="pin-input" class="form-control text-center fs-1 mb-3" maxlength="4" placeholder="••••" inputmode="numeric">
+    <div class="form-check mb-3 text-start">
+      <input class="form-check-input" type="checkbox" id="remember-pin">
+      <label class="form-check-label small" for="remember-pin">Non chiedere più il PIN su questo dispositivo</label>
+    </div>
+    <button class="btn btn-dark w-100 py-2" onclick="checkPin()">Sblocca</button>
+    <button class="btn btn-link mt-2" onclick="logout()">Esci</button>
+  </div>
+</div>
+
+<!-- APP SIRIMED -->
+<div id="main-screen" class="screen">
+  <nav class="topbar py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <span class="brand fs-4">CANTIERI<span>CLOUD</span></span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-dark install-btn" style="display:none;">⬇️ Installa</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="logout()">Esci</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <section id="section-list" class="section-page active">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Commesse</div><h3 id="stat-cantieri" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Giornali</div><h3 id="stat-giornali" class="fw-bold m-0">0</h3></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="small-label">Ditte</div><h3 id="stat-ditte" class="fw-bold m-0">0</h3></div></div>
+      </div>
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+          <h3 class="section-title">Commesse attive</h3>
+          <div class="text-muted small">Archivio generale Sirimed</div>
+        </div>
+        <button id="btn-nuova-commessa" class="btn btn-dark btn-sm px-4" onclick="openModaleNuovo()">+ Nuova commessa</button>
+      </div>
+      <div id="cantieri-grid" class="row g-4"></div>
+    </section>
+
+    <section id="section-calendar" class="section-page">
+      <div class="glass p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+          <button class="btn btn-soft btn-sm" onclick="showSection('section-list')">← Indietro</button>
+
+          <div class="text-center">
+            <h4 id="cal-title" class="section-title"></h4>
+            <div class="text-muted small">Calendario giornale lavori</div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button id="btn-accesso-ditta" class="btn btn-outline-success btn-sm" onclick="shareAccessoDittaWhatsApp()">📲 Accesso ditta</button>
+            <button id="btn-impostazioni-commessa" class="btn btn-outline-dark btn-sm" onclick="editCurrentCommessa()">Impostazioni</button>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center align-items-center mb-3">
+          <button class="btn btn-link text-dark" onclick="changeMonth(-1)">◀</button>
+          <h6 id="month-display" class="fw-bold text-uppercase m-0 mx-4"></h6>
+          <button class="btn btn-link text-dark" onclick="changeMonth(1)">▶</button>
+        </div>
+
+        <div id="calendar-days" class="calendar-grid"></div>
+      </div>
+    </section>
+
+    <section id="section-giornale" class="section-page">
+      <div class="glass p-4">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+          <div>
+            <h5 id="g-date-label" class="fw-bold m-0"></h5>
+            <small class="text-muted">Giornale giornaliero</small>
+          </div>
+          <button class="btn-close" onclick="showSection('section-calendar')"></button>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <div class="small-label text-primary">1. Dati giornalieri</div>
+            <hr>
+
+            <label class="small-label">Meteo e temperatura</label>
+            <div class="input-group mb-3">
+              <select id="g-meteo" class="form-select" onchange="autoSave()">
+                <option value="Soleggiato">☀️ Soleggiato</option>
+                <option value="Nuvoloso">☁️ Nuvoloso</option>
+                <option value="Pioggia">🌧️ Pioggia</option>
+                <option value="Vento">💨 Vento</option>
+              </select>
+              <input type="number" id="g-temp" class="form-control" placeholder="°C" onchange="autoSave()">
+            </div>
+
+            <label class="small-label">Ditte e maestranze Sirimed</label>
+            <select id="sel-ditta" class="form-select form-select-sm mb-3" onchange="addDittaG()"></select>
+            <div id="ditte-presenze" class="mb-3"></div>
+
+            <button class="btn btn-outline-secondary btn-sm w-100 mb-2" onclick="$('#photo-in').click()">📸 Allegati foto</button>
+            <input type="file" id="photo-in" capture="environment" accept="image/*" class="d-none" onchange="handlePhotos(this)">
+            <div id="photo-box" class="d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="small-label text-primary">2. Contenuti e contributi</div>
+            <hr>
+
+            <div class="d-flex justify-content-between mb-2">
+              <label class="small-label">Lavorazioni del giorno</label>
+              <button id="btn-lock" class="btn btn-xs btn-outline-dark" onclick="toggleLock()">SBLOCCA</button>
+            </div>
+
+            <textarea id="g-lavorazioni" class="form-control mb-3" rows="5" readonly></textarea>
+
+            <label class="small-label">Contributi ditte</label>
+            <div id="contributi-ditte-box" class="mb-3"></div>
+
+            <button class="btn btn-primary w-100 fw-bold py-3 mt-2" onclick="generatePDF()">📄 GENERA GIORNALE PDF</button>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="small-label text-danger">3. Privato e condivisione</div>
+            <hr>
+
+            <label class="small-label text-success">Condivisione WhatsApp</label>
+            <details id="wa-settings-panel" class="wa-settings mb-3 small">
+              <summary>📲 Preferenze invio WhatsApp</summary>
+              <div class="wa-settings-body">
+                <div class="wa-preference-grid">
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="commessa" id="wa-commessa"><label class="form-check-label" for="wa-commessa">Solo nome cantiere</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="meteo" id="wa-meteo"><label class="form-check-label" for="wa-meteo">Meteo e temperatura</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ditte" id="wa-ditte"><label class="form-check-label" for="wa-ditte">Ditte / subappalti / subaffidi</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="operai" id="wa-operai"><label class="form-check-label" for="wa-operai">Operai presenti</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="ore" id="wa-ore"><label class="form-check-label" for="wa-ore">Ore lavorate</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="lavorazioni" id="wa-lavorazioni"><label class="form-check-label" for="wa-lavorazioni">Lavorazioni del giorno</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="contributi" id="wa-contributi"><label class="form-check-label" for="wa-contributi">Contributi ditte</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="materiali" id="wa-materiali"><label class="form-check-label" for="wa-materiali">Materiali mancanti</label></div>
+                  <div class="form-check"><input class="form-check-input wa-check" type="checkbox" value="note" id="wa-note"><label class="form-check-label" for="wa-note">Note private</label></div>
+                </div>
+              </div>
+            </details>
+            <button class="btn btn-success btn-sm w-100 mb-3" onclick="shareWhatsApp()">📲 Condividi su WhatsApp</button>
+
+            <label class="small-label">Note personali</label>
+            <textarea id="g-memo" class="form-control mb-4" rows="3" placeholder="Appunti privati..." onchange="autoSave()"></textarea>
+
+            <label class="small-label">Task matrix</label>
+            <div class="input-group input-group-sm mb-3">
+              <input type="text" id="task-in" class="form-control" placeholder="Nuovo task...">
+              <select id="task-q" class="form-select" style="max-width:85px">
+                <option value="1">Urg</option>
+                <option value="2">Imp</option>
+              </select>
+              <button class="btn btn-dark" onclick="addTask()">+</button>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-6"><div class="quadrant q-1" id="q1"></div></div>
+              <div class="col-6"><div class="quadrant q-2" id="q2"></div></div>
+            </div>
+
+            <div class="mt-4">
+              <label class="small-label">Firme giornale</label>
+              <div class="bg-white border rounded-4 p-3 small">
+                <input type="text" id="firma-responsabile" class="form-control form-control-sm mb-2" placeholder="Responsabile Sirimed" onchange="autoSave()">
+                <input type="text" id="firma-dl" class="form-control form-control-sm mb-2" placeholder="Direzione Lavori" onchange="autoSave()">
+                <input type="text" id="firma-impresa" class="form-control form-control-sm mb-2" placeholder="Impresa / Ditta presente" onchange="autoSave()">
+                <input type="text" id="firma-cse" class="form-control form-control-sm" placeholder="CSE / Coordinatore" onchange="autoSave()">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- APP DITTA -->
+<div id="ditta-screen" class="screen">
+  <nav class="topbar py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <span class="brand fs-4">CANTIERI<span>DITTA</span></span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-dark install-btn" style="display:none;">⬇️ Installa</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="logout()">Esci</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="glass p-4">
+      <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom pb-3 mb-4">
+        <div>
+          <h4 id="ditta-cantiere-title" class="section-title">Pannello Ditta</h4>
+          <div id="ditta-date-label" class="text-muted small"></div>
+        </div>
+        <span class="badge bg-dark align-self-start">Accesso limitato</span>
+      </div>
+
+      <div class="alert alert-info small">
+        Puoi compilare solo la tua parte del giorno corrente: meteo, lavorazioni, operai presenti e ore.
+      </div>
+
+      <label class="small-label">Meteo</label>
+      <div class="input-group mb-3">
+        <select id="ditta-meteo" class="form-select">
+          <option value="Soleggiato">☀️ Soleggiato</option>
+          <option value="Nuvoloso">☁️ Nuvoloso</option>
+          <option value="Pioggia">🌧️ Pioggia</option>
+          <option value="Vento">💨 Vento</option>
+        </select>
+        <input type="number" id="ditta-temp" class="form-control" placeholder="°C">
+      </div>
+
+      <label class="small-label">Lavorazioni della tua ditta</label>
+      <textarea id="ditta-lavorazioni" class="form-control mb-3" rows="5" placeholder="Descrivi le lavorazioni svolte oggi..."></textarea>
+
+      <label class="small-label">Materiale mancante / richiesto</label>
+      <textarea id="ditta-materiali" class="form-control mb-2" rows="3" placeholder="Es. tubazioni, raccordi, DPI, attrezzature mancanti..."></textarea>
+
+      <div class="input-group mb-3">
+        <span class="input-group-text">Priorità</span>
+        <select id="ditta-materiali-priorita" class="form-select">
+          <option value="2">Importante</option>
+          <option value="1">Urgente</option>
+        </select>
+      </div>
+
+      <label class="small-label">Operai presenti e ore</label>
+      <div id="ditta-operai-box" class="mb-3"></div>
+
+      <button class="btn btn-dark w-100 py-3" onclick="saveDittaContribution()">Salva contributo giornaliero</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE COMMESSA -->
+<div class="modal fade" id="modalC" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content border-0" style="border-radius:24px;overflow:hidden;">
+      <div class="modal-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">Configurazione commessa</h5>
+            <div class="text-muted small">Dati generali, ditte e operai</div>
+          </div>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-12"><input type="text" id="c-ente" class="form-control" placeholder="Stazione Appaltante"></div>
+          <div class="col-md-6"><input type="text" id="c-nome" class="form-control" placeholder="Cantiere"></div>
+          <div class="col-md-6"><input type="text" id="c-oggetto" class="form-control" placeholder="Oggetto"></div>
+          <div class="col-md-6"><input type="text" id="c-cig" class="form-control" placeholder="CIG"></div>
+          <div class="col-md-6"><input type="text" id="c-cup" class="form-control" placeholder="CUP"></div>
+          <div class="col-md-6"><input type="text" id="c-dl" class="form-control" placeholder="Dir. Lavori"></div>
+          <div class="col-md-6"><input type="text" id="c-adl" class="form-control" placeholder="Ass. DL"></div>
+          <div class="col-md-6"><input type="text" id="c-cse" class="form-control" placeholder="CSE"></div>
+          <div class="col-md-6"><input type="text" id="c-rup" class="form-control" placeholder="RUP"></div>
+          <div class="col-md-6"><input type="text" id="c-arup" class="form-control" placeholder="Ass. RUP"></div>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
+          <div>
+            <h6 class="fw-bold m-0">Ditte e personale</h6>
+            <small class="text-muted">Appaltatore, subappaltatore, subaffidatario, fornitore o autonomo.</small>
+          </div>
+          <button class="btn btn-sm btn-outline-dark" onclick="addAnaDitta()">+ Aggiungi ditta</button>
+        </div>
+
+        <div id="ana-list" class="mb-3"></div>
+
+        <button class="btn btn-dark w-100 mt-3 py-3" onclick="saveC()">SALVA COMMESSA</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDCtNOTx-IwS3773jypKl-mW3E51cDxuig",
+  authDomain: "gestionecantierilombardia.firebaseapp.com",
+  projectId: "gestionecantierilombardia",
+  storageBucket: "gestionecantierilombardia.firebasestorage.app",
+  messagingSenderId: "341647926497",
+  appId: "1:341647926497:web:e9eb22c39ded8ea93e83a0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let userData = { cantieri: [] };
+let allCantieri = [];
+let cIdx = -1;
+let activeDate = "";
+let currentMonth = new Date();
+let tempAna = [];
+let saveTimer = null;
+let currentUser = null;
+let currentUserProfile = null;
+let dittaPanelData = { cantiere: null, ditta: null, todayKey: null };
+let deferredInstallPrompt = null;
+
+const REMEMBER_LOGIN_KEY = "cc_remember_login";
+const PIN_UNLOCK_LOCAL_KEY = "cc_pin_unlocked_uid";
+const PIN_UNLOCK_SESSION_KEY = "cc_pin_unlocked_session_uid";
+const USER_EMAIL_KEY = "cc_saved_email";
+const DITTA_CODE_KEY = "cc_saved_ditta_code";
+
+const TIPO_DITTA_LABELS = {
+  appaltatore: "Appaltatore / Affidataria",
+  subappaltatore: "Subappaltatore",
+  subaffidatario: "Subaffidatario",
+  fornitore: "Fornitore / Nolo / Trasportatore",
+  autonomo: "Lavoratore autonomo"
+};
+
+
+const APP_NAV_STATE_KEY = "cc_current_view";
+const WA_PREFS_KEY = "cc_wa_preferences";
+let internalNavigation = false;
+
+function setAppView(view, push = true) {
+  sessionStorage.setItem(APP_NAV_STATE_KEY, JSON.stringify(view));
+
+  if (push && !internalNavigation) {
+    history.pushState({ ccView: view }, "", location.href);
   }
-});
+}
 
-self.addEventListener("fetch", event => {
-  const request = event.request;
+function restoreAppViewFromState(view) {
+  if (!view || !view.screen) return false;
 
-  if (request.method !== "GET") return;
+  internalNavigation = true;
 
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request, { cache: "no-store" })
-        .then(response => {
-          const copy = response.clone();
+  try {
+    if (view.screen === "list") {
+      showScreen("#main-screen");
+      showSection("section-list", false);
+      return true;
+    }
 
-          caches.open(CACHE_VERSION).then(cache => {
-            cache.put("./index.html", copy);
-          });
+    if (view.screen === "calendar" && typeof view.cIdx === "number" && userData.cantieri[view.cIdx]) {
+      cIdx = view.cIdx;
+      $("#cal-title").text(userData.cantieri[cIdx].nome || "");
+      showScreen("#main-screen");
+      showSection("section-calendar", false);
+      renderCal();
+      return true;
+    }
 
-          return response;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
+    if (view.screen === "giornale" && typeof view.cIdx === "number" && view.activeDate && userData.cantieri[view.cIdx]) {
+      cIdx = view.cIdx;
+      $("#cal-title").text(userData.cantieri[cIdx].nome || "");
+      showScreen("#main-screen");
+      openG(view.activeDate);
+      return true;
+    }
 
+    if (view.screen === "auth") {
+      showScreen("#auth-screen");
+      return true;
+    }
+  } finally {
+    internalNavigation = false;
+  }
+
+  return false;
+}
+
+function initBackNavigation() {
+  history.replaceState({ ccView: { screen: "auth" } }, "", location.href);
+
+  window.addEventListener("popstate", function(e) {
+    const view = e.state && e.state.ccView;
+
+    if (view) {
+      restoreAppViewFromState(view);
+      return;
+    }
+
+    if ($("#section-giornale").hasClass("active")) {
+      showSection("section-calendar");
+      history.pushState({ ccView: { screen: "calendar", cIdx } }, "", location.href);
+      return;
+    }
+
+    if ($("#section-calendar").hasClass("active")) {
+      showSection("section-list");
+      history.pushState({ ccView: { screen: "list" } }, "", location.href);
+      return;
+    }
+  });
+}
+
+function loadWhatsAppPreferences() {
+  const defaults = {
+    commessa: true,
+    meteo: false,
+    ditte: false,
+    operai: true,
+    ore: true,
+    lavorazioni: false,
+    contributi: false,
+    materiali: false,
+    note: false
+  };
+
+  let prefs = defaults;
+
+  try {
+    prefs = { ...defaults, ...JSON.parse(localStorage.getItem(WA_PREFS_KEY) || "{}") };
+  } catch (e) {
+    prefs = defaults;
+  }
+
+  $(".wa-check").each(function() {
+    const key = $(this).val();
+    $(this).prop("checked", !!prefs[key]);
+  });
+}
+
+function saveWhatsAppPreferences() {
+  const prefs = {};
+
+  $(".wa-check").each(function() {
+    prefs[$(this).val()] = $(this).is(":checked");
+  });
+
+  localStorage.setItem(WA_PREFS_KEY, JSON.stringify(prefs));
+}
+
+
+
+function isMainAdmin() {
+  const email = (currentUser?.email || "").toLowerCase();
+  const ruolo = currentUserProfile?.ruolo || "";
+
+  return ruolo === "admin" || email === "geom.fazio7@gmail.com";
+}
+
+function isSecondaryAdmin() {
+  const email = (currentUser?.email || "").toLowerCase();
+  return currentUserProfile?.ruolo === "responsabile" && email.endsWith("@sirimed.it");
+}
+
+function canCreateDeleteCantieri() {
+  return isMainAdmin();
+}
+
+function getAllowedCantiereIds() {
+  const raw = currentUserProfile?.cantiereIds;
+
+  // Accetta sia array corretto ["*"] sia, per sicurezza, stringa "*"
+  // così se in Firestore è stato inserito per errore come stringa funziona comunque.
+  if (Array.isArray(raw)) {
+    return raw.map(x => normalizeKey(String(x).trim()));
+  }
+
+  if (typeof raw === "string") {
+    return [normalizeKey(raw.trim())];
+  }
+
+  return [];
+}
+
+function canSeeCantiere(c) {
+  if (isMainAdmin()) return true;
+
+  const allowed = getAllowedCantiereIds();
+
+  if (!allowed.length) return false;
+
+  // Permette a un responsabile secondario di vedere tutte le commesse
+  // senza dargli i permessi dell'admin principale.
+  if (allowed.includes("*")) return true;
+
+  const id = normalizeKey(c.id || "");
+  const nome = normalizeKey(c.nome || "");
+
+  return allowed.includes(id) || allowed.includes(nome);
+}
+
+function applyVisibilityToCantieri(cantieri) {
+  const normalized = (cantieri || []).map(ensureCantiereShape);
+
+  if (isMainAdmin()) return normalized;
+
+  return normalized.filter(canSeeCantiere);
+}
+
+function updateAdminUi() {
+  const isMain = canCreateDeleteCantieri();
+
+  $("#btn-nuova-commessa").toggle(isMain);
+  $("#btn-accesso-ditta").toggle(isMain);
+  $("#btn-impostazioni-commessa").toggle(isMain);
+}
+
+
+function showScreen(id) {
+  const target = typeof id === "string" ? id : "#auth-screen";
+
+  $(".screen")
+    .removeClass("active-screen")
+    .attr("aria-hidden", "true")
+    .hide();
+
+  $(target)
+    .addClass("active-screen")
+    .attr("aria-hidden", "false")
+    .show();
+
+  if (target === "#main-screen") {
+    showSection("section-list", false);
+    setAppView({ screen: "list" });
+  }
+
+  if (target === "#auth-screen") {
+    setAppView({ screen: "auth" });
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function showSection(id, push = true) {
+  $(".section-page").removeClass("active").hide();
+  $("#" + id).addClass("active").show();
+
+  if (id === "section-list") {
+    setAppView({ screen: "list" }, push);
+  }
+
+  if (id === "section-calendar") {
+    setAppView({ screen: "calendar", cIdx }, push);
+  }
+
+  if (id === "section-giornale") {
+    setAppView({ screen: "giornale", cIdx, activeDate }, push);
+  }
+
+  window.scrollTo(0, 0);
+}
+
+function uid() {
+  return Date.now() + Math.floor(Math.random() * 100000);
+}
+
+function esc(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatDateIT(ds) {
+  return ds ? ds.split("-").reverse().join("/") : "-";
+}
+
+function getTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function normalizeKey(s) {
+  return String(s || "").trim().toUpperCase();
+}
+
+function safeId(s) {
+  return normalizeKey(s)
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "") || "ID";
+}
+
+function wantsRememberLogin() {
+  return $("#remember-login").is(":checked") || $("#remember-ditta-login").is(":checked");
+}
+
+function saveRememberPrefs(type) {
+  const remember = wantsRememberLogin();
+  localStorage.setItem(REMEMBER_LOGIN_KEY, remember ? "1" : "0");
+
+  if (type === "sirimed") {
+    const email = $("#log-email").val().trim();
+    if (remember && email) localStorage.setItem(USER_EMAIL_KEY, email);
+    if (!remember) localStorage.removeItem(USER_EMAIL_KEY);
+  }
+
+  if (type === "ditta") {
+    const code = $("#codice-ditta-login").val().trim().toUpperCase();
+    if (remember && code) localStorage.setItem(DITTA_CODE_KEY, code);
+    if (!remember) localStorage.removeItem(DITTA_CODE_KEY);
+  }
+}
+
+function restoreRememberPrefs() {
+  const remember = localStorage.getItem(REMEMBER_LOGIN_KEY) === "1";
+  $("#remember-login, #remember-ditta-login, #remember-pin").prop("checked", remember);
+
+  const email = localStorage.getItem(USER_EMAIL_KEY);
+  if (email) $("#log-email").val(email);
+
+  const code = localStorage.getItem(DITTA_CODE_KEY);
+  if (code) $("#codice-ditta-login").val(code);
+}
+
+function markPinUnlocked(uid) {
+  sessionStorage.setItem(PIN_UNLOCK_SESSION_KEY, uid);
+
+  if ($("#remember-pin").is(":checked") || wantsRememberLogin()) {
+    localStorage.setItem(PIN_UNLOCK_LOCAL_KEY, uid);
+  } else {
+    localStorage.removeItem(PIN_UNLOCK_LOCAL_KEY);
+  }
+}
+
+function isPinUnlocked(uid) {
+  return sessionStorage.getItem(PIN_UNLOCK_SESSION_KEY) === uid ||
+         localStorage.getItem(PIN_UNLOCK_LOCAL_KEY) === uid;
+}
+
+function clearLoginState() {
+  sessionStorage.removeItem(PIN_UNLOCK_SESSION_KEY);
+  localStorage.removeItem(PIN_UNLOCK_LOCAL_KEY);
+}
+
+function showSave(t = "💾 Sincronizzazione...") {
+  $("#save-status").text(t).fadeIn();
+}
+
+function hideSaveSoon() {
+  setTimeout(() => $("#save-status").fadeOut(), 800);
+}
+
+function openModalC() {
+  bootstrap.Modal.getOrCreateInstance(document.getElementById("modalC")).show();
+}
+
+function closeModalC() {
+  bootstrap.Modal.getInstance(document.getElementById("modalC"))?.hide();
+}
+
+function normalizeDitte(ditte) {
+  return (ditte || []).map(d => {
+    const nd = typeof d === "string" ? { nome: d } : { ...d };
+
+    if (!nd.id) nd.id = safeId(nd.nome || uid());
+    if (!nd.nome) nd.nome = "DITTA SENZA NOME";
+
+    nd.nome = normalizeKey(nd.nome);
+
+    if (!nd.tipo) nd.tipo = "appaltatore";
+    if (typeof nd.attiva === "undefined") nd.attiva = true;
+    if (!nd.stato) nd.stato = "autorizzata";
+    if (!nd.operai) nd.operai = [];
+
+    nd.operai = nd.operai.map(o => {
+      if (typeof o === "string") {
+        return { id: safeId(o), nome: normalizeKey(o), mansione: "", attivo: true };
+      }
+
+      return {
+        id: o.id || safeId(o.nome || uid()),
+        nome: normalizeKey(o.nome || "OPERAIO SENZA NOME"),
+        mansione: o.mansione || "",
+        attivo: o.attivo !== false
+      };
+    });
+
+    return nd;
+  });
+}
+
+function ensureCantiereShape(c) {
+  if (!c.id) c.id = safeId(c.nome || uid());
+  if (!c.giornali) c.giornali = {};
+  if (!c.tasks) c.tasks = [];
+  if (!c.anagraficaDitte) c.anagraficaDitte = [];
+  c.anagraficaDitte = normalizeDitte(c.anagraficaDitte);
+  return c;
+}
+
+function showSirimedLogin() {
+  const tabSirimed = document.getElementById("tab-sirimed");
+  const tabDitta = document.getElementById("tab-ditta");
+  const boxSirimed = document.getElementById("login-sirimed-box");
+  const boxDitta = document.getElementById("login-ditta-box");
+
+  if (!tabSirimed || !tabDitta || !boxSirimed || !boxDitta) return;
+
+  tabSirimed.classList.add("active");
+  tabDitta.classList.remove("active");
+
+  boxSirimed.style.display = "block";
+  boxDitta.style.display = "none";
+}
+
+function showDittaLogin() {
+  const tabSirimed = document.getElementById("tab-sirimed");
+  const tabDitta = document.getElementById("tab-ditta");
+  const boxSirimed = document.getElementById("login-sirimed-box");
+  const boxDitta = document.getElementById("login-ditta-box");
+
+  if (!tabSirimed || !tabDitta || !boxSirimed || !boxDitta) return;
+
+  tabDitta.classList.add("active");
+  tabSirimed.classList.remove("active");
+
+  boxSirimed.style.display = "none";
+  boxDitta.style.display = "block";
+}
+
+function initLoginTabs() {
+  const tabSirimed = document.getElementById("tab-sirimed");
+  const tabDitta = document.getElementById("tab-ditta");
+
+  if (tabSirimed) {
+    tabSirimed.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showSirimedLogin();
+      return false;
+    };
+  }
+
+  if (tabDitta) {
+    tabDitta.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showDittaLogin();
+      return false;
+    };
+  }
+}
+
+async function handleLogin() {
+  const email = $("#log-email").val().trim();
+  const pw = $("#log-pw").val();
+
+  if (!email || !pw) {
+    alert("Inserisci email e password.");
     return;
   }
 
-  event.respondWith(
-    fetch(request)
-      .then(response => {
-        const copy = response.clone();
+  try {
+    saveRememberPrefs("sirimed");
 
-        caches.open(CACHE_VERSION).then(cache => {
-          cache.put(request, copy);
-        });
+    const persistence = wantsRememberLogin()
+      ? firebase.auth.Auth.Persistence.LOCAL
+      : firebase.auth.Auth.Persistence.SESSION;
 
-        return response;
-      })
-      .catch(() => caches.match(request))
+    await auth.setPersistence(persistence);
+    await auth.signInWithEmailAndPassword(email, pw);
+  } catch (e) {
+    alert("Errore accesso: " + e.message);
+  }
+}
+
+async function handleDittaLogin() {
+  const codice = $("#codice-ditta-login").val().trim().toLowerCase();
+  const pw = $("#password-ditta-login").val();
+
+  if (!codice || !pw) {
+    alert("Inserisci codice ditta e password.");
+    return;
+  }
+
+  try {
+    saveRememberPrefs("ditta");
+
+    const persistence = wantsRememberLogin()
+      ? firebase.auth.Auth.Persistence.LOCAL
+      : firebase.auth.Auth.Persistence.SESSION;
+
+    await auth.setPersistence(persistence);
+
+    const emailTecnica = `${codice}@ditta.it`;
+    await auth.signInWithEmailAndPassword(emailTecnica, pw);
+  } catch (e) {
+    alert("Codice ditta o password non validi.");
+  }
+}
+
+async function loadUserProfile(user) {
+  try {
+    const snap = await db.collection("utenti").doc(user.uid).get();
+
+    if (!snap.exists) {
+      alert("Utente non autorizzato. Profilo mancante.");
+      await auth.signOut();
+      return;
+    }
+
+    const p = snap.data();
+
+    if (p.attivo === false) {
+      alert("Accesso disattivato.");
+      await auth.signOut();
+      return;
+    }
+
+    currentUserProfile = p;
+
+    if (p.ruolo === "admin" || p.ruolo === "responsabile") {
+      if (isPinUnlocked(user.uid)) {
+        showScreen("#main-screen");
+        await loadDB();
+      } else {
+        $("#pin-input").val("");
+        showScreen("#pin-screen");
+      }
+      return;
+    }
+
+    if (p.ruolo === "ditta") {
+      showScreen("#ditta-screen");
+      await loadDittaPanel();
+      return;
+    }
+
+    alert("Ruolo non valido.");
+    await auth.signOut();
+  } catch (e) {
+    console.error(e);
+    alert("Errore lettura profilo.");
+    await auth.signOut();
+  }
+}
+
+async function checkPin() {
+  const pin = $("#pin-input").val().trim();
+
+  if (pin !== "9731") {
+    alert("PIN errato");
+    return;
+  }
+
+  if (!currentUser) {
+    alert("Sessione scaduta. Effettua di nuovo il login.");
+    showScreen("#auth-screen");
+    return;
+  }
+
+  markPinUnlocked(currentUser.uid);
+  showScreen("#main-screen");
+  await loadDB();
+}
+
+function logout() {
+  clearLoginState();
+  auth.signOut().then(() => {
+    $("#log-pw, #password-ditta-login, #pin-input").val("");
+    showScreen("#auth-screen");
+  });
+}
+
+function loadDB() {
+  return db.collection("users").doc("archivio_condiviso").get()
+    .then(doc => {
+      allCantieri = doc.exists ? (doc.data().cantieri || []) : [];
+      allCantieri = allCantieri.map(ensureCantiereShape);
+
+      userData.cantieri = applyVisibilityToCantieri(allCantieri);
+
+      console.log("Cantieri totali:", allCantieri.length, "Cantieri visibili:", userData.cantieri.length, "Profilo:", currentUserProfile);
+
+      renderList();
+      updateAdminUi();
+
+      return userData;
+    })
+    .catch(e => {
+      console.error(e);
+      alert("Errore caricamento archivio.");
+    });
+}
+
+function saveArchivio(callback) {
+  showSave();
+
+  userData.cantieri = userData.cantieri.map(ensureCantiereShape);
+
+  const ref = db.collection("users").doc("archivio_condiviso");
+
+  const doSave = (cantieriDaSalvare) => {
+    return ref.set({ cantieri: cantieriDaSalvare.map(ensureCantiereShape) })
+      .then(() => {
+        allCantieri = cantieriDaSalvare.map(ensureCantiereShape);
+        userData.cantieri = applyVisibilityToCantieri(allCantieri);
+
+        showSave("✅ Salvato");
+        hideSaveSoon();
+
+        if (callback) callback();
+      });
+  };
+
+  if (isMainAdmin()) {
+    doSave(userData.cantieri)
+      .catch(e => {
+        console.error(e);
+        showSave("⚠️ Errore salvataggio");
+        hideSaveSoon();
+      });
+    return;
+  }
+
+  ref.get()
+    .then(doc => {
+      const archivioCompleto = doc.exists ? (doc.data().cantieri || []).map(ensureCantiereShape) : [];
+      const visibiliMap = new Map(userData.cantieri.map(c => [normalizeKey(c.id || c.nome), ensureCantiereShape(c)]));
+
+      const merged = archivioCompleto.map(c => {
+        const keyId = normalizeKey(c.id || "");
+        const keyNome = normalizeKey(c.nome || "");
+
+        if (visibiliMap.has(keyId)) return visibiliMap.get(keyId);
+        if (visibiliMap.has(keyNome)) return visibiliMap.get(keyNome);
+
+        return c;
+      });
+
+      return doSave(merged);
+    })
+    .catch(e => {
+      console.error(e);
+      showSave("⚠️ Errore salvataggio");
+      hideSaveSoon();
+    });
+}
+
+function updateStats() {
+  const cantieri = userData.cantieri || [];
+  const giornali = cantieri.reduce((s, c) => s + Object.keys(c.giornali || {}).length, 0);
+  const ditte = cantieri.reduce((s, c) => s + (c.anagraficaDitte || []).length, 0);
+  $("#stat-cantieri").text(cantieri.length);
+  $("#stat-giornali").text(giornali);
+  $("#stat-ditte").text(ditte);
+}
+
+function renderList() {
+  updateStats();
+  updateAdminUi();
+  let h = "";
+
+  userData.cantieri.forEach((c, i) => {
+    ensureCantiereShape(c);
+
+    h += `
+      <div class="col-md-6 col-xl-4 position-relative">
+        <div class="card commessa-card p-4" onclick="openC(${i})">
+          <h5 class="fw-bold mb-1">${esc(c.nome)}</h5>
+          <div class="text-muted small">CIG: ${esc(c.cig || "-")}</div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <span class="badge bg-dark">${(c.anagraficaDitte || []).length} ditte</span>
+            <span class="badge bg-secondary">${Object.keys(c.giornali || {}).length} giornali</span>
+          </div>
+        </div>
+        ${canCreateDeleteCantieri() ? `<button class="btn-del-cantiere" onclick="deleteCommessa(event, ${i})">🗑️</button>` : ""}
+      </div>
+    `;
+  });
+
+  if (!h) {
+    const msg = isMainAdmin()
+      ? "Nessuna commessa presente."
+      : "Nessuna commessa assegnata a questo account.";
+    h = `<div class="col-12"><div class="glass p-4 text-center text-muted">${msg}</div></div>`;
+  }
+
+  $("#cantieri-grid").html(h);
+}
+
+function deleteCommessa(e, i) {
+  e.stopPropagation();
+
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può eliminare le commesse.");
+    return;
+  }
+
+  if (confirm(`Eliminare DEFINITIVAMENTE la commessa "${userData.cantieri[i].nome}"?`)) {
+    userData.cantieri.splice(i, 1);
+    saveArchivio(renderList);
+  }
+}
+
+function openC(i) {
+  cIdx = i;
+  ensureCantiereShape(userData.cantieri[cIdx]);
+  $("#cal-title").text(userData.cantieri[i].nome);
+  showSection("section-calendar");
+  renderCal();
+}
+
+function changeMonth(dir) {
+  currentMonth.setMonth(currentMonth.getMonth() + dir);
+  renderCal();
+}
+
+function renderCal() {
+  const y = currentMonth.getFullYear();
+  const m = currentMonth.getMonth();
+  const today = new Date().setHours(0, 0, 0, 0);
+
+  $("#month-display").text(
+    new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(currentMonth)
   );
+
+  const days = new Date(y, m + 1, 0).getDate();
+  const start = (new Date(y, m, 1).getDay() + 6) % 7;
+
+  let h = "";
+
+  ["L", "M", "M", "G", "V", "S", "D"].forEach(d => {
+    h += `<div class="cal-header">${d}</div>`;
+  });
+
+  for (let i = 0; i < start; i++) h += "<div></div>";
+
+  const c = userData.cantieri[cIdx];
+
+  for (let d = 1; d <= days; d++) {
+    const loopDate = new Date(y, m, d).setHours(0, 0, 0, 0);
+    const ds = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const g = c?.giornali?.[ds] || {};
+
+    const nPres = (g.presenti || []).length;
+    const nPhoto = (g.photos || []).length;
+
+    let cls = loopDate < today ? "cal-past" : loopDate === today ? "cal-today" : "";
+
+    h += `
+      <div class="cal-day ${cls}" onclick="openG('${ds}')">
+        <b>${d}</b>
+        ${nPres ? `<div class="day-meta">👷 ${nPres}</div>` : ""}
+        ${nPhoto ? `<div class="day-meta">📷 ${nPhoto}</div>` : ""}
+      </div>
+    `;
+  }
+
+  $("#calendar-days").html(h);
+}
+
+async function openG(ds) {
+  activeDate = ds;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  if (!c.giornali[ds]) c.giornali[ds] = {};
+
+  const g = c.giornali[ds];
+
+  $("#g-date-label").text("DATA: " + formatDateIT(ds));
+  $("#g-meteo").val(g.meteo || "Soleggiato");
+  $("#g-temp").val(g.temp || "");
+  $("#g-lavorazioni").val(g.lavorazioni || "").prop("readonly", true);
+  $("#btn-lock").text("SBLOCCA");
+  $("#g-memo").val(g.memo || "");
+
+  const firme = g.firme || {};
+  $("#firma-responsabile").val(firme.responsabile || "");
+  $("#firma-dl").val(firme.dl || "");
+  $("#firma-impresa").val(firme.impresa || "");
+  $("#firma-cse").val(firme.cse || "");
+
+  const sel = $("#sel-ditta").empty().append('<option value="">+ Ditta presente</option>');
+
+  c.anagraficaDitte
+    .filter(d => d.attiva !== false)
+    .forEach(d => {
+      sel.append(`<option value="${d.id}">${esc(d.nome)} - ${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</option>`);
+    });
+
+  showSection("section-giornale");
+  loadWhatsAppPreferences();
+  renderPresenze();
+  renderPhotos();
+  renderTasks();
+  await renderContributiDitte();
+}
+
+function autoSave() {
+  showSave("💾 Modifiche in corso...");
+  clearTimeout(saveTimer);
+
+  saveTimer = setTimeout(() => {
+    const c = ensureCantiereShape(userData.cantieri[cIdx]);
+    const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+
+    g.meteo = $("#g-meteo").val();
+    g.temp = $("#g-temp").val();
+    g.lavorazioni = $("#g-lavorazioni").val();
+    g.memo = $("#g-memo").val();
+    g.firme = {
+      responsabile: $("#firma-responsabile").val(),
+      dl: $("#firma-dl").val(),
+      impresa: $("#firma-impresa").val(),
+      cse: $("#firma-cse").val()
+    };
+
+    saveArchivio(() => renderCal());
+  }, 700);
+}
+
+function toggleLock() {
+  const f = $("#g-lavorazioni");
+
+  if (f.prop("readonly")) {
+    f.prop("readonly", false).focus();
+    $("#btn-lock").text("SALVA");
+  } else {
+    f.prop("readonly", true);
+    $("#btn-lock").text("SBLOCCA");
+    autoSave();
+  }
+}
+
+function handlePhotos(inpt) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+
+  if (!g.photos) g.photos = [];
+
+  for (let f of inpt.files) {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const img = new Image();
+      img.src = e.target.result;
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxW = 800;
+        const scale = img.width > maxW ? maxW / img.width : 1;
+
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        g.photos.push(canvas.toDataURL("image/jpeg", .6));
+
+        renderPhotos();
+        autoSave();
+      };
+    };
+
+    reader.readAsDataURL(f);
+  }
+
+  inpt.value = "";
+}
+
+function renderPhotos() {
+  $("#photo-box").empty();
+
+  if (cIdx < 0 || !activeDate) return;
+  const g = userData.cantieri[cIdx].giornali[activeDate] || {};
+
+  (g.photos || []).forEach((p, i) => {
+    $("#photo-box").append(`
+      <img src="${p}" style="width:64px;height:64px;object-fit:cover;border-radius:12px;border:1px solid #e5e7eb" onclick="delPh(${i})">
+    `);
+  });
+}
+
+function delPh(i) {
+  if (confirm("Eliminare foto?")) {
+    userData.cantieri[cIdx].giornali[activeDate].photos.splice(i, 1);
+    renderPhotos();
+    autoSave();
+  }
+}
+
+function findDittaByIdOrName(value, cantiere = null) {
+  const c = cantiere || ensureCantiereShape(userData.cantieri[cIdx]);
+
+  return (c.anagraficaDitte || []).find(d =>
+    String(d.id) === String(value) ||
+    normalizeKey(d.nome) === normalizeKey(value)
+  );
+}
+
+function normalizeGiornaleDitteVisibili(g) {
+  if (!g.ditteVisibili) g.ditteVisibili = [];
+
+  g.ditteVisibili = g.ditteVisibili.map(v => {
+    const d = findDittaByIdOrName(v);
+    return d ? d.id : v;
+  });
+}
+
+function addDittaG() {
+  const dittaId = $("#sel-ditta").val();
+  if (!dittaId) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+
+  normalizeGiornaleDitteVisibili(g);
+
+  if (!g.ditteVisibili.includes(dittaId)) g.ditteVisibili.push(dittaId);
+
+  $("#sel-ditta").val("");
+  renderPresenze();
+  autoSave();
+}
+
+function removeDittaG(dittaId) {
+  const d = findDittaByIdOrName(dittaId);
+  if (!d) return;
+
+  if (confirm(`Rimuovere ${d.nome} dal giornale?`)) {
+    const g = userData.cantieri[cIdx].giornali[activeDate];
+
+    g.ditteVisibili = (g.ditteVisibili || []).filter(x => String(x) !== String(dittaId));
+
+    g.presenti = (g.presenti || []).filter(p => {
+      if (typeof p === "string") return !p.includes(`(${d.nome})`);
+      return String(p.dittaId) !== String(dittaId);
+    });
+
+    renderPresenze();
+    autoSave();
+  }
+}
+
+function isWorkerPresent(g, dittaId, o) {
+  return (g.presenti || []).some(p => {
+    if (typeof p === "string") return false;
+    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(o.id);
+  });
+}
+
+function getPresenza(g, dittaId, operaioId) {
+  return (g.presenti || []).find(p => {
+    if (typeof p === "string") return false;
+    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId);
+  });
+}
+
+function toggleW(dittaId, operaioId) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+
+  if (!g.presenti) g.presenti = [];
+
+  const d = findDittaByIdOrName(dittaId);
+  const o = (d?.operai || []).find(x => String(x.id) === String(operaioId));
+
+  if (!d || !o) return;
+
+  const idx = g.presenti.findIndex(p => {
+    if (typeof p === "string") return false;
+    return String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId);
+  });
+
+  if (idx >= 0) {
+    g.presenti.splice(idx, 1);
+  } else {
+    g.presenti.push({
+      dittaId: d.id,
+      dittaNome: d.nome,
+      dittaTipo: d.tipo,
+      operaioId: o.id,
+      operaioNome: o.nome,
+      mansione: o.mansione || "",
+      ore: 8
+    });
+  }
+
+  renderPresenze();
+  autoSave();
+}
+
+function updateOreOperaio(dittaId, operaioId, ore) {
+  const g = userData.cantieri[cIdx].giornali[activeDate];
+  const p = getPresenza(g, dittaId, operaioId);
+
+  if (!p) return;
+
+  let val = parseFloat(String(ore).replace(",", "."));
+  if (isNaN(val) || val < 0) val = 0;
+
+  p.ore = val;
+  autoSave();
+}
+
+function selectAllWorkers(dittaId) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+  const d = findDittaByIdOrName(dittaId);
+
+  if (!g.presenti) g.presenti = [];
+  if (!d) return;
+
+  d.operai.filter(o => o.attivo !== false).forEach(o => {
+    if (!isWorkerPresent(g, d.id, o)) {
+      g.presenti.push({
+        dittaId: d.id,
+        dittaNome: d.nome,
+        dittaTipo: d.tipo,
+        operaioId: o.id,
+        operaioNome: o.nome,
+        mansione: o.mansione || "",
+        ore: 8
+      });
+    }
+  });
+
+  renderPresenze();
+  autoSave();
+}
+
+function deselectAllWorkers(dittaId) {
+  const g = userData.cantieri[cIdx].giornali[activeDate];
+  const d = findDittaByIdOrName(dittaId);
+
+  if (!d) return;
+
+  g.presenti = (g.presenti || []).filter(p => {
+    if (typeof p === "string") return !p.includes(`(${d.nome})`);
+    return String(p.dittaId) !== String(d.id);
+  });
+
+  renderPresenze();
+  autoSave();
+}
+
+function getTotaleOreDitta(g, dittaId) {
+  return (g.presenti || [])
+    .filter(p => typeof p !== "string" && String(p.dittaId) === String(dittaId))
+    .reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
+}
+
+function addOperaioGiornaliero(dittaId) {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || (c.giornali[activeDate] = {});
+  const d = findDittaByIdOrName(dittaId);
+
+  if (!d) return;
+
+  const nome = prompt("Nome e cognome del personale da aggiungere per questa giornata:");
+  if (!nome) return;
+
+  const mansione = prompt("Mansione / qualifica:", "") || "";
+  let ore = prompt("Ore lavorate:", "8");
+  ore = parseFloat(String(ore || "0").replace(",", "."));
+  if (isNaN(ore) || ore < 0) ore = 0;
+
+  if (!g.presenti) g.presenti = [];
+
+  const manualId = "MANUALE_" + uid();
+
+  g.presenti.push({
+    dittaId: d.id,
+    dittaNome: d.nome,
+    dittaTipo: d.tipo,
+    operaioId: manualId,
+    operaioNome: normalizeKey(nome),
+    mansione: mansione,
+    ore: ore,
+    manualeGiornaliero: true
+  });
+
+  if (!g.ditteVisibili) g.ditteVisibili = [];
+  if (!g.ditteVisibili.includes(d.id)) g.ditteVisibili.push(d.id);
+
+  renderPresenze();
+  autoSave();
+}
+
+function removePresenzaGiornaliera(dittaId, operaioId) {
+  const g = userData.cantieri[cIdx].giornali[activeDate];
+
+  if (!g || !g.presenti) return;
+
+  if (!confirm("Rimuovere questa presenza dalla giornata?")) return;
+
+  g.presenti = g.presenti.filter(p => {
+    if (typeof p === "string") return true;
+    return !(String(p.dittaId) === String(dittaId) && String(p.operaioId) === String(operaioId));
+  });
+
+  renderPresenze();
+  autoSave();
+}
+
+function renderPresenze() {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || {};
+
+  normalizeGiornaleDitteVisibili(g);
+
+  let h = "";
+
+  (g.ditteVisibili || []).forEach(dittaId => {
+    const d = findDittaByIdOrName(dittaId);
+    if (!d) return;
+
+    const parent = d.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+    const totale = getTotaleOreDitta(g, d.id);
+
+    h += `
+      <div class="bg-white p-2 border rounded mb-2 small">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <b>${esc(d.nome)}</b><br>
+            <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
+            ${parent ? `<span class="badge bg-secondary">collegata a ${esc(parent.nome)}</span>` : ""}
+            <span class="badge bg-info text-dark">Ore: ${totale}</span>
+          </div>
+          <button class="btn btn-sm btn-link text-danger p-0" onclick="removeDittaG('${d.id}')">🗑️</button>
+        </div>
+
+        <div class="d-flex gap-1 mt-2 mb-2">
+          <button class="btn btn-xs btn-outline-secondary" onclick="selectAllWorkers('${d.id}')">Tutti</button>
+          <button class="btn btn-xs btn-outline-secondary" onclick="deselectAllWorkers('${d.id}')">Nessuno</button>
+          <button class="btn btn-xs btn-outline-dark" onclick="addOperaioGiornaliero('${d.id}')">+ Personale</button>
+        </div>
+    `;
+
+    const ops = d.operai.filter(o => o.attivo !== false);
+
+    if (!ops.length) h += `<div class="text-muted">Nessun operaio attivo.</div>`;
+
+    ops.forEach(o => {
+      const sel = isWorkerPresent(g, d.id, o) ? "selected" : "";
+      const p = getPresenza(g, d.id, o.id);
+
+      h += `
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span class="worker-chip ${sel}" onclick="toggleW('${d.id}', '${o.id}')">
+            ${esc(o.nome)}${o.mansione ? " - " + esc(o.mansione) : ""}
+          </span>
+
+          ${sel ? `
+            <input type="number" min="0" step="0.5" value="${p?.ore ?? 8}" class="form-control form-control-sm ore-input" onchange="updateOreOperaio('${d.id}', '${o.id}', this.value)">
+            <small class="text-muted">ore</small>
+          ` : ""}
+        </div>
+      `;
+    });
+
+    const manuali = (g.presenti || []).filter(p =>
+      typeof p !== "string" &&
+      String(p.dittaId) === String(d.id) &&
+      p.manualeGiornaliero === true
+    );
+
+    manuali.forEach(p => {
+      h += `
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span class="worker-chip selected">
+            ${esc(p.operaioNome)}${p.mansione ? " - " + esc(p.mansione) : ""}
+          </span>
+          <input type="number" min="0" step="0.5" value="${p.ore ?? 0}" class="form-control form-control-sm ore-input" onchange="updateOreOperaio('${d.id}', '${p.operaioId}', this.value)">
+          <small class="text-muted">ore</small>
+          <button class="btn btn-xs btn-outline-danger" onclick="removePresenzaGiornaliera('${d.id}', '${p.operaioId}')">Rimuovi</button>
+        </div>
+      `;
+    });
+
+    h += `</div>`;
+  });
+
+  $("#ditte-presenze").html(h);
+}
+
+function contributiCollection(cantiere) {
+  const id = safeId(cantiere.nome || cantiere.id);
+  return db.collection("cantieri").doc(id).collection("contributiDitte");
+}
+
+async function getContributiDitteGiorno(ds) {
+  if (cIdx < 0) return [];
+  const c = userData.cantieri[cIdx];
+  const snap = await contributiCollection(c).where("data", "==", ds).get();
+  return snap.docs.map(d => d.data());
+}
+
+async function renderContributiDitte() {
+  if (cIdx < 0 || !activeDate) return;
+
+  const contributi = await getContributiDitteGiorno(activeDate);
+
+  let h = "";
+
+  if (!contributi.length) {
+    h = `<div class="text-muted small border rounded p-2 bg-light">Nessun contributo ditta per questa giornata.</div>`;
+  }
+
+  contributi.forEach(ct => {
+    const ore = (ct.presenti || []).reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
+
+    h += `
+      <div class="contributo-card small">
+        <div>
+          <b>${esc(ct.dittaNome)}</b>
+          <span class="badge bg-info text-dark">${ore} ore</span>
+          <span class="badge ${ct.stato === "approvato" ? "bg-success" : ct.stato === "escluso" ? "bg-secondary" : "bg-warning text-dark"}">
+            ${esc(ct.stato || "da_verificare")}
+          </span>
+        </div>
+
+        <div class="mt-2">
+          <b>Meteo:</b> ${esc(ct.meteo || "-")} ${ct.temp ? "- " + esc(ct.temp) + "°C" : ""}<br>
+          <b>Lavorazioni:</b><br>
+          ${esc(ct.lavorazioni || "-")}
+        </div>
+
+        <div class="mt-2">
+          <b>Operai:</b><br>
+          ${(ct.presenti || []).map(p => `- ${esc(p.operaioNome)}${p.mansione ? " - " + esc(p.mansione) : ""} - ${p.ore || 0} ore`).join("<br>") || "-"}
+        </div>
+
+        ${ct.materiali ? `
+          <div class="mt-2 p-2 rounded bg-light border">
+            <b>Materiale mancante / richiesto:</b><br>
+            ${esc(ct.materiali)}
+            <div class="mt-1">
+              <span class="badge ${String(ct.materialiPriorita || "2") === "1" ? "bg-danger" : "bg-warning text-dark"}">
+                ${String(ct.materialiPriorita || "2") === "1" ? "Urgente" : "Importante"}
+              </span>
+            </div>
+          </div>
+        ` : ""}
+
+        <div class="d-flex gap-1 mt-2 flex-wrap">
+          <button class="btn btn-xs btn-success" onclick="setStatoContributo('${ct.id}', 'approvato', true)">Approva</button>
+          <button class="btn btn-xs btn-outline-secondary" onclick="setStatoContributo('${ct.id}', 'escluso', false)">Escludi PDF</button>
+          ${ct.materiali ? `<button class="btn btn-xs btn-outline-dark" onclick="addMaterialiToTask('${ct.id}')">+ Task materiali</button>` : ""}
+        </div>
+      </div>
+    `;
+  });
+
+  $("#contributi-ditte-box").html(h);
+}
+
+async function setStatoContributo(id, stato, includi) {
+  const c = userData.cantieri[cIdx];
+
+  await contributiCollection(c).doc(id).update({
+    stato: stato,
+    includiNelPDF: includi
+  });
+
+  await renderContributiDitte();
+}
+
+async function addMaterialiToTask(id) {
+  if (cIdx < 0) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const snap = await contributiCollection(c).doc(id).get();
+
+  if (!snap.exists) {
+    alert("Contributo non trovato.");
+    return;
+  }
+
+  const ct = snap.data();
+
+  if (!ct.materiali) {
+    alert("Nessun materiale indicato.");
+    return;
+  }
+
+  const q = String(ct.materialiPriorita || "2") === "1" ? "1" : "2";
+  const label = q === "1" ? "URGENTE" : "IMPORTANTE";
+
+  c.tasks.push({
+    id: uid(),
+    text: `[${label}] Materiale ${ct.dittaNome || "ditta"} - ${ct.materiali}`,
+    q: q
+  });
+
+  saveArchivio(() => {
+    renderTasks();
+    alert("Materiale aggiunto alla Task Matrix.");
+  });
+}
+
+async function loadDittaPanel() {
+  await loadDB();
+
+  const p = currentUserProfile;
+
+  const cId = normalizeKey((p.cantiereIds || [])[0]);
+  const dId = normalizeKey((p.dittaIds || [])[0]);
+
+  const c = userData.cantieri.find(x =>
+    normalizeKey(x.id) === cId ||
+    normalizeKey(x.nome) === cId
+  );
+
+  if (!c) {
+    alert("Cantiere non trovato per questa ditta.");
+    return;
+  }
+
+  ensureCantiereShape(c);
+
+  const d = findDittaByIdOrName(dId, c);
+
+  if (!d) {
+    alert("Ditta non trovata nella commessa.");
+    return;
+  }
+
+  dittaPanelData = {
+    cantiere: c,
+    ditta: d,
+    todayKey: getTodayKey()
+  };
+
+  $("#ditta-cantiere-title").text(`${c.nome} - ${d.nome}`);
+  $("#ditta-date-label").text("Data: " + formatDateIT(dittaPanelData.todayKey));
+
+  renderDittaOperaiBox();
+  await loadExistingDittaContribution();
+}
+
+function renderDittaOperaiBox() {
+  const d = dittaPanelData.ditta;
+
+  let h = "";
+
+  const ops = (d.operai || []).filter(o => o.attivo !== false);
+
+  if (!ops.length) {
+    h = `<div class="text-muted small border rounded p-2 bg-light">Nessun operaio attivo associato alla ditta.</div>`;
+  }
+
+  ops.forEach(o => {
+    h += `
+      <div class="border rounded p-2 mb-2 bg-white small">
+        <div class="form-check">
+          <input class="form-check-input ditta-operaio-check" type="checkbox" value="${o.id}" id="dit-op-${o.id}">
+          <label class="form-check-label" for="dit-op-${o.id}">
+            <b>${esc(o.nome)}</b>${o.mansione ? " - " + esc(o.mansione) : ""}
+          </label>
+        </div>
+
+        <div class="input-group input-group-sm mt-2">
+          <span class="input-group-text">Ore</span>
+          <input type="number" class="form-control ditta-operaio-ore" data-operaio-id="${o.id}" value="8" min="0" step="0.5">
+        </div>
+      </div>
+    `;
+  });
+
+  $("#ditta-operai-box").html(h);
+}
+
+function getDittaContributionKey() {
+  return `${dittaPanelData.todayKey}_${dittaPanelData.ditta.id}`;
+}
+
+async function loadExistingDittaContribution() {
+  const key = getDittaContributionKey();
+
+  const snap = await contributiCollection(dittaPanelData.cantiere).doc(key).get();
+
+  if (!snap.exists) return;
+
+  const ct = snap.data();
+
+  $("#ditta-meteo").val(ct.meteo || "Soleggiato");
+  $("#ditta-temp").val(ct.temp || "");
+  $("#ditta-lavorazioni").val(ct.lavorazioni || "");
+  $("#ditta-materiali").val(ct.materiali || "");
+  $("#ditta-materiali-priorita").val(String(ct.materialiPriorita || "2"));
+
+  setTimeout(() => {
+    (ct.presenti || []).forEach(p => {
+      $(`#dit-op-${p.operaioId}`).prop("checked", true);
+      $(`.ditta-operaio-ore[data-operaio-id="${p.operaioId}"]`).val(p.ore || 8);
+    });
+  }, 100);
+}
+
+async function saveDittaContribution() {
+  const { cantiere, ditta, todayKey } = dittaPanelData;
+
+  if (!cantiere || !ditta) {
+    alert("Dati pannello ditta non disponibili.");
+    return;
+  }
+
+  const presenti = [];
+
+  $(".ditta-operaio-check:checked").each(function() {
+    const oid = $(this).val();
+    const o = (ditta.operai || []).find(x => String(x.id) === String(oid));
+
+    if (!o) return;
+
+    let ore = parseFloat($(`.ditta-operaio-ore[data-operaio-id="${oid}"]`).val());
+    if (isNaN(ore) || ore < 0) ore = 0;
+
+    presenti.push({
+      operaioId: o.id,
+      operaioNome: o.nome,
+      mansione: o.mansione || "",
+      ore: ore
+    });
+  });
+
+  const key = getDittaContributionKey();
+
+  const data = {
+    id: key,
+    data: todayKey,
+    cantiereId: safeId(cantiere.nome || cantiere.id),
+    dittaId: ditta.id,
+    dittaNome: ditta.nome,
+    meteo: $("#ditta-meteo").val(),
+    temp: $("#ditta-temp").val(),
+    lavorazioni: $("#ditta-lavorazioni").val(),
+    materiali: $("#ditta-materiali").val(),
+    materialiPriorita: $("#ditta-materiali-priorita").val(),
+    presenti: presenti,
+    stato: "da_verificare",
+    includiNelPDF: true,
+    compilatoDaUid: auth.currentUser.uid,
+    updatedAt: new Date().toISOString()
+  };
+
+  await contributiCollection(cantiere).doc(key).set(data);
+
+  alert("Contributo giornaliero salvato.");
+}
+
+function addTask() {
+  const t = $("#task-in").val().trim();
+  if (!t) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  c.tasks.push({
+    id: uid(),
+    text: t,
+    q: $("#task-q").val()
+  });
+
+  $("#task-in").val("");
+
+  renderTasks();
+  saveArchivio();
+}
+
+function renderTasks() {
+  $(".quadrant").empty();
+
+  if (cIdx < 0) return;
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  (c.tasks || []).forEach(t => {
+    $(`#q${t.q}`).append(`
+      <div class="task-item">
+        <span>${esc(t.text)}</span>
+        <button class="btn-del-task" onclick="confirmDelTask(${t.id})">🗑️</button>
+      </div>
+    `);
+  });
+}
+
+function confirmDelTask(id) {
+  if (confirm("Eliminare?")) {
+    const c = ensureCantiereShape(userData.cantieri[cIdx]);
+    c.tasks = c.tasks.filter(x => x.id !== id);
+    renderTasks();
+    saveArchivio();
+  }
+}
+
+function openModaleNuovo() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può creare nuove commesse.");
+    return;
+  }
+
+  cIdx = -1;
+  tempAna = [];
+  $("#modalC input").val("");
+  $("#ana-list").empty();
+  openModalC();
+}
+
+function editCurrentCommessa() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può modificare le impostazioni della commessa.");
+    return;
+  }
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+
+  $("#c-ente").val(c.ente || "");
+  $("#c-nome").val(c.nome || "");
+  $("#c-oggetto").val(c.oggetto || "");
+  $("#c-cig").val(c.cig || "");
+  $("#c-cup").val(c.cup || "");
+  $("#c-dl").val(c.dl || "");
+  $("#c-adl").val(c.adl || "");
+  $("#c-cse").val(c.cse || "");
+  $("#c-rup").val(c.rup || "");
+  $("#c-arup").val(c.arup || "");
+
+  tempAna = normalizeDitte(JSON.parse(JSON.stringify(c.anagraficaDitte || [])));
+  renderAna();
+  openModalC();
+}
+
+function addAnaDitta() {
+  const nome = prompt("Ragione sociale ditta:");
+  if (!nome) return;
+
+  const tipoInput = prompt(
+    "Tipo rapporto:\n" +
+    "1 = Appaltatore / Affidataria\n" +
+    "2 = Subappaltatore\n" +
+    "3 = Subaffidatario\n" +
+    "4 = Fornitore / Nolo / Trasportatore\n" +
+    "5 = Lavoratore autonomo",
+    "1"
+  );
+
+  const tipoMap = {
+    "1": "appaltatore",
+    "2": "subappaltatore",
+    "3": "subaffidatario",
+    "4": "fornitore",
+    "5": "autonomo"
+  };
+
+  const tipo = tipoMap[tipoInput] || "appaltatore";
+
+  let parentDittaId = null;
+
+  if (["subappaltatore", "subaffidatario"].includes(tipo) && tempAna.length > 0) {
+    const elenco = tempAna.map((d, i) => `${i + 1} = ${d.nome}`).join("\n");
+    const scelta = prompt(`Collegata a quale impresa principale?\n${elenco}\nLascia vuoto se non vuoi collegarla.`);
+    const idx = parseInt(scelta, 10) - 1;
+
+    if (!isNaN(idx) && tempAna[idx]) {
+      parentDittaId = tempAna[idx].id;
+    }
+  }
+
+  tempAna.push({
+    id: safeId(nome),
+    nome: normalizeKey(nome),
+    tipo: tipo,
+    parentDittaId: parentDittaId,
+    stato: "autorizzata",
+    attiva: true,
+    operai: []
+  });
+
+  renderAna();
+}
+
+function editAnaDitta(i) {
+  const d = tempAna[i];
+
+  const nome = prompt("Ragione sociale:", d.nome);
+  if (!nome) return;
+
+  d.nome = normalizeKey(nome);
+
+  const stato = prompt("Stato ditta: autorizzata / in attesa documenti / sospesa / non autorizzata", d.stato || "autorizzata");
+
+  if (stato) d.stato = stato.toLowerCase();
+
+  renderAna();
+}
+
+function delAnaDitta(i) {
+  if (confirm("Eliminare definitivamente questa ditta?")) {
+    tempAna.splice(i, 1);
+    renderAna();
+  }
+}
+
+function toggleAnaDitta(i) {
+  tempAna[i].attiva = tempAna[i].attiva === false;
+  renderAna();
+}
+
+function addAnaW(i) {
+  const nome = prompt("Nome operaio:");
+  if (!nome) return;
+
+  const mansione = prompt("Mansione / qualifica:") || "";
+
+  if (!tempAna[i].operai) tempAna[i].operai = [];
+
+  tempAna[i].operai.push({
+    id: safeId(nome),
+    nome: normalizeKey(nome),
+    mansione: mansione,
+    attivo: true
+  });
+
+  renderAna();
+}
+
+function editAnaW(i, j) {
+  const o = tempAna[i].operai[j];
+
+  const nome = prompt("Nome operaio:", o.nome);
+  if (!nome) return;
+
+  const mansione = prompt("Mansione / qualifica:", o.mansione || "") || "";
+
+  o.nome = normalizeKey(nome);
+  o.mansione = mansione;
+
+  renderAna();
+}
+
+function toggleAnaW(i, j) {
+  tempAna[i].operai[j].attivo = !tempAna[i].operai[j].attivo;
+  renderAna();
+}
+
+function delAnaW(i, j) {
+  const o = tempAna[i].operai[j];
+
+  if (confirm(`Eliminare definitivamente ${o.nome}? Meglio disattivarlo se già usato.`)) {
+    tempAna[i].operai.splice(j, 1);
+    renderAna();
+  }
+}
+
+function renderAna() {
+  tempAna = normalizeDitte(tempAna);
+
+  let h = "";
+
+  if (!tempAna.length) {
+    h = `<div class="text-muted small border rounded p-3 bg-light">Nessuna ditta inserita.</div>`;
+  }
+
+  tempAna.forEach((d, i) => {
+    const parent = d.parentDittaId
+      ? tempAna.find(x => String(x.id) === String(d.parentDittaId))
+      : null;
+
+    h += `
+      <div class="ditta-card ${d.attiva === false ? "opacity-55" : ""}">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <b>${esc(d.nome)}</b>
+            <span class="badge bg-dark">${esc(TIPO_DITTA_LABELS[d.tipo] || d.tipo)}</span>
+            ${parent ? `<span class="badge bg-secondary">collegata a ${esc(parent.nome)}</span>` : ""}
+            <span class="badge ${d.stato === "autorizzata" ? "bg-success" : "bg-warning text-dark"}">${esc(d.stato)}</span>
+          </div>
+
+          <div class="d-flex gap-1 flex-wrap justify-content-end">
+            <button class="btn btn-xs btn-outline-secondary" onclick="editAnaDitta(${i})">✏️ Ditta</button>
+            <button class="btn btn-xs btn-outline-warning" onclick="toggleAnaDitta(${i})">
+              ${d.attiva === false ? "Riattiva" : "Disattiva"}
+            </button>
+            <button class="btn btn-xs btn-outline-danger" onclick="delAnaDitta(${i})">🗑️</button>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <b class="small">Operai / nominativi</b>
+          <button class="btn btn-xs btn-outline-dark" onclick="addAnaW(${i})">+ Aggiungi operaio</button>
+        </div>
+    `;
+
+    if (!d.operai.length) {
+      h += `<div class="text-muted small mt-2">Nessun operaio inserito.</div>`;
+    }
+
+    d.operai.forEach((o, j) => {
+      h += `
+        <div class="operaio-row d-flex justify-content-between align-items-center ${o.attivo === false ? "opacity-55" : ""}">
+          <div>
+            <b>${esc(o.nome)}</b>
+            ${o.mansione ? `<span class="text-muted"> - ${esc(o.mansione)}</span>` : ""}
+            <span class="badge ${o.attivo !== false ? "bg-success" : "bg-secondary"}">
+              ${o.attivo !== false ? "Attivo" : "Non attivo"}
+            </span>
+          </div>
+
+          <div class="d-flex gap-1">
+            <button class="btn btn-xs btn-outline-secondary" onclick="editAnaW(${i}, ${j})">✏️</button>
+            <button class="btn btn-xs btn-outline-warning" onclick="toggleAnaW(${i}, ${j})">${o.attivo !== false ? "🚫" : "↩️"}</button>
+            <button class="btn btn-xs btn-outline-danger" onclick="delAnaW(${i}, ${j})">🗑️</button>
+          </div>
+        </div>
+      `;
+    });
+
+    h += `</div>`;
+  });
+
+  $("#ana-list").html(h);
+}
+
+function saveC() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può salvare o modificare le commesse.");
+    return;
+  }
+
+  const d = {
+    id: cIdx === -1 ? safeId($("#c-nome").val()) : userData.cantieri[cIdx].id,
+    ente: normalizeKey($("#c-ente").val()),
+    nome: normalizeKey($("#c-nome").val()),
+    oggetto: $("#c-oggetto").val(),
+    cig: $("#c-cig").val(),
+    cup: $("#c-cup").val(),
+    dl: $("#c-dl").val(),
+    adl: $("#c-adl").val(),
+    cse: $("#c-cse").val(),
+    rup: $("#c-rup").val(),
+    arup: $("#c-arup").val(),
+    anagraficaDitte: normalizeDitte(tempAna),
+    giornali: cIdx === -1 ? {} : (userData.cantieri[cIdx].giornali || {}),
+    tasks: cIdx === -1 ? [] : (userData.cantieri[cIdx].tasks || [])
+  };
+
+  if (!d.nome) {
+    alert("Inserisci il nome della commessa.");
+    return;
+  }
+
+  if (cIdx === -1) {
+    userData.cantieri.push(d);
+  } else {
+    userData.cantieri[cIdx] = d;
+  }
+
+  saveArchivio(() => {
+    closeModalC();
+    renderList();
+
+    if (cIdx !== -1) {
+      $("#cal-title").text(d.nome);
+    }
+  });
+}
+
+function isWaChecked(v) {
+  return $(`.wa-check[value="${v}"]`).is(":checked");
+}
+
+
+function normalizePersonaKey(nome, mansione = "") {
+  return normalizeKey(`${nome || ""}_${mansione || ""}`);
+}
+
+function formatPersonaLine(p, includeOre = true, includeMansione = true) {
+  const ore = parseFloat(p.ore) || 0;
+  const nome = p.operaioNome || p.nome || "-";
+  const mansione = includeMansione && p.mansione ? " - " + p.mansione : "";
+  const oreTxt = includeOre && ore > 0 ? ` - ${ore} ore` : "";
+  return `- ${nome}${mansione}${oreTxt}`;
+}
+
+function mergePresenzeManualiEContributi(g, contributi = []) {
+  const gruppi = new Map();
+
+  function ensureGruppo(dittaId, dittaNome, tipo = "") {
+    const key = normalizeKey(dittaId || dittaNome || "DITTA");
+    if (!gruppi.has(key)) {
+      gruppi.set(key, {
+        dittaId: dittaId || key,
+        dittaNome: dittaNome || key,
+        tipo: tipo || "",
+        persone: new Map()
+      });
+    }
+
+    return gruppi.get(key);
+  }
+
+  (g.presenti || [])
+    .filter(p => typeof p !== "string")
+    .forEach(p => {
+      const gruppo = ensureGruppo(p.dittaId, p.dittaNome, p.dittaTipo);
+      const personaKey = normalizePersonaKey(p.operaioNome, p.mansione);
+      gruppo.persone.set(personaKey, {
+        operaioNome: p.operaioNome,
+        mansione: p.mansione || "",
+        ore: parseFloat(p.ore) || 0,
+        fonte: "manuale"
+      });
+    });
+
+  (contributi || [])
+    .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso")
+    .forEach(ct => {
+      const gruppo = ensureGruppo(ct.dittaId, ct.dittaNome, "ditta");
+
+      (ct.presenti || []).forEach(p => {
+        const personaKey = normalizePersonaKey(p.operaioNome, p.mansione);
+        const ore = parseFloat(p.ore) || 0;
+
+        if (gruppo.persone.has(personaKey)) {
+          const existing = gruppo.persone.get(personaKey);
+
+          // Se il nome è uguale, non duplico. Uso il valore più aggiornato/utile:
+          // se la ditta ha indicato ore > 0, uso quelle; altrimenti mantengo quelle manuali.
+          if (ore > 0) existing.ore = ore;
+          existing.fonte = "manuale+ditta";
+        } else {
+          gruppo.persone.set(personaKey, {
+            operaioNome: p.operaioNome,
+            mansione: p.mansione || "",
+            ore: ore,
+            fonte: "ditta"
+          });
+        }
+      });
+    });
+
+  return Array.from(gruppi.values()).map(g => ({
+    ...g,
+    persone: Array.from(g.persone.values())
+  }));
+}
+
+function totaleOrePersone(persone = []) {
+  return persone.reduce((s, p) => s + (parseFloat(p.ore) || 0), 0);
+}
+
+async function buildWhatsAppMessage() {
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || {};
+  const contributiGiorno = await getContributiDitteGiorno(activeDate);
+  const contributiValidi = contributiGiorno.filter(ct =>
+    ct.includiNelPDF !== false && ct.stato !== "escluso"
+  );
+
+  let msg = `GIORNALE DI CANTIERE - ${formatDateIT(activeDate)}\n\n`;
+
+  if (isWaChecked("commessa")) {
+    msg += `Cantiere: ${c.nome || "-"}\n\n`;
+  }
+
+  if (isWaChecked("meteo")) {
+    msg += `METEO\n`;
+    msg += `Meteo: ${g.meteo || "-"}\n`;
+    msg += `Temperatura: ${g.temp || "--"}°C\n\n`;
+  }
+
+  if (isWaChecked("ditte") || isWaChecked("operai") || isWaChecked("ore")) {
+    const gruppi = mergePresenzeManualiEContributi(g, contributiValidi);
+
+    if (isWaChecked("ditte")) {
+      msg += `DITTE E PERSONALE\n`;
+
+      gruppi.forEach(gr => {
+        const d = findDittaByIdOrName(gr.dittaId) || findDittaByIdOrName(gr.dittaNome);
+        const parent = d?.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+        const totale = totaleOrePersone(gr.persone);
+
+        msg += `\n${gr.dittaNome}\n`;
+
+        const tipo = d ? (TIPO_DITTA_LABELS[d.tipo] || d.tipo) : "Ditta esterna";
+        msg += `Tipo: ${tipo}\n`;
+        if (parent) msg += `Collegata a: ${parent.nome}\n`;
+
+        if (isWaChecked("ore") && totale > 0) {
+          msg += `Totale ore ditta: ${totale}\n`;
+        }
+
+        if (isWaChecked("operai")) {
+          gr.persone.forEach(p => {
+            msg += `${formatPersonaLine(p, isWaChecked("ore"), false)}\n`;
+          });
+        }
+      });
+
+      msg += `\n`;
+    } else if (isWaChecked("operai")) {
+      msg += `PRESENTI\n`;
+
+      gruppi.forEach(gr => {
+        gr.persone.forEach(p => {
+          msg += `${formatPersonaLine(p, isWaChecked("ore"), false)}\n`;
+        });
+      });
+
+      msg += `\n`;
+    }
+  }
+
+  if (isWaChecked("lavorazioni") || isWaChecked("contributi")) {
+    const lavorazioni = [];
+
+    if (isWaChecked("lavorazioni") && (g.lavorazioni || "").trim()) {
+      lavorazioni.push({
+        fonte: "SIRIMED",
+        testo: g.lavorazioni.trim()
+      });
+    }
+
+    if (isWaChecked("contributi")) {
+      contributiValidi.forEach(ct => {
+        if ((ct.lavorazioni || "").trim()) {
+          lavorazioni.push({
+            fonte: ct.dittaNome || "DITTA ESTERNA",
+            testo: ct.lavorazioni.trim()
+          });
+        }
+      });
+    }
+
+    if (lavorazioni.length) {
+      msg += `LAVORAZIONI DEL GIORNO\n`;
+
+      lavorazioni.forEach((l, i) => {
+        msg += `${i + 1}. ${l.fonte}: ${l.testo}\n`;
+      });
+
+      msg += `\n`;
+    }
+  }
+
+  if (isWaChecked("materiali")) {
+    const materiali = contributiValidi
+      .filter(ct => (ct.materiali || "").trim())
+      .map(ct => ({
+        ditta: ct.dittaNome || "DITTA ESTERNA",
+        testo: ct.materiali.trim(),
+        priorita: String(ct.materialiPriorita || "2") === "1" ? "URGENTE" : "IMPORTANTE"
+      }));
+
+    if (materiali.length) {
+      msg += `MATERIALI MANCANTI / RICHIESTI\n`;
+
+      materiali.forEach((m, i) => {
+        msg += `${i + 1}. [${m.priorita}] ${m.ditta}: ${m.testo}\n`;
+      });
+
+      msg += `\n`;
+    }
+  }
+
+  if (isWaChecked("note")) {
+    msg += `NOTE PRIVATE\n`;
+    msg += `${g.memo || "-"}\n\n`;
+  }
+
+  return msg.trim();
+}
+async function shareWhatsApp() {
+  saveWhatsAppPreferences();
+  const msg = await buildWhatsAppMessage();
+
+  if (!msg) {
+    alert("Nessun contenuto.");
+    return;
+  }
+
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+}
+
+function shareAccessoDittaWhatsApp() {
+  if (!canCreateDeleteCantieri()) {
+    alert("Solo l'amministratore principale può generare accessi per le ditte.");
+    return;
+  }
+
+  const c = userData.cantieri[cIdx];
+
+  if (!c) {
+    alert("Apri prima una commessa.");
+    return;
+  }
+
+  const codice = prompt("Inserisci codice ditta da condividere, es. MATTIA08:");
+  if (!codice) return;
+
+  const link = `${location.origin}${location.pathname}?accesso=ditta&cantiere=${encodeURIComponent(c.nome || "")}&codice=${encodeURIComponent(codice.toUpperCase())}`;
+
+  const msg =
+`Accesso giornale cantiere
+
+Cantiere: ${c.nome || "-"}
+Codice ditta: ${codice.toUpperCase()}
+
+Apri il link:
+${link}
+
+Inserisci la password comunicata da Sirimed.`;
+
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+}
+
+function getPresenzeByDitta(g, ditta) {
+  return (g.presenti || [])
+    .filter(p => typeof p !== "string" && String(p.dittaId) === String(ditta.id))
+    .map(p => `${p.operaioNome}${p.mansione ? " - " + p.mansione : ""}${p.ore !== undefined ? " - " + p.ore + " ore" : ""}`);
+}
+
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || {};
+  const contributi = (await getContributiDitteGiorno(activeDate))
+    .filter(ct => ct.includiNelPDF !== false && ct.stato !== "escluso");
+
+  let y = 50;
+
+  function checkPage(extra = 15) {
+    if (y + extra > 280) {
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  function addWrappedText(text, x, width, lineHeight = 5) {
+    const lines = doc.splitTextToSize(text || "-", width);
+    doc.text(lines, x, y);
+    y += (lines.length * lineHeight);
+  }
+
+  doc.setFillColor(17, 24, 39);
+  doc.rect(0, 0, 210, 40, "F");
+
+  doc.setTextColor(255);
+  doc.setFontSize(22);
+  doc.text("GIORNALE DI CANTIERE", 105, 20, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.text(`${formatDateIT(activeDate)} | Meteo: ${g.meteo || "-"} | Temp: ${g.temp || "--"}°C`, 105, 30, { align: "center" });
+
+  doc.setTextColor(0);
+  doc.setFontSize(11);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("STAZIONE APPALTANTE:", 15, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(c.ente || "-", 65, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("CANTIERE:", 15, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(c.nome || "-", 65, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("OGGETTO:", 15, y);
+  doc.setFont("helvetica", "normal");
+  const obj = doc.splitTextToSize(c.oggetto || "-", 130);
+  doc.text(obj, 65, y);
+  y += (obj.length * 6) + 4;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("CIG:", 15, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(c.cig || "-", 65, y);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("CUP:", 110, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(c.cup || "-", 130, y);
+  y += 12;
+
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("DITTE E PERSONALE PRESENTE", 15, y);
+  y += 8;
+
+  const gruppi = mergePresenzeManualiEContributi(g, contributi);
+
+  if (!gruppi.length) {
+    doc.setFont("helvetica", "normal");
+    doc.text("Nessun personale indicato.", 15, y);
+    y += 8;
+  }
+
+  gruppi.forEach(gr => {
+    const d = findDittaByIdOrName(gr.dittaId) || findDittaByIdOrName(gr.dittaNome);
+    const parent = d?.parentDittaId ? findDittaByIdOrName(d.parentDittaId) : null;
+    const totale = totaleOrePersone(gr.persone);
+
+    checkPage(22);
+
+    doc.setFont("helvetica", "bold");
+    doc.text(gr.dittaNome + ":", 15, y);
+
+    doc.setFont("helvetica", "normal");
+    const tipo = `${d ? (TIPO_DITTA_LABELS[d.tipo] || d.tipo) : "Ditta esterna"}${parent ? " - collegata a " + parent.nome : ""}${totale > 0 ? " - Totale ore: " + totale : ""}`;
+    doc.text(doc.splitTextToSize(tipo, 135), 55, y);
+    y += 6;
+
+    const operai = gr.persone.map(p => formatPersonaLine(p, true, true));
+
+    if (!operai.length) {
+      doc.text("Nessun operaio selezionato", 55, y);
+      y += 5;
+    } else {
+      operai.forEach(line => {
+        checkPage(8);
+        const lines = doc.splitTextToSize(line, 140);
+        doc.text(lines, 55, y);
+        y += (lines.length * 5);
+      });
+    }
+
+    y += 5;
+  });
+
+  y += 5;
+  checkPage(18);
+
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  const lavorazioni = [];
+
+  if ((g.lavorazioni || "").trim()) {
+    lavorazioni.push({
+      fonte: "SIRIMED",
+      testo: g.lavorazioni.trim()
+    });
+  }
+
+  contributi.forEach(ct => {
+    if ((ct.lavorazioni || "").trim()) {
+      lavorazioni.push({
+        fonte: ct.dittaNome || "DITTA ESTERNA",
+        testo: ct.lavorazioni.trim()
+      });
+    }
+  });
+
+  doc.setFont("helvetica", "bold");
+  doc.text("LAVORAZIONI DEL GIORNO", 15, y);
+  y += 8;
+
+  doc.setFont("helvetica", "normal");
+
+  if (!lavorazioni.length) {
+    doc.text("Nessuna lavorazione inserita.", 15, y);
+    y += 8;
+  } else {
+    lavorazioni.forEach((l, i) => {
+      checkPage(18);
+
+      doc.setFont("helvetica", "bold");
+      doc.text(`${i + 1}. ${l.fonte}`, 15, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      addWrappedText(l.testo, 20, 175, 5);
+      y += 4;
+    });
+  }
+
+  const materiali = contributi
+    .filter(ct => (ct.materiali || "").trim())
+    .map(ct => ({
+      ditta: ct.dittaNome || "DITTA ESTERNA",
+      testo: ct.materiali.trim(),
+      priorita: String(ct.materialiPriorita || "2") === "1" ? "URGENTE" : "IMPORTANTE"
+    }));
+
+  if (materiali.length) {
+    checkPage(20);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("MATERIALI MANCANTI / RICHIESTI", 15, y);
+    y += 8;
+
+    materiali.forEach((m, i) => {
+      checkPage(18);
+
+      doc.setFont("helvetica", "bold");
+      doc.text(`${i + 1}. [${m.priorita}] ${m.ditta}`, 15, y);
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      addWrappedText(m.testo, 20, 175, 5);
+      y += 4;
+    });
+  }
+
+
+  // SEZIONE FIRME
+  checkPage(55);
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  const firme = g.firme || {};
+
+  doc.setFont("helvetica", "bold");
+  doc.text("FIRME", 15, y);
+  y += 14;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  const firmaY1 = y;
+  doc.line(15, firmaY1, 85, firmaY1);
+  doc.line(125, firmaY1, 195, firmaY1);
+
+  y += 5;
+  doc.text(firme.responsabile || "Responsabile Sirimed", 50, y, { align: "center" });
+  doc.text(firme.dl || "Direzione Lavori", 160, y, { align: "center" });
+
+  y += 22;
+  const firmaY2 = y;
+  doc.line(15, firmaY2, 85, firmaY2);
+  doc.line(125, firmaY2, 195, firmaY2);
+
+  y += 5;
+  doc.text(firme.impresa || "Impresa / Ditta presente", 50, y, { align: "center" });
+  doc.text(firme.cse || "CSE / Coordinatore", 160, y, { align: "center" });
+
+  y += 10;
+
+  const pc = doc.internal.getNumberOfPages();
+
+  for (let i = 1; i <= pc; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(`${c.nome || "-"} - ${formatDateIT(activeDate)}`, 15, 287);
+    doc.text(`Pagina ${i} di ${pc}`, 195, 287, { align: "right" });
+  }
+
+  doc.save(`Giornale_${safeId(c.nome)}_${activeDate}.pdf`);
+}
+function readAccessParams() {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("accesso") === "ditta") {
+    showDittaLogin();
+
+    const codice = params.get("codice");
+
+    if (codice) {
+      $("#codice-ditta-login").val(codice.toUpperCase());
+    }
+  }
+}
+
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  $("#install-app-btn, .install-btn").show();
 });
+
+$(document).on("click", "#install-app-btn, .install-btn", async () => {
+  if (!deferredInstallPrompt) {
+    alert("Installazione non disponibile su questo browser.");
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+
+  deferredInstallPrompt = null;
+  $("#install-app-btn, .install-btn").hide();
+});
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(reg => {
+      reg.update();
+
+      setInterval(() => {
+        reg.update();
+      }, 60 * 60 * 1000);
+
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+    })
+    .catch(err => console.warn("Service worker non registrato:", err));
+
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    loadUserProfile(user);
+  } else {
+    currentUser = null;
+    currentUserProfile = null;
+    showScreen("#auth-screen");
+  }
+});
+
+$(document).ready(() => {
+  $(".screen").removeClass("active-screen").hide();
+  $(".section-page").removeClass("active").hide();
+
+  initLoginTabs();
+  initBackNavigation();
+  restoreRememberPrefs();
+  loadWhatsAppPreferences();
+  $(document).on("change", ".wa-check", saveWhatsAppPreferences);
+  showScreen("#auth-screen");
+  readAccessParams();
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
