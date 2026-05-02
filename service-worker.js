@@ -1,4 +1,4 @@
-const CACHE_VERSION = "cantiericloud-v13-torrisi-fix";
+const CACHE_VERSION = "cantiericloud-v14-whatsapp-pdf-list";
 
 const APP_SHELL = [
   "./",
