@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CantieriCloud Pro</title>
-  <meta name="app-version" content="v15-firme-dropdown-figure-commessa">
+  <meta name="app-version" content="v16-firme-digitali-tablet">
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#111827">
@@ -389,6 +389,30 @@
       margin: 0;
     }
 
+    .signature-box {
+      background: #fff;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .signature-canvas {
+      width: 100%;
+      height: 120px;
+      display: block;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .signature-hint {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
 
     .opacity-55 { opacity: .55; }
 
@@ -593,20 +617,44 @@
 
             <textarea id="g-lavorazioni" class="form-control mb-3" rows="5" readonly></textarea>
 
-            <details id="firme-settings-panel" class="wa-settings mb-3 small">
+            <details id="firme-settings-panel" class="wa-settings mb-3 small" ontoggle="onFirmePanelToggle()">
               <summary>✍️ Firme giornale</summary>
               <div class="wa-settings-body">
                 <label class="small-label">Firma 1</label>
                 <select id="firma-responsabile" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
 
+                <div class="signature-box">
+                  <canvas id="sig-responsabile" class="signature-canvas"></canvas>
+                  <div class="signature-hint">Firma con dito o penna sul tablet</div>
+                  <button type="button" class="btn btn-xs btn-outline-danger mt-2" onclick="clearSignature('responsabile')">Pulisci firma</button>
+                </div>
+
                 <label class="small-label">Firma 2</label>
                 <select id="firma-dl" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
+
+                <div class="signature-box">
+                  <canvas id="sig-dl" class="signature-canvas"></canvas>
+                  <div class="signature-hint">Firma con dito o penna sul tablet</div>
+                  <button type="button" class="btn btn-xs btn-outline-danger mt-2" onclick="clearSignature('dl')">Pulisci firma</button>
+                </div>
 
                 <label class="small-label">Firma 3</label>
                 <select id="firma-impresa" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
 
+                <div class="signature-box">
+                  <canvas id="sig-impresa" class="signature-canvas"></canvas>
+                  <div class="signature-hint">Firma con dito o penna sul tablet</div>
+                  <button type="button" class="btn btn-xs btn-outline-danger mt-2" onclick="clearSignature('impresa')">Pulisci firma</button>
+                </div>
+
                 <label class="small-label">Firma 4</label>
-                <select id="firma-cse" class="form-select form-select-sm" onchange="autoSave()"></select>
+                <select id="firma-cse" class="form-select form-select-sm mb-2" onchange="autoSave()"></select>
+
+                <div class="signature-box">
+                  <canvas id="sig-cse" class="signature-canvas"></canvas>
+                  <div class="signature-hint">Firma con dito o penna sul tablet</div>
+                  <button type="button" class="btn btn-xs btn-outline-danger mt-2" onclick="clearSignature('cse')">Pulisci firma</button>
+                </div>
               </div>
             </details>
 
@@ -805,9 +853,9 @@ const TIPO_DITTA_LABELS = {
   autonomo: "Lavoratore autonomo"
 };
 
-
 const APP_NAV_STATE_KEY = "cc_current_view";
 const WA_PREFS_KEY = "cc_wa_preferences";
+const SIGNATURE_KEYS = ["responsabile", "dl", "impresa", "cse"];
 let internalNavigation = false;
 
 function setAppView(view, push = true) {
@@ -920,8 +968,6 @@ function saveWhatsAppPreferences() {
   localStorage.setItem(WA_PREFS_KEY, JSON.stringify(prefs));
 }
 
-
-
 function isMainAdmin() {
   const email = (currentUser?.email || "").toLowerCase();
   const ruolo = currentUserProfile?.ruolo || "";
@@ -986,7 +1032,6 @@ function updateAdminUi() {
   $("#btn-accesso-ditta").toggle(isMain);
   $("#btn-impostazioni-commessa").toggle(isMain);
 }
-
 
 function showScreen(id) {
   const target = typeof id === "string" ? id : "#auth-screen";
@@ -1562,6 +1607,11 @@ async function openG(ds) {
     });
 
   showSection("section-giornale");
+
+  setTimeout(() => {
+    initSignaturePads(g.firmeDigitali || {});
+  }, 80);
+
   loadWhatsAppPreferences();
   renderPresenze();
   renderPhotos();
@@ -1586,6 +1636,15 @@ function autoSave() {
       dl: $("#firma-dl").val(),
       impresa: $("#firma-impresa").val(),
       cse: $("#firma-cse").val()
+    };
+
+    const firmeDigitaliPrecedenti = g.firmeDigitali || {};
+
+    g.firmeDigitali = {
+      responsabile: getSignatureData("responsabile", firmeDigitaliPrecedenti.responsabile),
+      dl: getSignatureData("dl", firmeDigitaliPrecedenti.dl),
+      impresa: getSignatureData("impresa", firmeDigitaliPrecedenti.impresa),
+      cse: getSignatureData("cse", firmeDigitaliPrecedenti.cse)
     };
 
     saveArchivio(() => renderCal());
@@ -1730,6 +1789,153 @@ function renderFirmaOptions(c, firme = {}) {
   });
 }
 
+function getSignatureCanvas(key) {
+  return document.getElementById("sig-" + key);
+}
+
+function setupSignatureCanvas(key) {
+  const canvas = getSignatureCanvas(key);
+  if (!canvas || canvas.dataset.ready === "1") return;
+
+  let drawing = false;
+
+  function getPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+
+    drawing = true;
+    canvas.dataset.signed = "1";
+
+    const ctx = canvas.getContext("2d");
+    const p = getPoint(e);
+
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (err) {}
+  }
+
+  function moveDraw(e) {
+    if (!drawing) return;
+
+    e.preventDefault();
+
+    const ctx = canvas.getContext("2d");
+    const p = getPoint(e);
+
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+
+  function stopDraw(e) {
+    if (!drawing) return;
+
+    e.preventDefault();
+    drawing = false;
+
+    autoSave();
+  }
+
+  canvas.addEventListener("pointerdown", startDraw);
+  canvas.addEventListener("pointermove", moveDraw);
+  canvas.addEventListener("pointerup", stopDraw);
+  canvas.addEventListener("pointercancel", stopDraw);
+  canvas.addEventListener("pointerleave", stopDraw);
+
+  canvas.dataset.ready = "1";
+}
+
+function prepareSignatureCanvas(canvas, existingData = "") {
+  const cssWidth = Math.max(
+    280,
+    Math.floor(canvas.parentElement?.clientWidth || canvas.getBoundingClientRect().width || 280)
+  );
+
+  const cssHeight = 120;
+  const ratio = window.devicePixelRatio || 1;
+
+  canvas.width = Math.floor(cssWidth * ratio);
+  canvas.height = Math.floor(cssHeight * ratio);
+  canvas.style.width = "100%";
+  canvas.style.height = cssHeight + "px";
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#111827";
+
+  if (existingData) {
+    const img = new Image();
+
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, cssWidth, cssHeight);
+    };
+
+    img.src = existingData;
+  }
+}
+
+function initSignaturePads(firmeDigitali = {}) {
+  SIGNATURE_KEYS.forEach(key => {
+    const canvas = getSignatureCanvas(key);
+    if (!canvas) return;
+
+    setupSignatureCanvas(key);
+
+    const saved = firmeDigitali[key] || "";
+
+    canvas.dataset.signed = saved ? "1" : "0";
+    prepareSignatureCanvas(canvas, saved);
+  });
+}
+
+function clearSignature(key) {
+  const canvas = getSignatureCanvas(key);
+  if (!canvas) return;
+
+  prepareSignatureCanvas(canvas, "");
+  canvas.dataset.signed = "0";
+
+  autoSave();
+}
+
+function getSignatureData(key, fallback = "") {
+  const canvas = getSignatureCanvas(key);
+
+  if (!canvas || canvas.dataset.ready !== "1") {
+    return fallback || "";
+  }
+
+  return canvas.dataset.signed === "1" ? canvas.toDataURL("image/png") : "";
+}
+
+function onFirmePanelToggle() {
+  const panel = document.getElementById("firme-settings-panel");
+
+  if (!panel || !panel.open || cIdx < 0 || !activeDate) return;
+
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali[activeDate] || {};
+
+  setTimeout(() => {
+    initSignaturePads(g.firmeDigitali || {});
+  }, 80);
+}
 
 function normalizeGiornaleDitteVisibili(g) {
   if (!g.ditteVisibili) g.ditteVisibili = [];
@@ -2602,7 +2808,6 @@ function isWaChecked(v) {
   return $(`.wa-check[value="${v}"]`).is(":checked");
 }
 
-
 function normalizePersonaKey(nome, mansione = "") {
   return normalizeKey(`${nome || ""}_${mansione || ""}`);
 }
@@ -2803,6 +3008,7 @@ async function buildWhatsAppMessage() {
 
   return msg.trim();
 }
+
 async function shareWhatsApp() {
   saveWhatsAppPreferences();
   const msg = await buildWhatsAppMessage();
@@ -3015,38 +3221,71 @@ async function generatePDF() {
   }
 
   // SEZIONE FIRME
-  checkPage(55);
+  checkPage(75);
   doc.line(15, y, 195, y);
   y += 8;
 
   const firme = g.firme || {};
+  const firmeDigitali = g.firmeDigitali || {};
 
   doc.setFont("helvetica", "bold");
   doc.text("FIRME", 15, y);
-  y += 14;
+  y += 22;
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
+  function addFirmaPdf(label, signatureData, x, lineY) {
+    const w = 70;
+    const h = 18;
+
+    if (signatureData) {
+      try {
+        doc.addImage(signatureData, "PNG", x + 5, lineY - h - 2, w - 10, h);
+      } catch (e) {
+        console.warn("Firma non inserita nel PDF:", e);
+      }
+    }
+
+    doc.line(x, lineY, x + w, lineY);
+    doc.text(label, x + (w / 2), lineY + 5, { align: "center" });
+  }
+
   const firmaY1 = y;
-  doc.line(15, firmaY1, 85, firmaY1);
-  doc.line(125, firmaY1, 195, firmaY1);
 
-  y += 5;
-  doc.text(firme.responsabile || "Responsabile Sirimed", 50, y, { align: "center" });
-  doc.text(firme.dl || "Direzione Lavori", 160, y, { align: "center" });
+  addFirmaPdf(
+    firme.responsabile || "Responsabile Sirimed",
+    firmeDigitali.responsabile,
+    15,
+    firmaY1
+  );
 
-  y += 22;
+  addFirmaPdf(
+    firme.dl || "Direzione Lavori",
+    firmeDigitali.dl,
+    125,
+    firmaY1
+  );
+
+  y += 32;
+
   const firmaY2 = y;
-  doc.line(15, firmaY2, 85, firmaY2);
-  doc.line(125, firmaY2, 195, firmaY2);
 
-  y += 5;
-  doc.text(firme.impresa || "Impresa / Ditta presente", 50, y, { align: "center" });
-  doc.text(firme.cse || "CSE / Coordinatore", 160, y, { align: "center" });
+  addFirmaPdf(
+    firme.impresa || "Impresa / Ditta presente",
+    firmeDigitali.impresa,
+    15,
+    firmaY2
+  );
 
-  y += 10;
+  addFirmaPdf(
+    firme.cse || "CSE / Coordinatore",
+    firmeDigitali.cse,
+    125,
+    firmaY2
+  );
 
+  y += 14;
 
   const materiali = contributi
     .filter(ct => (ct.materiali || "").trim())
@@ -3078,7 +3317,6 @@ async function generatePDF() {
     });
   }
 
-
   const pc = doc.internal.getNumberOfPages();
 
   for (let i = 1; i <= pc; i++) {
@@ -3091,6 +3329,7 @@ async function generatePDF() {
 
   doc.save(`Giornale_${safeId(c.nome)}_${activeDate}.pdf`);
 }
+
 function readAccessParams() {
   const params = new URLSearchParams(window.location.search);
 
