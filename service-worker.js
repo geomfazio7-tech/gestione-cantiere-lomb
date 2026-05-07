@@ -1,4 +1,4 @@
-const CACHE_VERSION = "cantiericloud-v=20";
+const CACHE_VERSION = "cantiericloud-v=16";
 
 const APP_SHELL = [
   "./",
