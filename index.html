@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CantieriCloud Pro</title>
-  <meta name="app-version" content="v16-firme-digitali-tablet">
+  <meta name="app-version" content="v19-ditta-pdf-approvato-sirimed">
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#111827">
@@ -335,6 +335,31 @@
       border: 1px solid #bbf7d0;
       border-radius: 18px;
       padding: 13px;
+    }
+
+    .ditta-status-box {
+      border-radius: 18px;
+      padding: 12px 14px;
+      font-size: .84rem;
+      border: 1px solid var(--line);
+    }
+
+    .ditta-status-box.approvato {
+      background: var(--green);
+      border-color: #86efac;
+      color: #14532d;
+    }
+
+    .ditta-status-box.attesa {
+      background: var(--yellow);
+      border-color: #fcd34d;
+      color: #713f12;
+    }
+
+    .ditta-status-box.escluso {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #334155;
     }
 
     .wa-settings {
@@ -738,6 +763,8 @@
         Puoi compilare solo la tua parte del giorno corrente: meteo, lavorazioni, operai presenti e ore.
       </div>
 
+      <div id="ditta-contributo-status" class="ditta-status-box mb-3 d-none"></div>
+
       <label class="small-label">Meteo</label>
       <div class="input-group mb-3">
         <select id="ditta-meteo" class="form-select">
@@ -766,7 +793,8 @@
       <label class="small-label">Operai presenti e ore</label>
       <div id="ditta-operai-box" class="mb-3"></div>
 
-      <button class="btn btn-dark w-100 py-3" onclick="saveDittaContribution()">Salva contributo giornaliero</button>
+      <button id="btn-ditta-pdf-approvato" class="btn btn-success w-100 py-3 mb-2" style="display:none;" onclick="downloadDittaApprovedPDF()">📄 Scarica PDF approvato Sirimed</button>
+      <button id="btn-save-ditta-contribution" class="btn btn-dark w-100 py-3" onclick="saveDittaContribution()">Salva contributo giornaliero</button>
     </div>
   </div>
 </div>
@@ -1103,6 +1131,80 @@ function normalizeKey(s) {
   return String(s || "").trim().toUpperCase();
 }
 
+function profileValues(...values) {
+  const out = [];
+
+  values.forEach(value => {
+    if (Array.isArray(value)) {
+      value.forEach(v => {
+        const t = String(v || "").trim();
+        if (t && !out.some(x => normalizeKey(x) === normalizeKey(t))) out.push(t);
+      });
+      return;
+    }
+
+    if (typeof value === "string" || typeof value === "number") {
+      const t = String(value || "").trim();
+      if (t && !out.some(x => normalizeKey(x) === normalizeKey(t))) out.push(t);
+    }
+  });
+
+  return out;
+}
+
+function getFirstProfileValue(value) {
+  return profileValues(value)[0] || "";
+}
+
+function profileHasWildcard(values) {
+  return values.map(normalizeKey).includes("*");
+}
+
+function profileValuesText(values) {
+  return values.length ? values.join(", ") : "nessun valore";
+}
+
+function getLoginDittaCode() {
+  const email = currentUser?.email || auth.currentUser?.email || "";
+  return normalizeKey(email.split("@")[0] || "");
+}
+
+function findDittaInCantiereByCandidates(cantiere, candidates) {
+  const c = ensureCantiereShape(cantiere);
+  const normalized = candidates.map(normalizeKey).filter(Boolean);
+
+  if (!normalized.length) return null;
+
+  return (c.anagraficaDitte || []).find(d => {
+    const id = normalizeKey(d.id || "");
+    const nome = normalizeKey(d.nome || "");
+    const codice = normalizeKey(d.codice || d.codiceDitta || "");
+
+    return normalized.includes(id) || normalized.includes(nome) || (codice && normalized.includes(codice));
+  }) || null;
+}
+
+function getAvailableDitteText(cantieri = []) {
+  const lines = [];
+
+  (cantieri || []).slice(0, 10).forEach(c => {
+    ensureCantiereShape(c);
+    lines.push(`Commessa: ${c.nome || c.id || "-"} | ID: ${c.id || "-"}`);
+
+    (c.anagraficaDitte || []).slice(0, 12).forEach(d => {
+      lines.push(`  - Ditta: ${d.nome || "-"} | ID: ${d.id || "-"}`);
+    });
+  });
+
+  return lines.join("\n") || "Nessuna ditta trovata nell'archivio visibile.";
+}
+
+function firebaseErrorDetails(e) {
+  const code = e?.code || "senza codice";
+  const message = e?.message || String(e || "Errore sconosciuto");
+  return `Codice: ${code}\nMessaggio: ${message}`;
+}
+
 function safeId(s) {
   return normalizeKey(s)
     .replace(/[^A-Z0-9]+/g, "_")
@@ -1319,16 +1421,23 @@ async function handleDittaLogin() {
 }
 
 async function loadUserProfile(user) {
+  let p = null;
+
   try {
     const snap = await db.collection("utenti").doc(user.uid).get();
 
     if (!snap.exists) {
-      alert("Utente non autorizzato. Profilo mancante.");
+      alert(
+        "Utente non autorizzato. Profilo mancante.\n\n" +
+        "Per l'accesso ditta devi creare in Firestore il documento:\n" +
+        `utenti/${user.uid}\n\n` +
+        `Email login: ${user.email || "-"}`
+      );
       await auth.signOut();
       return;
     }
 
-    const p = snap.data();
+    p = snap.data();
 
     if (p.attivo === false) {
       alert("Accesso disattivato.");
@@ -1337,7 +1446,18 @@ async function loadUserProfile(user) {
     }
 
     currentUserProfile = p;
+  } catch (e) {
+    console.error("Errore lettura profilo utente:", e);
+    alert(
+      "Errore lettura profilo.\n\n" +
+      firebaseErrorDetails(e) +
+      "\n\nControlla le regole Firestore: l'utente autenticato deve poter leggere il proprio documento utenti/{uid}."
+    );
+    await auth.signOut();
+    return;
+  }
 
+  try {
     if (p.ruolo === "admin" || p.ruolo === "responsabile") {
       if (isPinUnlocked(user.uid)) {
         showScreen("#main-screen");
@@ -1355,11 +1475,15 @@ async function loadUserProfile(user) {
       return;
     }
 
-    alert("Ruolo non valido.");
+    alert("Ruolo non valido nel profilo utente.");
     await auth.signOut();
   } catch (e) {
-    console.error(e);
-    alert("Errore lettura profilo.");
+    console.error("Errore caricamento area utente:", e);
+    alert(
+      "Accesso effettuato, ma errore nel caricamento dell'area " + (p.ruolo || "utente") + ".\n\n" +
+      firebaseErrorDetails(e) +
+      "\n\nSe sei in accesso limitato ditta, controlla anche i permessi di lettura su users/archivio_condiviso e cantieri/{cantiere}/contributiDitte."
+    );
     await auth.signOut();
   }
 }
@@ -1391,7 +1515,9 @@ function logout() {
   });
 }
 
-function loadDB() {
+function loadDB(options = {}) {
+  const showAlert = options.showAlert !== false;
+
   return db.collection("users").doc("archivio_condiviso").get()
     .then(doc => {
       allCantieri = doc.exists ? (doc.data().cantieri || []) : [];
@@ -1407,8 +1533,13 @@ function loadDB() {
       return userData;
     })
     .catch(e => {
-      console.error(e);
-      alert("Errore caricamento archivio.");
+      console.error("Errore caricamento archivio:", e);
+
+      if (showAlert) {
+        alert("Errore caricamento archivio.\n\n" + firebaseErrorDetails(e));
+      }
+
+      throw e;
     });
 }
 
@@ -2295,14 +2426,44 @@ async function renderContributiDitte() {
 }
 
 async function setStatoContributo(id, stato, includi) {
-  const c = userData.cantieri[cIdx];
+  const c = ensureCantiereShape(userData.cantieri[cIdx]);
+  const g = c.giornali?.[activeDate] || {};
+  const firme = g.firme || {};
+  const firmeDigitali = g.firmeDigitali || {};
 
-  await contributiCollection(c).doc(id).update({
+  const updateData = {
     stato: stato,
-    includiNelPDF: includi
-  });
+    includiNelPDF: includi,
+    aggiornatoDaSirimedIl: new Date().toISOString(),
+    aggiornatoDaSirimedUid: auth.currentUser?.uid || "",
+    aggiornatoDaSirimedEmail: currentUser?.email || ""
+  };
 
-  await renderContributiDitte();
+  if (stato === "approvato") {
+    updateData.approvatoIl = new Date().toISOString();
+    updateData.approvatoDaUid = auth.currentUser?.uid || "";
+    updateData.approvatoDaEmail = currentUser?.email || "";
+    updateData.firmaSirimedLabel = firme.responsabile || currentUser?.email || "F.to SIRIMED";
+    updateData.firmaSirimedDigitale = firmeDigitali.responsabile || "";
+  } else {
+    updateData.approvatoIl = firebase.firestore.FieldValue.delete();
+    updateData.approvatoDaUid = firebase.firestore.FieldValue.delete();
+    updateData.approvatoDaEmail = firebase.firestore.FieldValue.delete();
+    updateData.firmaSirimedLabel = firebase.firestore.FieldValue.delete();
+    updateData.firmaSirimedDigitale = firebase.firestore.FieldValue.delete();
+  }
+
+  try {
+    await contributiCollection(c).doc(id).update(updateData);
+    await renderContributiDitte();
+
+    if (stato === "approvato") {
+      alert("Contributo approvato. La ditta vedrà lo stato approvato e potrà scaricare il PDF firmato Sirimed.");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Errore aggiornamento contributo.\n\nCodice: " + (e.code || "-") + "\nMessaggio: " + (e.message || e));
+  }
 }
 
 async function addMaterialiToTask(id) {
@@ -2339,29 +2500,88 @@ async function addMaterialiToTask(id) {
 }
 
 async function loadDittaPanel() {
-  await loadDB();
+  await loadDB({ showAlert: false });
 
-  const p = currentUserProfile;
+  const p = currentUserProfile || {};
+  const loginCode = getLoginDittaCode();
 
-  const cId = normalizeKey((p.cantiereIds || [])[0]);
-  const dId = normalizeKey((p.dittaIds || [])[0]);
-
-  const c = userData.cantieri.find(x =>
-    normalizeKey(x.id) === cId ||
-    normalizeKey(x.nome) === cId
+  const cantiereCandidates = profileValues(
+    p.cantiereIds,
+    p.cantiereId,
+    p.cantiere,
+    p.commessa,
+    p.commessaId
   );
 
-  if (!c) {
-    alert("Cantiere non trovato per questa ditta.");
+  const dittaCandidates = profileValues(
+    p.dittaIds,
+    p.dittaId,
+    p.ditta,
+    p.dittaNome,
+    p.codiceDitta,
+    p.codice,
+    loginCode
+  );
+
+  if (!dittaCandidates.length || profileHasWildcard(dittaCandidates)) {
+    alert(
+      "Profilo ditta non utilizzabile.\n\n" +
+      "Nel documento utenti di questa ditta devi indicare una ditta specifica.\n\n" +
+      "Esempio corretto:\n" +
+      "ruolo: ditta\n" +
+      "attivo: true\n" +
+      "cantiereIds: [\"ID_O_NOME_COMMESSA\"]\n" +
+      "dittaIds: [\"ID_O_NOME_DITTA\"]\n\n" +
+      "Codice login rilevato: " + (loginCode || "-") + "\n\n" +
+      "Ditte disponibili nell'archivio visibile:\n" +
+      getAvailableDitteText(userData.cantieri)
+    );
     return;
   }
 
-  ensureCantiereShape(c);
+  let c = null;
+  let d = null;
 
-  const d = findDittaByIdOrName(dId, c);
+  const canUseAnyCantiere = !cantiereCandidates.length || profileHasWildcard(cantiereCandidates);
+  const normalizedCantiereCandidates = cantiereCandidates.map(normalizeKey);
+
+  const candidateCantieri = canUseAnyCantiere
+    ? userData.cantieri
+    : userData.cantieri.filter(x =>
+        normalizedCantiereCandidates.includes(normalizeKey(x.id || "")) ||
+        normalizedCantiereCandidates.includes(normalizeKey(x.nome || ""))
+      );
+
+  for (const possibileCantiere of candidateCantieri) {
+    const possibileDitta = findDittaInCantiereByCandidates(possibileCantiere, dittaCandidates);
+
+    if (possibileDitta) {
+      c = ensureCantiereShape(possibileCantiere);
+      d = possibileDitta;
+      break;
+    }
+  }
+
+  if (!c) {
+    alert(
+      "Cantiere non trovato per questa ditta.\n\n" +
+      "Valori cantiere nel profilo: " + profileValuesText(cantiereCandidates) + "\n" +
+      "Valori ditta nel profilo/login: " + profileValuesText(dittaCandidates) + "\n\n" +
+      "Soluzione: nel documento utenti della ditta inserisci il nome o ID esatto della commessa e della ditta.\n\n" +
+      "Ditte disponibili nell'archivio visibile:\n" +
+      getAvailableDitteText(userData.cantieri)
+    );
+    return;
+  }
 
   if (!d) {
-    alert("Ditta non trovata nella commessa.");
+    alert(
+      "Ditta non trovata nella commessa.\n\n" +
+      "Commessa trovata: " + (c.nome || c.id || "-") + "\n" +
+      "Valori ditta nel profilo/login: " + profileValuesText(dittaCandidates) + "\n\n" +
+      "Copia uno degli ID o nomi qui sotto nel campo dittaIds del profilo utente:\n" +
+      getAvailableDitteText([c])
+    );
     return;
   }
 
@@ -2376,6 +2596,272 @@ async function loadDittaPanel() {
 
   renderDittaOperaiBox();
   await loadExistingDittaContribution();
+}
+
+function formatDateTimeIT(value) {
+  if (!value) return "-";
+
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return "-";
+
+    return new Intl.DateTimeFormat("it-IT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(d);
+  } catch (e) {
+    return "-";
+  }
+}
+
+function setDittaFormLocked(locked) {
+  $("#ditta-meteo, #ditta-temp, #ditta-lavorazioni, #ditta-materiali, #ditta-materiali-priorita, .ditta-operaio-check, .ditta-operaio-ore")
+    .prop("disabled", !!locked);
+
+  $("#btn-save-ditta-contribution")
+    .prop("disabled", !!locked)
+    .toggleClass("opacity-55", !!locked);
+}
+
+function renderDittaContributionStatus(ct = null) {
+  const box = $("#ditta-contributo-status");
+  const btnPdf = $("#btn-ditta-pdf-approvato");
+  const btnSave = $("#btn-save-ditta-contribution");
+
+  box.removeClass("d-none approvato attesa escluso").empty();
+  btnPdf.hide();
+  btnSave.text("Salva contributo giornaliero");
+  setDittaFormLocked(false);
+
+  if (!ct) {
+    box.addClass("d-none");
+    return;
+  }
+
+  const stato = ct.stato || "da_verificare";
+
+  if (stato === "approvato") {
+    box.addClass("approvato").html(`
+      <b>✅ Contributo approvato da Sirimed</b><br>
+      ${ct.approvatoIl ? `Approvato il: ${esc(formatDateTimeIT(ct.approvatoIl))}<br>` : ""}
+      ${ct.approvatoDaEmail ? `Da: ${esc(ct.approvatoDaEmail)}<br>` : ""}
+      Puoi scaricare la versione PDF approvata con F.to Sirimed.
+    `);
+
+    btnPdf.show();
+    btnSave.text("Contributo già approvato");
+    setDittaFormLocked(true);
+    return;
+  }
+
+  if (stato === "escluso") {
+    box.addClass("escluso").html(`
+      <b>ℹ️ Contributo escluso dal PDF Sirimed</b><br>
+      Puoi correggerlo e salvarlo di nuovo: tornerà in verifica.
+    `);
+    btnSave.text("Correggi e reinvia contributo");
+    return;
+  }
+
+  box.addClass("attesa").html(`
+    <b>⏳ Contributo salvato, in attesa di approvazione Sirimed</b><br>
+    Quando l'amministratore lo approva, qui comparirà il pulsante per scaricare il PDF approvato.
+  `);
+  btnSave.text("Aggiorna contributo giornaliero");
+}
+
+function getFirmaSirimedApproval(cantiere, ct) {
+  const g = cantiere?.giornali?.[ct?.data] || {};
+  const firme = g.firme || {};
+  const firmeDigitali = g.firmeDigitali || {};
+
+  return {
+    label: ct?.firmaSirimedLabel || firme.responsabile || ct?.approvatoDaEmail || "F.to SIRIMED",
+    image: ct?.firmaSirimedDigitale || firmeDigitali.responsabile || "",
+    email: ct?.approvatoDaEmail || ""
+  };
+}
+
+function drawSirimedSignature(doc, signatureInfo, x, lineY, w = 70, h = 18) {
+  const label = signatureInfo?.label || "F.to SIRIMED";
+
+  if (signatureInfo?.image) {
+    try {
+      doc.addImage(signatureInfo.image, "PNG", x + 5, lineY - h - 2, w - 10, h);
+    } catch (e) {
+      console.warn("Firma Sirimed non inserita nel PDF:", e);
+    }
+  } else {
+    doc.setFont("helvetica", "italic");
+    doc.text("F.to SIRIMED", x + (w / 2), lineY - 6, { align: "center" });
+    doc.setFont("helvetica", "normal");
+  }
+
+  doc.line(x, lineY, x + w, lineY);
+  doc.text(label, x + (w / 2), lineY + 5, { align: "center" });
+}
+
+async function downloadDittaApprovedPDF() {
+  const { jsPDF } = window.jspdf;
+  const { cantiere, ditta, todayKey } = dittaPanelData;
+
+  if (!cantiere || !ditta) {
+    alert("Dati ditta non disponibili.");
+    return;
+  }
+
+  let ct = dittaPanelData.contributo;
+
+  if (!ct || ct.id !== getDittaContributionKey()) {
+    const snap = await contributiCollection(cantiere).doc(getDittaContributionKey()).get();
+
+    if (!snap.exists) {
+      alert("Contributo non trovato.");
+      return;
+    }
+
+    ct = snap.data();
+    dittaPanelData.contributo = ct;
+  }
+
+  if (ct.stato !== "approvato") {
+    alert("Il PDF approvato sarà disponibile solo dopo l'approvazione Sirimed.");
+    return;
+  }
+
+  const doc = new jsPDF();
+  let y = 50;
+
+  function checkPage(extra = 15) {
+    if (y + extra > 280) {
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  function addWrappedText(text, x, width, lineHeight = 5) {
+    const lines = doc.splitTextToSize(text || "-", width);
+    doc.text(lines, x, y);
+    y += lines.length * lineHeight;
+  }
+
+  doc.setFillColor(17, 24, 39);
+  doc.rect(0, 0, 210, 40, "F");
+  doc.setTextColor(255);
+  doc.setFontSize(18);
+  doc.text("CONTRIBUTO DITTA APPROVATO", 105, 18, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(`F.to SIRIMED | ${formatDateIT(ct.data || todayKey)}`, 105, 29, { align: "center" });
+
+  doc.setTextColor(0);
+  doc.setFontSize(11);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("CANTIERE:", 15, y);
+  doc.setFont("helvetica", "normal");
+  addWrappedText(cantiere.nome || "-", 55, 140, 5);
+  y += 2;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("OGGETTO:", 15, y);
+  doc.setFont("helvetica", "normal");
+  addWrappedText(cantiere.oggetto || "-", 55, 140, 5);
+  y += 2;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("DITTA:", 15, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(ct.dittaNome || ditta.nome || "-", 55, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("DATA:", 15, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(formatDateIT(ct.data || todayKey), 55, y);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("METEO:", 105, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(`${ct.meteo || "-"}${ct.temp ? " - " + ct.temp + "°C" : ""}`, 130, y);
+  y += 12;
+
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("LAVORAZIONI DELLA DITTA", 15, y);
+  y += 8;
+  doc.setFont("helvetica", "normal");
+  addWrappedText(ct.lavorazioni || "-", 15, 180, 5);
+  y += 5;
+
+  checkPage(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("OPERAI PRESENTI E ORE", 15, y);
+  y += 8;
+  doc.setFont("helvetica", "normal");
+
+  const presenti = ct.presenti || [];
+
+  if (!presenti.length) {
+    doc.text("Nessun operaio indicato.", 15, y);
+    y += 8;
+  } else {
+    presenti.forEach(p => {
+      checkPage(8);
+      const line = `- ${p.operaioNome || "-"}${p.mansione ? " - " + p.mansione : ""} - ${p.ore || 0} ore`;
+      const lines = doc.splitTextToSize(line, 175);
+      doc.text(lines, 15, y);
+      y += lines.length * 5;
+    });
+  }
+
+  if ((ct.materiali || "").trim()) {
+    y += 5;
+    checkPage(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("MATERIALE MANCANTE / RICHIESTO", 15, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    addWrappedText(ct.materiali, 15, 180, 5);
+  }
+
+  y += 8;
+  checkPage(55);
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("APPROVAZIONE SIRIMED", 15, y);
+  y += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.text("Il presente contributo ditta è stato verificato e approvato da Sirimed.", 15, y);
+  y += 7;
+
+  if (ct.approvatoIl) {
+    doc.text("Approvato il: " + formatDateTimeIT(ct.approvatoIl), 15, y);
+    y += 6;
+  }
+
+  const firmaInfo = getFirmaSirimedApproval(cantiere, ct);
+  drawSirimedSignature(doc, firmaInfo, 125, y + 24, 70, 18);
+  y += 38;
+
+  const pc = doc.internal.getNumberOfPages();
+
+  for (let i = 1; i <= pc; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(`${cantiere.nome || "-"} - ${formatDateIT(ct.data || todayKey)}`, 15, 287);
+    doc.text(`Pagina ${i} di ${pc}`, 195, 287, { align: "right" });
+  }
+
+  doc.save(`Contributo_${safeId(ct.dittaNome || ditta.nome)}_${ct.data || todayKey}_approvato_Sirimed.pdf`);
 }
 
 function renderDittaOperaiBox() {
@@ -2417,24 +2903,35 @@ function getDittaContributionKey() {
 async function loadExistingDittaContribution() {
   const key = getDittaContributionKey();
 
-  const snap = await contributiCollection(dittaPanelData.cantiere).doc(key).get();
+  dittaPanelData.contributo = null;
+  renderDittaContributionStatus(null);
 
-  if (!snap.exists) return;
+  try {
+    const snap = await contributiCollection(dittaPanelData.cantiere).doc(key).get();
 
-  const ct = snap.data();
+    if (!snap.exists) return;
 
-  $("#ditta-meteo").val(ct.meteo || "Soleggiato");
-  $("#ditta-temp").val(ct.temp || "");
-  $("#ditta-lavorazioni").val(ct.lavorazioni || "");
-  $("#ditta-materiali").val(ct.materiali || "");
-  $("#ditta-materiali-priorita").val(String(ct.materialiPriorita || "2"));
+    const ct = snap.data();
+    dittaPanelData.contributo = ct;
 
-  setTimeout(() => {
-    (ct.presenti || []).forEach(p => {
-      $(`#dit-op-${p.operaioId}`).prop("checked", true);
-      $(`.ditta-operaio-ore[data-operaio-id="${p.operaioId}"]`).val(p.ore || 8);
-    });
-  }, 100);
+    $("#ditta-meteo").val(ct.meteo || "Soleggiato");
+    $("#ditta-temp").val(ct.temp || "");
+    $("#ditta-lavorazioni").val(ct.lavorazioni || "");
+    $("#ditta-materiali").val(ct.materiali || "");
+    $("#ditta-materiali-priorita").val(String(ct.materialiPriorita || "2"));
+
+    setTimeout(() => {
+      (ct.presenti || []).forEach(p => {
+        $(`#dit-op-${p.operaioId}`).prop("checked", true);
+        $(`.ditta-operaio-ore[data-operaio-id="${p.operaioId}"]`).val(p.ore || 8);
+      });
+
+      renderDittaContributionStatus(ct);
+    }, 100);
+  } catch (e) {
+    console.error(e);
+    alert("Errore caricamento contributo ditta.\n\nCodice: " + (e.code || "-") + "\nMessaggio: " + (e.message || e));
+  }
 }
 
 async function saveDittaContribution() {
@@ -2442,6 +2939,11 @@ async function saveDittaContribution() {
 
   if (!cantiere || !ditta) {
     alert("Dati pannello ditta non disponibili.");
+    return;
+  }
+
+  if (dittaPanelData.contributo?.stato === "approvato") {
+    alert("Questo contributo è già stato approvato da Sirimed e non può essere modificato dalla ditta.");
     return;
   }
 
@@ -2484,9 +2986,17 @@ async function saveDittaContribution() {
     updatedAt: new Date().toISOString()
   };
 
-  await contributiCollection(cantiere).doc(key).set(data);
+  try {
+    await contributiCollection(cantiere).doc(key).set(data);
 
-  alert("Contributo giornaliero salvato.");
+    dittaPanelData.contributo = data;
+    renderDittaContributionStatus(data);
+
+    alert("Contributo giornaliero salvato. Ora è in attesa di approvazione Sirimed.");
+  } catch (e) {
+    console.error(e);
+    alert("Errore salvataggio contributo.\n\nCodice: " + (e.code || "-") + "\nMessaggio: " + (e.message || e));
+  }
 }
 
 function addTask() {
